@@ -42,10 +42,16 @@ func main() {
 		utils.Fatal("Failed to connect to database", zap.Error(err))
 	}
 
-	// Get underlying sql.DB for migrations
-	sqlDB, err := gormDB.DB()
+	// Create a separate connection for migrations to avoid closing the main connection
+	migrationDB, err := database.ConnectDatabase(dsn)
 	if err != nil {
-		utils.Fatal("Failed to get underlying sql.DB", zap.Error(err))
+		utils.Fatal("Failed to connect to database for migrations", zap.Error(err))
+	}
+
+	// Get underlying sql.DB for migrations
+	sqlDB, err := migrationDB.DB()
+	if err != nil {
+		utils.Fatal("Failed to get underlying sql.DB for migrations", zap.Error(err))
 	}
 
 	// Run database migrations
@@ -56,6 +62,11 @@ func main() {
 
 	if err := database.MigrateUp(sqlDB, migrationsPath); err != nil {
 		utils.Fatal("Failed to run database migrations", zap.Error(err))
+	}
+
+	// Close the migration connection after migrations are done
+	if err := sqlDB.Close(); err != nil {
+		utils.Error("Failed to close migration database connection", zap.Error(err))
 	}
 
 	// Start database health check (every 30 seconds)
@@ -138,8 +149,13 @@ func main() {
 	stopHealthCheck()
 
 	// Close database connection gracefully
-	if err := sqlDB.Close(); err != nil {
-		utils.Error("Failed to close database connection", zap.Error(err))
+	mainSqlDB, err := gormDB.DB()
+	if err != nil {
+		utils.Error("Failed to get main database connection for closing", zap.Error(err))
+	} else {
+		if err := mainSqlDB.Close(); err != nil {
+			utils.Error("Failed to close database connection", zap.Error(err))
+		}
 	}
 
 	utils.Info("Server exited")
