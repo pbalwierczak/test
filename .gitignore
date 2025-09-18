@@ -1,2 +1,6 @@
 .env
-server
+bin/server
+bin/simulator
+simulator.log
+.env
+.env.local

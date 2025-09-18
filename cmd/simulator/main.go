@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"scootin-aboot/internal/config"
+	"scootin-aboot/pkg/simulator"
 	"scootin-aboot/pkg/utils"
 
 	"go.uber.org/zap"
@@ -31,6 +32,14 @@ func main() {
 		zap.String("server_url", cfg.SimulatorServerURL),
 	)
 
+	// Create simulator
+	sim := simulator.NewSimulator(cfg)
+
+	// Start simulation
+	if err := sim.Start(); err != nil {
+		utils.Fatal("Failed to start simulator", zap.Error(err))
+	}
+
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -38,4 +47,7 @@ func main() {
 	// Wait for shutdown signal
 	<-sigChan
 	utils.Info("Received shutdown signal, stopping simulator...")
+
+	// Stop simulation
+	sim.Stop()
 }
