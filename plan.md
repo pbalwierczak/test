@@ -101,22 +101,15 @@ scootin-aboot/
 - [x] Create basic middleware (logging, recovery)
 - [x] Set up basic error handling
 
-### 1.4 Testing Foundation
-- [ ] Set up testing framework (Go testing package + testify)
-- [ ] Add test configuration and setup
-- [ ] Test basic configuration loading
-- [ ] Test health check endpoint
-- [ ] Add running tests to makefile
-
 ## Phase 2: Dockerization & Container Setup (Session 2)
 
 ### 2.1 Docker Configuration
-- [ ] Create Dockerfile for main application
-- [ ] Create Dockerfile for simulator
-- [ ] Set up docker-compose.yml with both services
-- [ ] Add environment configuration for Docker
-- [ ] Configure database service in docker-compose
-- [ ] Set up volume mounts for development
+- [x] Create Dockerfile for main application
+- [x] Create Dockerfile for simulator
+- [x] Set up docker-compose.yml with both services
+- [x] Add environment configuration for Docker
+- [x] Configure database service in docker-compose
+- [x] Set up volume mounts for development
 
 ### 2.2 Container Management
 - [ ] Add Docker targets to Makefile

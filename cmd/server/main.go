@@ -7,6 +7,7 @@ import (
 	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/api/routes"
 	"scootin-aboot/internal/config"
+	"scootin-aboot/pkg/database"
 	"scootin-aboot/pkg/utils"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,30 @@ func main() {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 	defer utils.Sync()
+
+	// Connect to database
+	dsn := cfg.GetDatabaseDSN()
+	gormDB, err := database.ConnectDatabase(dsn)
+	if err != nil {
+		utils.Fatal("Failed to connect to database", zap.Error(err))
+	}
+
+	// Get underlying sql.DB for migrations
+	sqlDB, err := gormDB.DB()
+	if err != nil {
+		utils.Fatal("Failed to get underlying sql.DB", zap.Error(err))
+	}
+	defer sqlDB.Close()
+
+	// Run database migrations
+	migrationsPath, err := database.GetMigrationsPath()
+	if err != nil {
+		utils.Fatal("Failed to get migrations path", zap.Error(err))
+	}
+
+	if err := database.MigrateUp(sqlDB, migrationsPath); err != nil {
+		utils.Fatal("Failed to run database migrations", zap.Error(err))
+	}
 
 	utils.Info("Starting Scootin' Aboot server",
 		zap.String("host", cfg.ServerHost),
