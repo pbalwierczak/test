@@ -119,19 +119,19 @@ scootin-aboot/
 - [x] Load API key from `.env` file using environment variable loader
 
 ### 3.2 Scooter Management API
-- [ ] `POST /api/v1/scooters/{id}/trip/start` - Start trip
-- [ ] `POST /api/v1/scooters/{id}/trip/end` - End trip
-- [ ] `POST /api/v1/scooters/{id}/location` - Update location
-- [ ] `GET /api/v1/scooters` - Query scooters with filters
-- [ ] `GET /api/v1/scooters/{id}` - Get specific scooter details
-- [ ] `GET /api/v1/scooters/closest` - Find closest scooters
-- [ ] Secure endpoints with API key middleware
+- [x] `POST /api/v1/scooters/{id}/trip/start` - Start trip
+- [x] `POST /api/v1/scooters/{id}/trip/end` - End trip
+- [x] `POST /api/v1/scooters/{id}/location` - Update location
+- [x] `GET /api/v1/scooters` - Query scooters with filters
+- [x] `GET /api/v1/scooters/{id}` - Get specific scooter details
+- [x] `GET /api/v1/scooters/closest` - Find closest scooters
+- [x] Secure endpoints with API key middleware
 
 ### 3.3 Data Models & Repository Layer
-- [ ] Implement GORM models
-- [ ] Create repository interfaces and implementations
-- [ ] Add database migrations
-- [ ] Implement basic CRUD operations
+- [x] 1. Implement GORM models
+- [ ] 2. Create repository interfaces and implementations
+- [ ] 3. Unit test the repositories, mocking db
+- [ ] 3. Implement basic CRUD operations
 
 ## Phase 4: Business Logic & Services (Session 4)
 

@@ -19,6 +19,24 @@ COPY . .
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
 
+# Test stage (includes Go for running tests)
+FROM golang:1.25-alpine AS test
+
+# Set working directory
+WORKDIR /app
+
+# Install git and ca-certificates
+RUN apk add --no-cache git ca-certificates
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
 # Final stage
 FROM alpine:latest
 

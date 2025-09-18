@@ -82,8 +82,8 @@ clean:
 
 test:
 	@echo "Running tests in Docker container..."
-	@docker build -t scootin-app .
-	@docker run --rm scootin-app go test -v ./...
+	@docker build --target test -t scootin-test .
+	@docker run --rm scootin-test go test -v ./...
 
 # Database seed commands
 seed:

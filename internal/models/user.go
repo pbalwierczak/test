@@ -28,5 +28,28 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	if u.ID == uuid.Nil {
 		u.ID = uuid.New()
 	}
+
+	// Set timestamps
+	now := time.Now()
+	if u.CreatedAt.IsZero() {
+		u.CreatedAt = now
+	}
+	if u.UpdatedAt.IsZero() {
+		u.UpdatedAt = now
+	}
+
 	return nil
+}
+
+// BeforeUpdate hook to update timestamp
+func (u *User) BeforeUpdate(tx *gorm.DB) error {
+	u.UpdatedAt = time.Now()
+	return nil
+}
+
+// CreateUser creates a new user
+func CreateUser() *User {
+	return &User{
+		ID: uuid.New(),
+	}
 }

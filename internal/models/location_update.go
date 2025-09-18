@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,10 +27,57 @@ func (LocationUpdate) TableName() string {
 	return "location_updates"
 }
 
-// BeforeCreate hook to set the ID if not already set
+// BeforeCreate hook to set the ID if not already set and validate data
 func (lu *LocationUpdate) BeforeCreate(tx *gorm.DB) error {
 	if lu.ID == uuid.Nil {
 		lu.ID = uuid.New()
 	}
+
+	// Validate coordinates
+	if err := lu.ValidateCoordinates(); err != nil {
+		return err
+	}
+
+	// Set timestamp if not provided
+	if lu.Timestamp.IsZero() {
+		lu.Timestamp = time.Now()
+	}
+
+	// Set created timestamp
+	if lu.CreatedAt.IsZero() {
+		lu.CreatedAt = time.Now()
+	}
+
 	return nil
+}
+
+// ValidateCoordinates validates the location update coordinates
+func (lu *LocationUpdate) ValidateCoordinates() error {
+	// Validate latitude (-90 to 90)
+	if lu.Latitude < -90 || lu.Latitude > 90 {
+		return errors.New("invalid latitude: must be between -90 and 90")
+	}
+
+	// Validate longitude (-180 to 180)
+	if lu.Longitude < -180 || lu.Longitude > 180 {
+		return errors.New("invalid longitude: must be between -180 and 180")
+	}
+
+	return nil
+}
+
+// CreateLocationUpdate creates a new location update
+func CreateLocationUpdate(tripID uuid.UUID, latitude, longitude float64, timestamp time.Time) (*LocationUpdate, error) {
+	lu := &LocationUpdate{
+		TripID:    tripID,
+		Latitude:  latitude,
+		Longitude: longitude,
+		Timestamp: timestamp,
+	}
+
+	if err := lu.ValidateCoordinates(); err != nil {
+		return nil, err
+	}
+
+	return lu, nil
 }

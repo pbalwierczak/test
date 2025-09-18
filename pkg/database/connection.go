@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"scootin-aboot/internal/models"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -27,4 +29,21 @@ func ConnectDatabase(dsn string) (*gorm.DB, error) {
 
 	log.Println("Successfully connected to database")
 	return db, nil
+}
+
+// AutoMigrate runs GORM auto-migration for all models
+func AutoMigrate(db *gorm.DB) error {
+	// Auto-migrate all models
+	err := db.AutoMigrate(
+		&models.User{},
+		&models.Scooter{},
+		&models.Trip{},
+		&models.LocationUpdate{},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to auto-migrate models: %w", err)
+	}
+
+	log.Println("Database auto-migration completed successfully")
+	return nil
 }
