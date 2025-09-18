@@ -7,6 +7,8 @@ import (
 	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/api/routes"
 	"scootin-aboot/internal/config"
+	"scootin-aboot/internal/repository"
+	"scootin-aboot/internal/services"
 	"scootin-aboot/pkg/database"
 	"scootin-aboot/pkg/utils"
 
@@ -64,6 +66,17 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// Initialize repositories
+	repo := repository.NewRepository(gormDB)
+
+	// Initialize services
+	tripService := services.NewTripService(
+		repo.Trip(),
+		repo.Scooter(),
+		repo.User(),
+		repo.LocationUpdate(),
+	)
+
 	// Create Gin router
 	router := gin.New()
 
@@ -75,7 +88,7 @@ func main() {
 	router.Use(middleware.ValidateContentLength(1024 * 1024)) // 1MB max content length
 
 	// Setup routes
-	routes.SetupRoutes(router, cfg.APIKey)
+	routes.SetupRoutes(router, cfg.APIKey, tripService)
 
 	// Start server
 	address := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)

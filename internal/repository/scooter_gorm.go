@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"scootin-aboot/internal/models"
@@ -167,4 +168,35 @@ func (r *gormScooterRepository) GetByStatusInBounds(ctx context.Context, status 
 			status, minLat, maxLat, minLng, maxLng).
 		Find(&scooters).Error
 	return scooters, err
+}
+
+// GetByIDForUpdate retrieves a scooter by ID with row-level lock for update
+func (r *gormScooterRepository) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*models.Scooter, error) {
+	var scooter models.Scooter
+	err := r.db.WithContext(ctx).Set("gorm:query_option", "FOR UPDATE").
+		First(&scooter, "id = ?", id).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &scooter, nil
+}
+
+// UpdateStatusWithCheck updates scooter status only if current status matches expected
+func (r *gormScooterRepository) UpdateStatusWithCheck(ctx context.Context, id uuid.UUID, newStatus models.ScooterStatus, expectedStatus models.ScooterStatus) error {
+	result := r.db.WithContext(ctx).Model(&models.Scooter{}).
+		Where("id = ? AND status = ?", id, expectedStatus).
+		Update("status", newStatus)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("scooter status update failed: status mismatch or scooter not found")
+	}
+
+	return nil
 }

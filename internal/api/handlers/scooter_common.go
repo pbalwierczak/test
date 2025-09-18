@@ -3,18 +3,21 @@ package handlers
 import (
 	"time"
 
+	"scootin-aboot/internal/services"
+
 	"github.com/google/uuid"
 )
 
 // ScooterHandler handles scooter-related HTTP requests
 type ScooterHandler struct {
-	// TODO: Add scooter service dependency
-	// scooterService services.ScooterService
+	tripService services.TripService
 }
 
 // NewScooterHandler creates a new scooter handler
-func NewScooterHandler() *ScooterHandler {
-	return &ScooterHandler{}
+func NewScooterHandler(tripService services.TripService) *ScooterHandler {
+	return &ScooterHandler{
+		tripService: tripService,
+	}
 }
 
 // Trip-related request/response types

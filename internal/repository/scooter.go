@@ -35,4 +35,8 @@ type ScooterRepository interface {
 	// Combined filters
 	GetAvailableInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64) ([]*models.Scooter, error)
 	GetByStatusInBounds(ctx context.Context, status models.ScooterStatus, minLat, maxLat, minLng, maxLng float64) ([]*models.Scooter, error)
+
+	// Concurrency control
+	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (*models.Scooter, error)
+	UpdateStatusWithCheck(ctx context.Context, id uuid.UUID, newStatus models.ScooterStatus, expectedStatus models.ScooterStatus) error
 }

@@ -129,17 +129,17 @@ scootin-aboot/
 
 ### 3.3 Data Models & Repository Layer
 - [x] 1. Implement GORM models
-- [ ] 2. Create repository interfaces and implementations
-- [ ] 3. Unit test the repositories, mocking db
-- [ ] 3. Implement basic CRUD operations
+- [x] 2. Create repository interfaces and implementations
+- [x] 3. Unit test the repositories, mocking db
+- [x] 3. Implement basic CRUD operations
 
 ## Phase 4: Business Logic & Services (Session 4)
 
 ### 4.1 Trip Management Service
-- [ ] Implement trip lifecycle management
-- [ ] Add scooter status validation
-- [ ] Handle concurrent trip attempts
-- [ ] Implement location update validation
+- [x] Implement trip lifecycle management
+- [x] Add scooter status validation
+- [x] Handle concurrent trip attempts
+- [x] Implement location update validation
 
 ### 4.2 Query & Filtering Service
 - [ ] Implement rectangular area filtering

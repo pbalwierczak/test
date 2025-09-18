@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -24,22 +23,41 @@ func (h *ScooterHandler) StartTrip(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement scooter service logic
-	// 1. Check if scooter exists
-	// 2. Check if scooter is available
-	// 3. Check if user has an active trip
-	// 4. Create new trip
-	// 5. Update scooter status to occupied
+	// Use trip service to start the trip
+	trip, err := h.tripService.StartTrip(c.Request.Context(), scooterID, req.UserID, req.StartLatitude, req.StartLongitude)
+	if err != nil {
+		// Map service errors to appropriate HTTP status codes
+		switch err.Error() {
+		case "scooter not found":
+			c.JSON(http.StatusNotFound, gin.H{"error": "Scooter not found"})
+		case "user not found":
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		case "scooter is not available":
+			c.JSON(http.StatusConflict, gin.H{"error": "Scooter is not available"})
+		case "user already has an active trip":
+			c.JSON(http.StatusConflict, gin.H{"error": "User already has an active trip"})
+		case "scooter already has an active trip":
+			c.JSON(http.StatusConflict, gin.H{"error": "Scooter already has an active trip"})
+		default:
+			if err.Error() == "invalid coordinates: invalid latitude: must be between -90 and 90" ||
+				err.Error() == "invalid coordinates: invalid longitude: must be between -180 and 180" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to start trip"})
+			}
+		}
+		return
+	}
 
-	// Dummy response for now
+	// Convert trip to response
 	response := StartTripResponse{
-		TripID:         uuid.New(),
-		ScooterID:      scooterID,
-		UserID:         req.UserID,
-		StartTime:      time.Now(),
-		StartLatitude:  req.StartLatitude,
-		StartLongitude: req.StartLongitude,
-		Status:         "active",
+		TripID:         trip.ID,
+		ScooterID:      trip.ScooterID,
+		UserID:         trip.UserID,
+		StartTime:      trip.StartTime,
+		StartLatitude:  trip.StartLatitude,
+		StartLongitude: trip.StartLongitude,
+		Status:         string(trip.Status),
 	}
 
 	c.JSON(http.StatusCreated, response)
@@ -61,28 +79,43 @@ func (h *ScooterHandler) EndTrip(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement scooter service logic
-	// 1. Check if scooter exists
-	// 2. Check if scooter has an active trip
-	// 3. End the active trip
-	// 4. Update scooter status to available
-	// 5. Calculate trip duration
+	// Use trip service to end the trip
+	trip, err := h.tripService.EndTrip(c.Request.Context(), scooterID, req.EndLatitude, req.EndLongitude)
+	if err != nil {
+		// Map service errors to appropriate HTTP status codes
+		switch err.Error() {
+		case "no active trip found for scooter":
+			c.JSON(http.StatusNotFound, gin.H{"error": "No active trip found for scooter"})
+		default:
+			if err.Error() == "invalid coordinates: invalid latitude: must be between -90 and 90" ||
+				err.Error() == "invalid coordinates: invalid longitude: must be between -180 and 180" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to end trip"})
+			}
+		}
+		return
+	}
 
-	// Dummy response for now
-	startTime := time.Now().Add(-10 * time.Minute) // Simulate 10-minute trip
-	endTime := time.Now()
+	// Calculate trip duration
+	var duration int64
+	if trip.EndTime != nil {
+		duration = int64(trip.EndTime.Sub(trip.StartTime).Seconds())
+	}
+
+	// Convert trip to response
 	response := EndTripResponse{
-		TripID:         uuid.New(),
-		ScooterID:      scooterID,
-		UserID:         uuid.New(), // TODO: Get from active trip
-		StartTime:      startTime,
-		EndTime:        endTime,
-		StartLatitude:  45.4215, // TODO: Get from active trip
-		StartLongitude: -75.6972,
-		EndLatitude:    req.EndLatitude,
-		EndLongitude:   req.EndLongitude,
-		Status:         "completed",
-		Duration:       int64(endTime.Sub(startTime).Seconds()),
+		TripID:         trip.ID,
+		ScooterID:      trip.ScooterID,
+		UserID:         trip.UserID,
+		StartTime:      trip.StartTime,
+		EndTime:        *trip.EndTime,
+		StartLatitude:  trip.StartLatitude,
+		StartLongitude: trip.StartLongitude,
+		EndLatitude:    *trip.EndLatitude,
+		EndLongitude:   *trip.EndLongitude,
+		Status:         string(trip.Status),
+		Duration:       duration,
 	}
 
 	c.JSON(http.StatusOK, response)

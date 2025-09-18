@@ -3,16 +3,17 @@ package routes
 import (
 	"scootin-aboot/internal/api/handlers"
 	"scootin-aboot/internal/api/middleware"
+	"scootin-aboot/internal/services"
 	"scootin-aboot/pkg/auth/apikey"
 
 	"github.com/gin-gonic/gin"
 )
 
 // SetupRoutes configures all the routes for the application
-func SetupRoutes(router *gin.Engine, apiKey string) {
+func SetupRoutes(router *gin.Engine, apiKey string, tripService services.TripService) {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler()
-	scooterHandler := handlers.NewScooterHandler()
+	scooterHandler := handlers.NewScooterHandler(tripService)
 
 	// Initialize API key validator
 	apiKeyValidator := apikey.NewValidator(apiKey)
