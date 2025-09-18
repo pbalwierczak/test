@@ -29,6 +29,7 @@ type ScooterRepository interface {
 	// Geographic operations
 	GetInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64) ([]*models.Scooter, error)
 	GetClosest(ctx context.Context, latitude, longitude float64, limit int) ([]*models.Scooter, error)
+	GetClosestWithRadius(ctx context.Context, latitude, longitude, radius float64, status string, limit int) ([]*models.Scooter, error)
 	GetInRadius(ctx context.Context, latitude, longitude, radiusKm float64) ([]*models.Scooter, error)
 
 	// Combined filters

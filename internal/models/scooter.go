@@ -120,3 +120,13 @@ func (s *Scooter) SetStatus(status ScooterStatus) error {
 		return errors.New("invalid scooter status")
 	}
 }
+
+// GetLatitude returns the scooter's current latitude
+func (s *Scooter) GetLatitude() float64 {
+	return s.CurrentLatitude
+}
+
+// GetLongitude returns the scooter's current longitude
+func (s *Scooter) GetLongitude() float64 {
+	return s.CurrentLongitude
+}

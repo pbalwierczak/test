@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"scootin-aboot/internal/models"
@@ -107,53 +106,47 @@ func (r *gormScooterRepository) GetInBounds(ctx context.Context, minLat, maxLat,
 
 // GetClosest retrieves the closest scooters to a given location
 func (r *gormScooterRepository) GetClosest(ctx context.Context, latitude, longitude float64, limit int) ([]*models.Scooter, error) {
+	return r.GetClosestWithRadius(ctx, latitude, longitude, 0, "", limit)
+}
+
+// GetClosestWithRadius retrieves the closest scooters to a given location within a radius
+func (r *gormScooterRepository) GetClosestWithRadius(ctx context.Context, latitude, longitude, radius float64, status string, limit int) ([]*models.Scooter, error) {
 	var scooters []*models.Scooter
 
-	// Calculate distance using Haversine formula in SQL
-	// This is a simplified version - for production, consider using PostGIS
-	distanceQuery := fmt.Sprintf(`
-		(6371 * acos(
-			cos(radians(%f)) * 
-			cos(radians(current_latitude)) * 
-			cos(radians(current_longitude) - radians(%f)) + 
-			sin(radians(%f)) * 
-			sin(radians(current_latitude))
-		)) AS distance`,
-		latitude, longitude, latitude)
+	// If no radius specified or negative radius, get all scooters
+	var query *gorm.DB
+	if radius > 0 {
+		// Create bounding box for efficient database query using indexes
+		bbox := NewBoundingBox(latitude, longitude, radius)
 
-	query := r.db.WithContext(ctx).
-		Select("*, " + distanceQuery).
-		Order("distance ASC")
-
-	if limit > 0 {
-		query = query.Limit(limit)
+		query = r.db.WithContext(ctx).Model(&models.Scooter{}).
+			Where("current_latitude BETWEEN ? AND ?", bbox.MinLat, bbox.MaxLat).
+			Where("current_longitude BETWEEN ? AND ?", bbox.MinLng, bbox.MaxLng)
+	} else {
+		// No radius filter, get all scooters
+		query = r.db.WithContext(ctx).Model(&models.Scooter{})
 	}
 
+	// Add status filter if specified
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	// Get all scooters in the bounding box
 	err := query.Find(&scooters).Error
-	return scooters, err
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter by radius, sort by distance, and apply limit using the factored function
+	filteredScooters := FilterAndSortByDistance(scooters, latitude, longitude, radius, limit)
+
+	return filteredScooters, nil
 }
 
 // GetInRadius retrieves scooters within a radius of a given location
 func (r *gormScooterRepository) GetInRadius(ctx context.Context, latitude, longitude, radiusKm float64) ([]*models.Scooter, error) {
-	var scooters []*models.Scooter
-
-	// Calculate distance using Haversine formula
-	distanceQuery := fmt.Sprintf(`
-		(6371 * acos(
-			cos(radians(%f)) * 
-			cos(radians(current_latitude)) * 
-			cos(radians(current_longitude) - radians(%f)) + 
-			sin(radians(%f)) * 
-			sin(radians(current_latitude))
-		)) AS distance`,
-		latitude, longitude, latitude)
-
-	err := r.db.WithContext(ctx).
-		Select("*, "+distanceQuery).
-		Having("distance <= ?", radiusKm).
-		Order("distance ASC").
-		Find(&scooters).Error
-	return scooters, err
+	return r.GetClosestWithRadius(ctx, latitude, longitude, radiusKm, "", 0)
 }
 
 // GetAvailableInBounds retrieves available scooters within geographic bounds
