@@ -10,10 +10,10 @@ import (
 )
 
 // SetupRoutes configures all the routes for the application
-func SetupRoutes(router *gin.Engine, apiKey string, tripService services.TripService) {
+func SetupRoutes(router *gin.Engine, apiKey string, tripService services.TripService, scooterService services.ScooterService) {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler()
-	scooterHandler := handlers.NewScooterHandler(tripService)
+	scooterHandler := handlers.NewScooterHandler(tripService, scooterService)
 
 	// Initialize API key validator
 	apiKeyValidator := apikey.NewValidator(apiKey)

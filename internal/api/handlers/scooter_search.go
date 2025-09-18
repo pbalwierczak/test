@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"time"
+
+	"scootin-aboot/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -17,27 +18,41 @@ func (h *ScooterHandler) GetScooters(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement scooter service logic
-	// 1. Validate query parameters
-	// 2. Apply filters (status, geographic bounds)
-	// 3. Execute database query with pagination
-	// 4. Return filtered results
-
-	// Dummy response for now
-	response := ScooterListResponse{
-		Scooters: []ScooterInfo{
-			{
-				ID:               uuid.New(),
-				Status:           "available",
-				CurrentLatitude:  45.4215,
-				CurrentLongitude: -75.6972,
-				LastSeen:         time.Now(),
-				CreatedAt:        time.Now().Add(-24 * time.Hour),
-			},
-		},
-		Total:  1,
+	// Convert to service parameters
+	serviceParams := services.ScooterQueryParams{
+		Status: params.Status,
+		MinLat: params.MinLat,
+		MaxLat: params.MaxLat,
+		MinLng: params.MinLng,
+		MaxLng: params.MaxLng,
 		Limit:  params.Limit,
 		Offset: params.Offset,
+	}
+
+	// Call scooter service
+	result, err := h.scooterService.GetScooters(c.Request.Context(), serviceParams)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve scooters"})
+		return
+	}
+
+	// Convert service result to response format
+	response := ScooterListResponse{
+		Scooters: make([]ScooterInfo, len(result.Scooters)),
+		Total:    result.Total,
+		Limit:    result.Limit,
+		Offset:   result.Offset,
+	}
+
+	for i, scooter := range result.Scooters {
+		response.Scooters[i] = ScooterInfo{
+			ID:               scooter.ID,
+			Status:           scooter.Status,
+			CurrentLatitude:  scooter.CurrentLatitude,
+			CurrentLongitude: scooter.CurrentLongitude,
+			LastSeen:         scooter.LastSeen,
+			CreatedAt:        scooter.CreatedAt,
+		}
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -53,21 +68,37 @@ func (h *ScooterHandler) GetScooter(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement scooter service logic
-	// 1. Check if scooter exists
-	// 2. Get scooter details
-	// 3. If occupied, get active trip information
-	// 4. Return complete scooter information
+	// Call scooter service
+	result, err := h.scooterService.GetScooter(c.Request.Context(), scooterID)
+	if err != nil {
+		if err.Error() == "scooter not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Scooter not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve scooter"})
+		return
+	}
 
-	// Dummy response for now
+	// Convert service result to response format
 	response := ScooterDetailsResponse{
-		ID:               scooterID,
-		Status:           "available",
-		CurrentLatitude:  45.4215,
-		CurrentLongitude: -75.6972,
-		LastSeen:         time.Now(),
-		CreatedAt:        time.Now().Add(-24 * time.Hour),
-		UpdatedAt:        time.Now(),
+		ID:               result.ID,
+		Status:           result.Status,
+		CurrentLatitude:  result.CurrentLatitude,
+		CurrentLongitude: result.CurrentLongitude,
+		LastSeen:         result.LastSeen,
+		CreatedAt:        result.CreatedAt,
+		UpdatedAt:        result.UpdatedAt,
+	}
+
+	// Add active trip information if present
+	if result.ActiveTrip != nil {
+		response.ActiveTrip = &TripInfo{
+			TripID:         result.ActiveTrip.TripID,
+			UserID:         result.ActiveTrip.UserID,
+			StartTime:      result.ActiveTrip.StartTime,
+			StartLatitude:  result.ActiveTrip.StartLatitude,
+			StartLongitude: result.ActiveTrip.StartLongitude,
+		}
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -82,35 +113,44 @@ func (h *ScooterHandler) GetClosestScooters(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement scooter service logic
-	// 1. Validate location parameters
-	// 2. Calculate distances using Haversine formula
-	// 3. Filter by status if specified
-	// 4. Filter by radius
-	// 5. Sort by distance
-	// 6. Apply limit
-	// 7. Return closest scooters
+	// Convert to service parameters
+	serviceParams := services.ClosestScootersQueryParams{
+		Latitude:  params.Latitude,
+		Longitude: params.Longitude,
+		Radius:    params.Radius,
+		Limit:     params.Limit,
+		Status:    params.Status,
+	}
 
-	// Dummy response for now
+	// Call scooter service
+	result, err := h.scooterService.GetClosestScooters(c.Request.Context(), serviceParams)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve closest scooters"})
+		return
+	}
+
+	// Convert service result to response format
 	response := ClosestScootersResponse{
-		Scooters: []ScooterWithDistance{
-			{
-				ScooterInfo: ScooterInfo{
-					ID:               uuid.New(),
-					Status:           "available",
-					CurrentLatitude:  45.4215,
-					CurrentLongitude: -75.6972,
-					LastSeen:         time.Now(),
-					CreatedAt:        time.Now().Add(-24 * time.Hour),
-				},
-				Distance: 150.5,
-			},
-		},
+		Scooters: make([]ScooterWithDistance, len(result.Scooters)),
 		Center: Location{
-			Latitude:  params.Latitude,
-			Longitude: params.Longitude,
+			Latitude:  result.Center.Latitude,
+			Longitude: result.Center.Longitude,
 		},
-		Radius: params.Radius,
+		Radius: result.Radius,
+	}
+
+	for i, scooter := range result.Scooters {
+		response.Scooters[i] = ScooterWithDistance{
+			ScooterInfo: ScooterInfo{
+				ID:               scooter.ID,
+				Status:           scooter.Status,
+				CurrentLatitude:  scooter.CurrentLatitude,
+				CurrentLongitude: scooter.CurrentLongitude,
+				LastSeen:         scooter.LastSeen,
+				CreatedAt:        scooter.CreatedAt,
+			},
+			Distance: scooter.Distance,
+		}
 	}
 
 	c.JSON(http.StatusOK, response)

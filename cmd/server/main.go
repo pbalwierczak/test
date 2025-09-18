@@ -77,6 +77,11 @@ func main() {
 		repo.LocationUpdate(),
 	)
 
+	scooterService := services.NewScooterService(
+		repo.Scooter(),
+		repo.Trip(),
+	)
+
 	// Create Gin router
 	router := gin.New()
 
@@ -88,7 +93,7 @@ func main() {
 	router.Use(middleware.ValidateContentLength(1024 * 1024)) // 1MB max content length
 
 	// Setup routes
-	routes.SetupRoutes(router, cfg.APIKey, tripService)
+	routes.SetupRoutes(router, cfg.APIKey, tripService, scooterService)
 
 	// Start server
 	address := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)

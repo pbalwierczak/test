@@ -142,12 +142,11 @@ scootin-aboot/
 - [x] Implement location update validation
 
 ### 4.2 Query & Filtering Service
-- [ ] Implement rectangular area filtering
-- [ ] Add status-based filtering
-- [ ] Implement closest scooter search with distance calculation
-- [ ] Add geographic indexing for performance
-- [ ] Optimize database queries with indexes
-- [ ] Add pagination support
+- [x] Implement rectangular area filtering
+- [x] Add status-based filtering
+- [x] Implement closest scooter search with distance calculation
+- [x] Add geographic indexing for performance
+- [x] Optimize database queries with indexes
 
 ### 4.3 Location Services
 - [ ] Validate geographical coordinates

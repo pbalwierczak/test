@@ -10,13 +10,15 @@ import (
 
 // ScooterHandler handles scooter-related HTTP requests
 type ScooterHandler struct {
-	tripService services.TripService
+	tripService    services.TripService
+	scooterService services.ScooterService
 }
 
 // NewScooterHandler creates a new scooter handler
-func NewScooterHandler(tripService services.TripService) *ScooterHandler {
+func NewScooterHandler(tripService services.TripService, scooterService services.ScooterService) *ScooterHandler {
 	return &ScooterHandler{
-		tripService: tripService,
+		tripService:    tripService,
+		scooterService: scooterService,
 	}
 }
 
