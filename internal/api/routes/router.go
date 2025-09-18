@@ -12,6 +12,7 @@ import (
 func SetupRoutes(router *gin.Engine, apiKey string) {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler()
+	scooterHandler := handlers.NewScooterHandler()
 
 	// Initialize API key validator
 	apiKeyValidator := apikey.NewValidator(apiKey)
@@ -26,13 +27,13 @@ func SetupRoutes(router *gin.Engine, apiKey string) {
 		protected := v1.Group("")
 		protected.Use(middleware.APIKeyMiddleware(apiKeyValidator))
 		{
-			// Scooter management endpoints will be added here
-			// protected.POST("/scooters/:id/trip/start", ...)
-			// protected.POST("/scooters/:id/trip/end", ...)
-			// protected.POST("/scooters/:id/location", ...)
-			// protected.GET("/scooters", ...)
-			// protected.GET("/scooters/:id", ...)
-			// protected.GET("/scooters/closest", ...)
+			// Scooter management endpoints
+			protected.POST("/scooters/:id/trip/start", scooterHandler.StartTrip)
+			protected.POST("/scooters/:id/trip/end", scooterHandler.EndTrip)
+			protected.POST("/scooters/:id/location", scooterHandler.UpdateLocation)
+			protected.GET("/scooters", scooterHandler.GetScooters)
+			protected.GET("/scooters/:id", scooterHandler.GetScooter)
+			protected.GET("/scooters/closest", scooterHandler.GetClosestScooters)
 		}
 	}
 }

@@ -133,15 +133,6 @@ scootin-aboot/
 - [ ] Add database migrations
 - [ ] Implement basic CRUD operations
 
-### 3.4 API Testing
-- [ ] Test authentication middleware
-- [ ] Test all scooter management endpoints
-- [ ] Test API key validation
-- [ ] Test error handling and responses
-- [ ] Test repository layer CRUD operations
-- [ ] Test service layer business logic
-- [ ] Test geographic search functionality
-
 ## Phase 4: Business Logic & Services (Session 4)
 
 ### 4.1 Trip Management Service
