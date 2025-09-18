@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"scootin-aboot/internal/api/routes"
 	"scootin-aboot/internal/config"
 	"scootin-aboot/pkg/utils"
 
@@ -44,13 +45,8 @@ func main() {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	// Health check endpoint
-	router.GET("/api/v1/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "healthy",
-			"service": "scootin-aboot",
-		})
-	})
+	// Setup routes
+	routes.SetupRoutes(router)
 
 	// Start server
 	address := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)

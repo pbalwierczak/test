@@ -1,5 +1,8 @@
 # Scootin' Aboot - Electric Scooter Management System
 
+Important: see plan-support.md for additional details.
+When implementing a point, mark it as done with x in [ ].
+
 ## Project Overview
 A backend service for managing electric scooters in Ottawa and Montreal, providing REST API for scooter event collection and mobile client reporting.
 These are the only requirements - no need to invent more:
@@ -71,19 +74,18 @@ scootin-aboot/
 ├── go.mod
 ├── go.sum
 ├── README.md
-├── ASSUMPTIONS.md
 └── plan.md
 ```
 
 ## Phase 1: Project Setup & Foundation (Session 1)
 
-### 1.1 Project Initialization
-- [ ] Initialize git repo and Go module (`go mod init scootin-aboot`)
-- [ ] Set up project directory structure
-- [ ] Create `.env` and `.env.example` files for configuration
-- [ ] Set up environment variable loading (godotenv or viper)
-- [ ] Set up logging (zap)
-- [ ] Add godotenv dependency for .env file loading
+### 1.1 Project Initialization ✅
+- [x] Initialize git repo and Go module (`go mod init scootin-aboot`)
+- [x] Set up project directory structure
+- [x] Create `.env` and `.env.example` files for configuration
+- [x] Set up environment variable loading (godotenv or viper)
+- [x] Set up logging (zap)
+- [x] Add godotenv dependency for .env file loading
 
 ### 1.2 Database Design
 - [ ] Design database schema for:

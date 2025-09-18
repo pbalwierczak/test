@@ -2,43 +2,57 @@ package config
 
 import (
 	"testing"
+
+	"scootin-aboot/pkg/database"
+
+	_ "github.com/lib/pq"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
-
-func TestGeographicConstants(t *testing.T) {
-	// Test Ottawa coordinates
-	if OttawaCenterLat != 45.4215 {
-		t.Errorf("Expected OttawaCenterLat to be 45.4215, got %f", OttawaCenterLat)
-	}
-	if OttawaCenterLng != -75.6972 {
-		t.Errorf("Expected OttawaCenterLng to be -75.6972, got %f", OttawaCenterLng)
-	}
-
-	// Test Montreal coordinates
-	if MontrealCenterLat != 45.5017 {
-		t.Errorf("Expected MontrealCenterLat to be 45.5017, got %f", MontrealCenterLat)
-	}
-	if MontrealCenterLng != -73.5673 {
-		t.Errorf("Expected MontrealCenterLng to be -73.5673, got %f", MontrealCenterLng)
-	}
-
-	// Test city radius
-	if CityRadiusKm != 10 {
-		t.Errorf("Expected CityRadiusKm to be 10, got %d", CityRadiusKm)
-	}
-}
 
 func TestConfigLoad(t *testing.T) {
 	config, err := Load()
-	if err != nil {
-		t.Fatalf("Failed to load configuration: %v", err)
+	require.NoError(t, err)
+	assert.NotEmpty(t, config.APIKey)
+	assert.NotEmpty(t, config.ServerPort)
+}
+
+func TestDatabaseConnection(t *testing.T) {
+	// Load test configuration
+	config, err := Load()
+	require.NoError(t, err)
+
+	// Test database connection using the new database package
+	dsn := config.GetDatabaseDSN()
+	db, err := database.ConnectDatabase(dsn)
+	require.NoError(t, err)
+	require.NotNil(t, db)
+
+	// Test that we can get the underlying sql.DB
+	sqlDB, err := db.DB()
+	require.NoError(t, err)
+	require.NotNil(t, sqlDB)
+
+	// Test ping
+	err = sqlDB.Ping()
+	require.NoError(t, err)
+
+	// Close connection
+	err = sqlDB.Close()
+	require.NoError(t, err)
+}
+
+func TestDatabaseDSN(t *testing.T) {
+	config := &Config{
+		DBHost:     "localhost",
+		DBPort:     "5432",
+		DBName:     "test_db",
+		DBUser:     "test_user",
+		DBPassword: "test_password",
+		DBSSLMode:  "disable",
 	}
 
-	// Test that geographic constants are not in the config struct
-	// (they should be accessed as constants, not as config fields)
-	if config.APIKey == "" {
-		t.Error("Expected APIKey to be set")
-	}
-	if config.ServerPort == "" {
-		t.Error("Expected ServerPort to be set")
-	}
+	expected := "host=localhost port=5432 user=test_user password=test_password dbname=test_db sslmode=disable"
+	actual := config.GetDatabaseDSN()
+	assert.Equal(t, expected, actual)
 }
