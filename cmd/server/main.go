@@ -75,7 +75,7 @@ func main() {
 	router.Use(middleware.ValidateContentLength(1024 * 1024)) // 1MB max content length
 
 	// Setup routes
-	routes.SetupRoutes(router)
+	routes.SetupRoutes(router, cfg.APIKey)
 
 	// Start server
 	address := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)

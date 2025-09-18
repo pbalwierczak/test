@@ -111,19 +111,12 @@ scootin-aboot/
 - [x] Configure database service in docker-compose
 - [x] Set up volume mounts for development
 
-### 2.2 Container Management
-- [ ] Add Docker targets to Makefile
-- [ ] Create development environment setup
-- [ ] Test container builds and startup
-- [ ] Ensure database migrations work in containers
-- [ ] Verify seed data loading in containers
-
 ## Phase 3: Core API Implementation (Session 3)
 
 ### 3.1 Authentication & Authorization
-- [ ] Implement static API key validation (single key for entire system)
-- [ ] Create API key middleware for request authentication
-- [ ] Load API key from `.env` file using environment variable loader
+- [x] Implement static API key validation (single key for entire system)
+- [x] Create API key middleware for request authentication
+- [x] Load API key from `.env` file using environment variable loader
 
 ### 3.2 Scooter Management API
 - [ ] `POST /api/v1/scooters/{id}/trip/start` - Start trip
