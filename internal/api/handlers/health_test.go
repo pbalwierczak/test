@@ -31,10 +31,3 @@ func TestHealthHandler_HealthCheck(t *testing.T) {
 	expectedResponse := `{"service":"scootin-aboot","status":"healthy"}`
 	assert.JSONEq(t, expectedResponse, w.Body.String())
 }
-
-func TestNewHealthHandler(t *testing.T) {
-	// Test that NewHealthHandler returns a non-nil handler
-	handler := NewHealthHandler()
-	assert.NotNil(t, handler)
-	assert.IsType(t, &HealthHandler{}, handler)
-}

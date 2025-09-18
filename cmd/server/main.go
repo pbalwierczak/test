@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/api/routes"
 	"scootin-aboot/internal/config"
 	"scootin-aboot/pkg/utils"
@@ -41,9 +42,16 @@ func main() {
 	// Create Gin router
 	router := gin.New()
 
-	// Add middleware
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
+	// Add middleware (order matters!)
+	router.Use(middleware.RequestIDMiddleware())              // Add request ID first
+	router.Use(middleware.LoggingMiddleware())                // Custom logging with zap
+	router.Use(middleware.RecoveryMiddleware())               // Custom recovery with structured logging
+	router.Use(middleware.ErrorHandlerMiddleware())           // Error handling
+	router.Use(middleware.CORSMiddleware())                   // CORS support
+	router.Use(middleware.SecureHeadersMiddleware())          // Security headers
+	router.Use(middleware.ValidateJSON())                     // JSON validation
+	router.Use(middleware.ValidateContentLength(1024 * 1024)) // 1MB max content length
+	router.Use(middleware.DefaultRateLimitMiddleware())       // Rate limiting
 
 	// Setup routes
 	routes.SetupRoutes(router)

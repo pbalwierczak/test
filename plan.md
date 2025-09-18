@@ -88,20 +88,18 @@ scootin-aboot/
 - [x] Add godotenv dependency for .env file loading
 
 ### 1.2 Database Design
-- [ ] Design database schema for:
+- [x] Design database schema for:
   - Scooters table (id, status, current_location)
   - Trips table (id, scooter_id, user_id, start_time, end_time, start_location, end_location)
   - Location_updates table (id, trip_id, latitude, longitude, timestamp)
   - Users table (id, created_at)
-- [ ] Create migration files using golang-migrate
-- [ ] Set up database connection and configuration
-- [ ] Create seed data files and seed data load scripts for development
+- [x] Create migration files using golang-migrate
+- [x] Set up database connection and configuration
+- [x] Create seed data files and seed data load scripts for development
 
 ### 1.3 Basic API Structure
-- [ ] Set up Gin router
-- [ ] Create basic middleware (logging, recovery)
-- [ ] Implement health check endpoint
-- [ ] Set up basic error handling
+- [x] Create basic middleware (logging, recovery)
+- [x] Set up basic error handling
 
 ### 1.4 Testing Foundation
 - [ ] Set up testing framework (Go testing package + testify)
@@ -301,7 +299,7 @@ scootin-aboot/
 ### 7.4 Seed Data Implementation
 - [ ] **Scooter Seed Data**: Pre-populate with 20+ scooters in Ottawa and Montreal
   - Realistic GPS coordinates within city boundaries
-  - Mix of statuses: available, occupied, maintenance
+  - Mix of statuses: available, occupied
   - Varied last_seen timestamps
 - [ ] **User Seed Data**: Create test users (no API key storage needed)
   - 5+ test users for trip tracking
@@ -311,7 +309,7 @@ scootin-aboot/
   - Ottawa: Parliament Hill, ByWard Market, Rideau Centre areas
   - Montreal: Old Port, Downtown, Plateau areas
   - 10km radius from city centers
-- [ ] **Status Variety**: Mix of available, occupied, and maintenance scooters
+- [ ] **Status Variety**: Mix of available, occupied scooters
 - [ ] **Historical Data**: Sample trips and location updates for testing
   - Completed trips with full location history
   - Ongoing trips for testing
