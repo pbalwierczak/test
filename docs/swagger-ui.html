@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scootin' Aboot API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin:0;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                url: '/api-docs.yaml',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                tryItOutEnabled: true,
+                requestInterceptor: function(request) {
+                    // Add API key to requests if available
+                    const apiKey = localStorage.getItem('api-key');
+                    if (apiKey) {
+                        request.headers['X-API-Key'] = apiKey;
+                    }
+                    return request;
+                }
+            });
+            
+            // Add API key input
+            const apiKeyInput = document.createElement('div');
+            apiKeyInput.innerHTML = `
+                <div style="padding: 10px; background: #f0f0f0; border-bottom: 1px solid #ccc;">
+                    <label for="api-key-input" style="margin-right: 10px;">API Key:</label>
+                    <input type="password" id="api-key-input" placeholder="Enter your API key" style="padding: 5px; width: 300px;">
+                    <button onclick="setApiKey()" style="margin-left: 10px; padding: 5px 10px;">Set API Key</button>
+                </div>
+            `;
+            document.body.insertBefore(apiKeyInput, document.getElementById('swagger-ui'));
+            
+            window.setApiKey = function() {
+                const apiKey = document.getElementById('api-key-input').value;
+                if (apiKey) {
+                    localStorage.setItem('api-key', apiKey);
+                    alert('API Key set! You can now test the endpoints.');
+                } else {
+                    localStorage.removeItem('api-key');
+                    alert('API Key cleared.');
+                }
+            };
+        };
+    </script>
+</body>
+</html>

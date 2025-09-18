@@ -58,6 +58,9 @@ COPY --from=builder /app/migrations ./migrations
 # Copy seed files
 COPY --from=builder /app/seeds ./seeds
 
+# Copy documentation files
+COPY --from=builder /app/docs ./docs
+
 # Change ownership to appuser
 RUN chown -R appuser:appuser /app
 

@@ -1,0 +1,7 @@
+ApiKeyAuth:
+  type: apiKey
+  in: header
+  name: Authorization
+  description: |
+    API key for authentication. Format: "Bearer YOUR_API_KEY"
+    Example: "Bearer sk-1234567890abcdef"

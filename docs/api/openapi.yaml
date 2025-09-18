@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  $ref: './info/api-info.yaml'
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+  - url: https://api.scootinaboot.com/api/v1
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+  - {}
+
+paths:
+  /health:
+    $ref: './paths/health.yaml'
+  /scooters:
+    $ref: './paths/scooters.yaml'
+  /scooters/{id}:
+    $ref: './paths/scooter-by-id.yaml'
+  /scooters/closest:
+    $ref: './paths/scooters-closest.yaml'
+  /scooters/{id}/trip/start:
+    $ref: './paths/trip-start.yaml'
+  /scooters/{id}/trip/end:
+    $ref: './paths/trip-end.yaml'
+  /scooters/{id}/location:
+    $ref: './paths/location-update.yaml'
+
+components:
+  securitySchemes:
+    $ref: './components/security.yaml'
+  schemas:
+    $ref: './components/schemas.yaml'
+
+tags:
+  - name: System
+    description: System health and status endpoints
+  - name: Scooters
+    description: Scooter management and discovery endpoints
+  - name: Trips
+    description: Trip lifecycle management endpoints

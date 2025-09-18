@@ -1,0 +1,78 @@
+get:
+  summary: Find Closest Scooters
+  description: |
+    Finds the closest available scooters to a given location within a specified radius.
+    Results are sorted by distance from the center point.
+  operationId: getClosestScooters
+  tags:
+    - Scooters
+  parameters:
+    - name: lat
+      in: query
+      description: Latitude of the center point
+      required: true
+      schema:
+        type: number
+        format: float
+        minimum: -90
+        maximum: 90
+    - name: lng
+      in: query
+      description: Longitude of the center point
+      required: true
+      schema:
+        type: number
+        format: float
+        minimum: -180
+        maximum: 180
+    - name: radius
+      in: query
+      description: Search radius in meters
+      required: false
+      schema:
+        type: number
+        format: float
+        minimum: 1
+        maximum: 10000
+        default: 1000
+    - name: limit
+      in: query
+      description: Maximum number of scooters to return
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
+    - name: status
+      in: query
+      description: Filter scooters by status
+      required: false
+      schema:
+        type: string
+        enum: [available, occupied, maintenance, offline]
+  responses:
+    '200':
+      description: Closest scooters retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ClosestScootersResponse'
+    '400':
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '401':
+      description: Unauthorized - invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'

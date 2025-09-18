@@ -1,0 +1,59 @@
+post:
+  summary: Start Trip
+  description: |
+    Starts a new trip for a specific scooter. The scooter must be available and the user must not have an active trip.
+    The scooter status will change to 'occupied' upon successful trip start.
+  operationId: startTrip
+  tags:
+    - Trips
+  parameters:
+    - name: id
+      in: path
+      description: Unique identifier of the scooter
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas.yaml#/StartTripRequest'
+  responses:
+    '201':
+      description: Trip started successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/StartTripResponse'
+    '400':
+      description: Bad request - invalid request data or coordinates
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '401':
+      description: Unauthorized - invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '404':
+      description: Scooter or user not found
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '409':
+      description: Conflict - scooter or user already has an active trip, or scooter is not available
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'

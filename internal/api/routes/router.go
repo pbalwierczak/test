@@ -1,6 +1,10 @@
 package routes
 
 import (
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"scootin-aboot/internal/api/handlers"
 	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/services"
@@ -17,6 +21,32 @@ func SetupRoutes(router *gin.Engine, apiKey string, tripService services.TripSer
 
 	// Initialize API key validator
 	apiKeyValidator := apikey.NewValidator(apiKey)
+
+	// Documentation routes (no authentication required)
+	router.GET("/docs", func(c *gin.Context) {
+		// Serve Swagger UI
+		swaggerUIPath := filepath.Join(".", "docs", "swagger-ui.html")
+		if _, err := os.Stat(swaggerUIPath); os.IsNotExist(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Documentation not found"})
+			return
+		}
+		c.File(swaggerUIPath)
+	})
+
+	router.GET("/api-docs.yaml", func(c *gin.Context) {
+		// Serve OpenAPI specification
+		apiDocsPath := filepath.Join(".", "docs", "api", "openapi.yaml")
+		if _, err := os.Stat(apiDocsPath); os.IsNotExist(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "API documentation not found"})
+			return
+		}
+		c.File(apiDocsPath)
+	})
+
+	// Serve OpenAPI component files
+	router.Static("/paths", "./docs/api/paths")
+	router.Static("/components", "./docs/api/components")
+	router.Static("/info", "./docs/api/info")
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")

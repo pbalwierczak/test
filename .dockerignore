@@ -2,11 +2,10 @@
 .git
 .gitignore
 
-# Documentation
+# Documentation (exclude markdown files but keep docs/ directory)
 README.md
 plan.md
 plan-support.md
-docs/
 
 # Docker files
 Dockerfile*

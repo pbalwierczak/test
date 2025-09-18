@@ -1,7 +1,7 @@
 # Scootin' Aboot - Electric Scooter Management System
 # Makefile for development and build automation
 
-.PHONY: app simulator db build clean test help _build _server _simulator _test _clean _deps
+.PHONY: app simulator db build clean test help _build _server _simulator _test _clean _deps docs docs-validate docs-clean
 
 # Default target
 app:
@@ -27,6 +27,15 @@ help:
 	@echo "  _deps       - Download dependencies"
 	@echo "  seed        - Load seed data into database"
 	@echo "  seed-reset  - Reset database and reload seeds"
+	@echo ""
+	@echo "Documentation targets:"
+	@echo "  docs          - Show documentation help"
+	@echo "  docs-validate - Validate OpenAPI specification using Docker"
+	@echo "  docs-clean    - Clean documentation artifacts"
+	@echo ""
+	@echo "API Documentation:"
+	@echo "  Swagger UI is available at: http://localhost:8080/docs"
+	@echo "  OpenAPI spec is available at: http://localhost:8080/api-docs.yaml"
 	@echo "  help        - Show this help message"
 
 # Local development targets (prefixed with _)

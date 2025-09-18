@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"scootin-aboot/internal/models"
 
@@ -26,6 +27,11 @@ func ConnectDatabase(dsn string) (*gorm.DB, error) {
 	if err := sqlDB.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+
+	// Configure connection pool settings
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	log.Println("Successfully connected to database")
 	return db, nil

@@ -1,0 +1,45 @@
+get:
+  summary: Get Scooter Details
+  description: Retrieves detailed information about a specific scooter, including active trip information if applicable
+  operationId: getScooter
+  tags:
+    - Scooters
+  parameters:
+    - name: id
+      in: path
+      description: Unique identifier of the scooter
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: Scooter details retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ScooterDetailsResponse'
+    '400':
+      description: Bad request - invalid scooter ID format
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '401':
+      description: Unauthorized - invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '404':
+      description: Scooter not found
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'

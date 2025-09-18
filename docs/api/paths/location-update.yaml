@@ -1,0 +1,53 @@
+post:
+  summary: Update Scooter Location
+  description: |
+    Updates the location of a scooter during an active trip. This endpoint is typically called
+    periodically during a trip to track the scooter's movement.
+  operationId: updateLocation
+  tags:
+    - Trips
+  parameters:
+    - name: id
+      in: path
+      description: Unique identifier of the scooter
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas.yaml#/LocationUpdateRequest'
+  responses:
+    '200':
+      description: Location updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/LocationUpdateResponse'
+    '400':
+      description: Bad request - invalid request data or coordinates
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '401':
+      description: Unauthorized - invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '404':
+      description: No active trip found for scooter
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'

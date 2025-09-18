@@ -1,0 +1,16 @@
+title: Scootin' Aboot API
+description: |
+  A RESTful API for managing electric scooter sharing operations. This API provides endpoints for:
+  - Scooter management and tracking
+  - Trip lifecycle management (start, update location, end)
+  - Location-based scooter search and discovery
+  - Real-time location updates during trips
+  
+  All endpoints except `/health` require API key authentication via the `Authorization` header.
+version: 1.0.0
+contact:
+  name: Scootin' Aboot Team
+  email: support@scootinaboot.com
+license:
+  name: MIT
+  url: https://opensource.org/licenses/MIT

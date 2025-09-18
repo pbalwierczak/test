@@ -181,16 +181,6 @@ scootin-aboot/
 - [ ] **Status Monitoring**: Real-time simulation statistics
 - [ ] **API Integration**: HTTP client for server communication
 
-### 5.6 Simulator Testing
-- [ ] Test simulator architecture and initialization
-- [ ] Test user behavior simulation
-- [ ] Test scooter movement physics
-- [ ] Test concurrent goroutine management
-- [ ] Test signal handling and graceful shutdown
-- [ ] Test API integration and error handling
-- [ ] Test configuration parameter validation
-- [ ] Test movement calculation accuracy
-
 ## Phase 6: Testing & Quality Assurance (Session 6)
 
 ### 6.1 Test Coverage & Quality

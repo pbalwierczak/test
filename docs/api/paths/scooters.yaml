@@ -1,0 +1,94 @@
+get:
+  summary: List Scooters
+  description: |
+    Retrieves a list of scooters with optional filtering by status and geographic bounds.
+    Supports pagination and geographic filtering.
+  operationId: getScooters
+  tags:
+    - Scooters
+  parameters:
+    - name: status
+      in: query
+      description: Filter scooters by status
+      required: false
+      schema:
+        type: string
+        enum: [available, occupied, maintenance, offline]
+    - name: min_lat
+      in: query
+      description: Minimum latitude for geographic filtering
+      required: false
+      schema:
+        type: number
+        format: float
+        minimum: -90
+        maximum: 90
+    - name: max_lat
+      in: query
+      description: Maximum latitude for geographic filtering
+      required: false
+      schema:
+        type: number
+        format: float
+        minimum: -90
+        maximum: 90
+    - name: min_lng
+      in: query
+      description: Minimum longitude for geographic filtering
+      required: false
+      schema:
+        type: number
+        format: float
+        minimum: -180
+        maximum: 180
+    - name: max_lng
+      in: query
+      description: Maximum longitude for geographic filtering
+      required: false
+      schema:
+        type: number
+        format: float
+        minimum: -180
+        maximum: 180
+    - name: limit
+      in: query
+      description: Maximum number of scooters to return
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    - name: offset
+      in: query
+      description: Number of scooters to skip for pagination
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  responses:
+    '200':
+      description: List of scooters retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ScooterListResponse'
+    '400':
+      description: Bad request - invalid query parameters
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '401':
+      description: Unauthorized - invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yaml#/ErrorResponse'

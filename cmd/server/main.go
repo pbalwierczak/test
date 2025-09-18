@@ -41,7 +41,6 @@ func main() {
 	if err != nil {
 		utils.Fatal("Failed to get underlying sql.DB", zap.Error(err))
 	}
-	defer sqlDB.Close()
 
 	// Run database migrations
 	migrationsPath, err := database.GetMigrationsPath()
