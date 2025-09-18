@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"scootin-aboot/pkg/validation"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -43,7 +45,7 @@ func (s *Scooter) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	// Validate coordinates
-	if err := s.ValidateCoordinates(); err != nil {
+	if err := validation.ValidateCoordinates(s.CurrentLatitude, s.CurrentLongitude); err != nil {
 		return err
 	}
 
@@ -65,7 +67,7 @@ func (s *Scooter) BeforeCreate(tx *gorm.DB) error {
 // BeforeUpdate hook to validate data before update
 func (s *Scooter) BeforeUpdate(tx *gorm.DB) error {
 	// Validate coordinates
-	if err := s.ValidateCoordinates(); err != nil {
+	if err := validation.ValidateCoordinates(s.CurrentLatitude, s.CurrentLongitude); err != nil {
 		return err
 	}
 
@@ -87,17 +89,7 @@ func (s *Scooter) IsOccupied() bool {
 
 // ValidateCoordinates validates the scooter's coordinates
 func (s *Scooter) ValidateCoordinates() error {
-	// Validate latitude (-90 to 90)
-	if s.CurrentLatitude < -90 || s.CurrentLatitude > 90 {
-		return errors.New("invalid latitude: must be between -90 and 90")
-	}
-
-	// Validate longitude (-180 to 180)
-	if s.CurrentLongitude < -180 || s.CurrentLongitude > 180 {
-		return errors.New("invalid longitude: must be between -180 and 180")
-	}
-
-	return nil
+	return validation.ValidateCoordinates(s.CurrentLatitude, s.CurrentLongitude)
 }
 
 // UpdateLocation updates the scooter's location and last seen timestamp
@@ -106,7 +98,7 @@ func (s *Scooter) UpdateLocation(latitude, longitude float64) error {
 	s.CurrentLongitude = longitude
 	s.LastSeen = time.Now()
 
-	return s.ValidateCoordinates()
+	return validation.ValidateCoordinates(latitude, longitude)
 }
 
 // SetStatus updates the scooter's status

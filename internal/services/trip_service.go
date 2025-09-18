@@ -8,6 +8,7 @@ import (
 
 	"scootin-aboot/internal/models"
 	"scootin-aboot/internal/repository"
+	"scootin-aboot/pkg/validation"
 
 	"github.com/google/uuid"
 )
@@ -54,7 +55,7 @@ func NewTripService(
 // StartTrip starts a new trip for a scooter
 func (s *tripService) StartTrip(ctx context.Context, scooterID, userID uuid.UUID, lat, lng float64) (*models.Trip, error) {
 	// Validate coordinates
-	if err := validateCoordinates(lat, lng); err != nil {
+	if err := validation.ValidateCoordinates(lat, lng); err != nil {
 		return nil, fmt.Errorf("invalid coordinates: %w", err)
 	}
 
@@ -131,7 +132,7 @@ func (s *tripService) StartTrip(ctx context.Context, scooterID, userID uuid.UUID
 // EndTrip ends an active trip for a scooter
 func (s *tripService) EndTrip(ctx context.Context, scooterID uuid.UUID, lat, lng float64) (*models.Trip, error) {
 	// Validate coordinates
-	if err := validateCoordinates(lat, lng); err != nil {
+	if err := validation.ValidateCoordinates(lat, lng); err != nil {
 		return nil, fmt.Errorf("invalid coordinates: %w", err)
 	}
 
@@ -199,7 +200,7 @@ func (s *tripService) CancelTrip(ctx context.Context, scooterID uuid.UUID) (*mod
 // UpdateLocation updates the location of a scooter during an active trip
 func (s *tripService) UpdateLocation(ctx context.Context, scooterID uuid.UUID, lat, lng float64) error {
 	// Validate coordinates
-	if err := validateCoordinates(lat, lng); err != nil {
+	if err := validation.ValidateCoordinates(lat, lng); err != nil {
 		return fmt.Errorf("invalid coordinates: %w", err)
 	}
 
@@ -261,19 +262,4 @@ func (s *tripService) GetTrip(ctx context.Context, tripID uuid.UUID) (*models.Tr
 		return nil, errors.New("trip not found")
 	}
 	return trip, nil
-}
-
-// validateCoordinates validates latitude and longitude values
-func validateCoordinates(lat, lng float64) error {
-	// Validate latitude (-90 to 90)
-	if lat < -90 || lat > 90 {
-		return errors.New("invalid latitude: must be between -90 and 90")
-	}
-
-	// Validate longitude (-180 to 180)
-	if lng < -180 || lng > 180 {
-		return errors.New("invalid longitude: must be between -180 and 180")
-	}
-
-	return nil
 }

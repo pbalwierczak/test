@@ -1,8 +1,9 @@
 package models
 
 import (
-	"errors"
 	"time"
+
+	"scootin-aboot/pkg/validation"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -34,7 +35,7 @@ func (lu *LocationUpdate) BeforeCreate(tx *gorm.DB) error {
 	}
 
 	// Validate coordinates
-	if err := lu.ValidateCoordinates(); err != nil {
+	if err := validation.ValidateCoordinates(lu.Latitude, lu.Longitude); err != nil {
 		return err
 	}
 
@@ -53,17 +54,7 @@ func (lu *LocationUpdate) BeforeCreate(tx *gorm.DB) error {
 
 // ValidateCoordinates validates the location update coordinates
 func (lu *LocationUpdate) ValidateCoordinates() error {
-	// Validate latitude (-90 to 90)
-	if lu.Latitude < -90 || lu.Latitude > 90 {
-		return errors.New("invalid latitude: must be between -90 and 90")
-	}
-
-	// Validate longitude (-180 to 180)
-	if lu.Longitude < -180 || lu.Longitude > 180 {
-		return errors.New("invalid longitude: must be between -180 and 180")
-	}
-
-	return nil
+	return validation.ValidateCoordinates(lu.Latitude, lu.Longitude)
 }
 
 // CreateLocationUpdate creates a new location update
@@ -75,7 +66,7 @@ func CreateLocationUpdate(tripID uuid.UUID, latitude, longitude float64, timesta
 		Timestamp: timestamp,
 	}
 
-	if err := lu.ValidateCoordinates(); err != nil {
+	if err := validation.ValidateCoordinates(latitude, longitude); err != nil {
 		return nil, err
 	}
 

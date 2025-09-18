@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"scootin-aboot/internal/models"
 	"scootin-aboot/internal/repository"
+	"scootin-aboot/pkg/validation"
 
 	"github.com/google/uuid"
 )
@@ -239,7 +239,7 @@ func (s *scooterService) GetClosestScooters(ctx context.Context, params ClosestS
 	scootersWithDistance := make([]*ScooterWithDistance, len(scooters))
 	for i, scooter := range scooters {
 		// Calculate distance using Haversine formula
-		distance := s.calculateDistance(params.Latitude, params.Longitude, scooter.CurrentLatitude, scooter.CurrentLongitude)
+		distance := repository.HaversineDistance(params.Latitude, params.Longitude, scooter.CurrentLatitude, scooter.CurrentLongitude)
 
 		scootersWithDistance[i] = &ScooterWithDistance{
 			ScooterInfo: s.mapScooterToInfo(scooter),
@@ -265,7 +265,7 @@ func (s *scooterService) validateScooterQueryParams(params ScooterQueryParams) e
 	}
 
 	// Validate geographic bounds
-	if err := s.validateGeographicBounds(params.MinLat, params.MaxLat, params.MinLng, params.MaxLng); err != nil {
+	if err := repository.ValidateGeographicBounds(params.MinLat, params.MaxLat, params.MinLng, params.MaxLng); err != nil {
 		return err
 	}
 
@@ -286,7 +286,7 @@ func (s *scooterService) validateScooterQueryParams(params ScooterQueryParams) e
 // validateClosestScootersParams validates closest scooters query parameters
 func (s *scooterService) validateClosestScootersParams(params ClosestScootersQueryParams) error {
 	// Validate coordinates
-	if err := s.validateCoordinates(params.Latitude, params.Longitude); err != nil {
+	if err := validation.ValidateCoordinates(params.Latitude, params.Longitude); err != nil {
 		return err
 	}
 
@@ -312,72 +312,6 @@ func (s *scooterService) validateClosestScootersParams(params ClosestScootersQue
 	}
 
 	return nil
-}
-
-// validateGeographicBounds validates geographic bounding box parameters
-func (s *scooterService) validateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
-	// Check if any bounds are provided
-	if minLat == 0 && maxLat == 0 && minLng == 0 && maxLng == 0 {
-		return nil // No bounds provided, that's okay
-	}
-
-	// Validate individual coordinates
-	if err := s.validateCoordinates(minLat, minLng); err != nil {
-		return fmt.Errorf("invalid min bounds: %w", err)
-	}
-	if err := s.validateCoordinates(maxLat, maxLng); err != nil {
-		return fmt.Errorf("invalid max bounds: %w", err)
-	}
-
-	// Validate bounds consistency
-	if minLat >= maxLat {
-		return errors.New("min_lat must be less than max_lat")
-	}
-	if minLng >= maxLng {
-		return errors.New("min_lng must be less than max_lng")
-	}
-
-	// Check for reasonable bounds (not too large)
-	latDiff := maxLat - minLat
-	lngDiff := maxLng - minLng
-	if latDiff > 10 || lngDiff > 10 {
-		return errors.New("geographic bounds are too large (max 10 degrees)")
-	}
-
-	return nil
-}
-
-// validateCoordinates validates latitude and longitude values
-func (s *scooterService) validateCoordinates(lat, lng float64) error {
-	if lat < -90 || lat > 90 {
-		return errors.New("latitude must be between -90 and 90")
-	}
-	if lng < -180 || lng > 180 {
-		return errors.New("longitude must be between -180 and 180")
-	}
-	return nil
-}
-
-// calculateDistance calculates distance between two points using Haversine formula
-func (s *scooterService) calculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
-	const earthRadius = 6371 // Earth's radius in kilometers
-
-	// Convert degrees to radians
-	lat1Rad := lat1 * math.Pi / 180
-	lon1Rad := lon1 * math.Pi / 180
-	lat2Rad := lat2 * math.Pi / 180
-	lon2Rad := lon2 * math.Pi / 180
-
-	// Haversine formula
-	dlat := lat2Rad - lat1Rad
-	dlon := lon2Rad - lon1Rad
-
-	a := math.Sin(dlat/2)*math.Sin(dlat/2) +
-		math.Cos(lat1Rad)*math.Cos(lat2Rad)*
-			math.Sin(dlon/2)*math.Sin(dlon/2)
-	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-
-	return earthRadius * c
 }
 
 // mapScooterToInfo maps a scooter model to scooter info

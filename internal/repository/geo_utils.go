@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"sort"
 )
@@ -65,6 +67,50 @@ func NewBoundingBox(centerLat, centerLng, radiusKm float64) BoundingBox {
 // Contains checks if a point is within the bounding box
 func (bb BoundingBox) Contains(lat, lng float64) bool {
 	return IsPointInBounds(lat, lng, bb.MinLat, bb.MaxLat, bb.MinLng, bb.MaxLng)
+}
+
+// ValidateGeographicBounds validates geographic bounding box parameters
+func ValidateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
+	// Check if any bounds are provided
+	if minLat == 0 && maxLat == 0 && minLng == 0 && maxLng == 0 {
+		return nil // No bounds provided, that's okay
+	}
+
+	// Validate individual coordinates
+	if err := validateCoordinates(minLat, minLng); err != nil {
+		return fmt.Errorf("invalid min bounds: %w", err)
+	}
+	if err := validateCoordinates(maxLat, maxLng); err != nil {
+		return fmt.Errorf("invalid max bounds: %w", err)
+	}
+
+	// Validate bounds consistency
+	if minLat >= maxLat {
+		return errors.New("min_lat must be less than max_lat")
+	}
+	if minLng >= maxLng {
+		return errors.New("min_lng must be less than max_lng")
+	}
+
+	// Check for reasonable bounds (not too large)
+	latDiff := maxLat - minLat
+	lngDiff := maxLng - minLng
+	if latDiff > 10 || lngDiff > 10 {
+		return errors.New("geographic bounds are too large (max 10 degrees)")
+	}
+
+	return nil
+}
+
+// validateCoordinates validates latitude and longitude values
+func validateCoordinates(lat, lng float64) error {
+	if lat < -90 || lat > 90 {
+		return errors.New("latitude must be between -90 and 90")
+	}
+	if lng < -180 || lng > 180 {
+		return errors.New("longitude must be between -180 and 180")
+	}
+	return nil
 }
 
 // Expand expands the bounding box by the given radius
