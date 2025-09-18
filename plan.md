@@ -148,23 +148,6 @@ scootin-aboot/
 - [x] Add geographic indexing for performance
 - [x] Optimize database queries with indexes
 
-### 4.3 Location Services
-- [ ] Validate geographical coordinates
-- [ ] Implement distance calculations (Haversine formula)
-- [ ] Add location history tracking
-- [ ] Implement geographic bounding box queries
-- [ ] Add PostGIS integration for advanced geographic queries
-
-### 4.4 Service Layer Testing
-- [ ] Test trip lifecycle management
-- [ ] Test scooter status validation logic
-- [ ] Test concurrent trip handling
-- [ ] Test location update validation
-- [ ] Test geographic filtering algorithms
-- [ ] Test distance calculation accuracy
-- [ ] Test database query optimization
-- [ ] Test pagination functionality
-
 ## Phase 5: Advanced Simulator Implementation (Session 5)
 
 ### 5.1 Simulator Architecture
