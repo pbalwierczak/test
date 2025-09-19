@@ -84,10 +84,32 @@ func (s *Simulator) Start() error {
 
 // Stop gracefully stops the simulation
 func (s *Simulator) Stop() {
-	utils.Info("Stopping simulation...")
+	utils.Info("Stopping simulation gracefully...")
+
+	// Check for active trips before shutdown
+	activeTrips := s.getActiveTripsCount()
+	if activeTrips > 0 {
+		utils.Info("Active trips detected, waiting for completion", zap.Int("active_trips", activeTrips))
+	}
+
+	utils.Info("Cancelling context to signal shutdown to all goroutines...")
 	s.cancel()
+
+	utils.Info("Waiting for all goroutines to complete...")
 	s.wg.Wait()
-	utils.Info("Simulation stopped")
+
+	utils.Info("Simulation stopped gracefully - all trips completed")
+}
+
+// getActiveTripsCount returns the number of users currently in trips
+func (s *Simulator) getActiveTripsCount() int {
+	count := 0
+	for _, user := range s.users {
+		if user.getInTrip() {
+			count++
+		}
+	}
+	return count
 }
 
 // initializeScooters fetches existing scooters from the API and creates scooter instances
