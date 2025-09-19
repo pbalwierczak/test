@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestNewScooterServiceRefactored(t *testing.T) {
+func TestNewScooterService(t *testing.T) {
 	mockSetup := &MockSetup{}
 	service, _, _, _, _ := mockSetup.CreateTestScooterService()
 
 	assert.NotNil(t, service)
 }
 
-func TestScooterService_GetScootersRefactored(t *testing.T) {
+func TestScooterService_GetScooters(t *testing.T) {
 	testCases := &ScooterTestCases{}
 	cases := testCases.GetScootersTestCases()
 
@@ -45,7 +45,7 @@ func TestScooterService_GetScootersRefactored(t *testing.T) {
 	}
 }
 
-func TestScooterService_GetScooters_InvalidParamsRefactored(t *testing.T) {
+func TestScooterService_GetScooters_InvalidParams(t *testing.T) {
 	invalidParams := GetInvalidScooterQueryParams()
 	mockSetup := &MockSetup{}
 
@@ -61,7 +61,7 @@ func TestScooterService_GetScooters_InvalidParamsRefactored(t *testing.T) {
 	}
 }
 
-func TestScooterService_GetScooters_PaginationRefactored(t *testing.T) {
+func TestScooterService_GetScooters_Pagination(t *testing.T) {
 	mockSetup := &MockSetup{}
 	service, scooterRepo, _, _, _ := mockSetup.CreateTestScooterService()
 
@@ -86,7 +86,7 @@ func TestScooterService_GetScooters_PaginationRefactored(t *testing.T) {
 	scooterRepo.AssertExpectations(t)
 }
 
-func TestScooterService_GetScooterRefactored(t *testing.T) {
+func TestScooterService_GetScooter(t *testing.T) {
 	testCases := &ScooterTestCases{}
 	cases := testCases.GetScooterTestCases()
 
@@ -115,7 +115,7 @@ func TestScooterService_GetScooterRefactored(t *testing.T) {
 	}
 }
 
-func TestScooterService_GetClosestScootersRefactored(t *testing.T) {
+func TestScooterService_GetClosestScooters(t *testing.T) {
 	testCases := &ScooterTestCases{}
 	cases := testCases.GetClosestScootersTestCases()
 
@@ -146,7 +146,7 @@ func TestScooterService_GetClosestScootersRefactored(t *testing.T) {
 	}
 }
 
-func TestScooterService_GetClosestScooters_InvalidParamsRefactored(t *testing.T) {
+func TestScooterService_GetClosestScooters_InvalidParams(t *testing.T) {
 	invalidParams := GetInvalidClosestScootersQueryParams()
 	mockSetup := &MockSetup{}
 
@@ -162,7 +162,7 @@ func TestScooterService_GetClosestScooters_InvalidParamsRefactored(t *testing.T)
 	}
 }
 
-func TestScooterService_UpdateLocationRefactored(t *testing.T) {
+func TestScooterService_UpdateLocation(t *testing.T) {
 	testCases := &ScooterTestCases{}
 	cases := testCases.UpdateLocationTestCases()
 
@@ -191,7 +191,7 @@ func TestScooterService_UpdateLocationRefactored(t *testing.T) {
 	}
 }
 
-func TestScooterService_UpdateLocation_InvalidCoordinatesRefactored(t *testing.T) {
+func TestScooterService_UpdateLocation_InvalidCoordinates(t *testing.T) {
 	mockSetup := &MockSetup{}
 	service, _, _, _, _ := mockSetup.CreateTestScooterService()
 
@@ -202,7 +202,7 @@ func TestScooterService_UpdateLocation_InvalidCoordinatesRefactored(t *testing.T
 }
 
 // Validation tests
-func TestValidateScooterQueryParams(t *testing.T) {
+func TestScooterService_ValidateScooterQueryParams(t *testing.T) {
 	service := &scooterService{}
 
 	t.Run("valid params", func(t *testing.T) {
@@ -240,7 +240,7 @@ func TestValidateScooterQueryParams(t *testing.T) {
 	})
 }
 
-func TestValidateClosestScootersParams(t *testing.T) {
+func TestScooterService_ValidateClosestScootersParams(t *testing.T) {
 	service := &scooterService{}
 
 	t.Run("valid params", func(t *testing.T) {
@@ -311,7 +311,7 @@ func TestValidateClosestScootersParams(t *testing.T) {
 	})
 }
 
-func TestMapScooterToInfo(t *testing.T) {
+func TestScooterService_MapScooterToInfo(t *testing.T) {
 	service := &scooterService{}
 
 	t.Run("complete scooter", func(t *testing.T) {
