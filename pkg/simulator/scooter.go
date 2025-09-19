@@ -152,13 +152,24 @@ func (s *Scooter) updateLocation() {
 	// Send location update via publisher
 	heading := s.CurrentTrip.Direction
 	speed := 15.0 // Mock speed for now
+
+	logger.Debug("Publishing location update event",
+		logger.Int("scooter_id", s.ID),
+		logger.String("trip_id", s.CurrentTrip.ID),
+		logger.Float64("lat", s.Location.Latitude),
+		logger.Float64("lng", s.Location.Longitude),
+		logger.Float64("heading", heading),
+		logger.Float64("speed", speed),
+	)
+
 	if err := s.Publisher.PublishLocationUpdated(s.Ctx, s.getScooterID(), s.CurrentTrip.ID, s.Location.Latitude, s.Location.Longitude, heading, speed); err != nil {
-		logger.Error("Failed to publish location update",
+		logger.Error("Failed to publish location update event",
 			logger.Int("scooter_id", s.ID),
+			logger.String("trip_id", s.CurrentTrip.ID),
 			logger.ErrorField(err),
 		)
 	} else {
-		logger.Debug("Scooter location updated",
+		logger.Debug("Location update event published successfully",
 			logger.Int("scooter_id", s.ID),
 			logger.String("trip_id", s.CurrentTrip.ID),
 			logger.Float64("lat", s.Location.Latitude),
@@ -196,7 +207,7 @@ func (s *Scooter) StartTrip(tripID, userID string) {
 	}
 	s.Status = "occupied"
 
-	logger.Info("Scooter trip started",
+	logger.Info("Scooter trip state changed to started",
 		logger.Int("scooter_id", s.ID),
 		logger.String("trip_id", tripID),
 		logger.String("user_id", userID),
@@ -209,7 +220,7 @@ func (s *Scooter) EndTrip() {
 	if s.CurrentTrip != nil {
 		duration := time.Since(s.CurrentTrip.StartTime)
 
-		logger.Info("Scooter trip ended",
+		logger.Info("Scooter trip state changed to ended",
 			logger.Int("scooter_id", s.ID),
 			logger.String("trip_id", s.CurrentTrip.ID),
 			logger.String("user_id", s.CurrentTrip.UserID),
@@ -288,6 +299,14 @@ func (s *Scooter) startRandomTrip() {
 	s.StartTrip(tripID, userID)
 
 	// Send trip start event via publisher
+	logger.Info("Publishing trip start event",
+		logger.Int("scooter_id", s.ID),
+		logger.String("trip_id", tripID),
+		logger.String("user_id", userID),
+		logger.Float64("lat", s.Location.Latitude),
+		logger.Float64("lng", s.Location.Longitude),
+	)
+
 	if err := s.Publisher.PublishTripStarted(s.Ctx, tripID, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude); err != nil {
 		logger.Error("Failed to publish trip start event",
 			logger.Int("scooter_id", s.ID),
@@ -299,7 +318,7 @@ func (s *Scooter) startRandomTrip() {
 		s.EndTrip()
 		s.UserTracker.MarkUserInactive(userID)
 	} else {
-		logger.Info("Trip started successfully",
+		logger.Info("Trip start event published successfully",
 			logger.Int("scooter_id", s.ID),
 			logger.String("trip_id", s.CurrentTrip.ID),
 			logger.String("user_id", userID),
@@ -320,6 +339,14 @@ func (s *Scooter) EndCurrentTrip() {
 	userID := s.CurrentTrip.UserID
 
 	// Send trip end event via publisher
+	logger.Info("Publishing trip end event",
+		logger.Int("scooter_id", s.ID),
+		logger.String("trip_id", tripID),
+		logger.String("user_id", userID),
+		logger.Float64("lat", s.Location.Latitude),
+		logger.Float64("lng", s.Location.Longitude),
+	)
+
 	if err := s.Publisher.PublishTripEnded(s.Ctx, tripID, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude, s.CurrentTrip.StartTime); err != nil {
 		logger.Error("Failed to publish trip end event",
 			logger.Int("scooter_id", s.ID),
@@ -328,7 +355,7 @@ func (s *Scooter) EndCurrentTrip() {
 			logger.ErrorField(err),
 		)
 	} else {
-		logger.Info("Trip ended successfully",
+		logger.Info("Trip end event published successfully",
 			logger.Int("scooter_id", s.ID),
 			logger.String("trip_id", tripID),
 			logger.String("user_id", userID),
