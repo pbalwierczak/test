@@ -34,9 +34,8 @@ type Trip struct {
 	DeletedAt      gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
 
 	// Relationships
-	Scooter         Scooter          `json:"scooter,omitempty" gorm:"foreignKey:ScooterID"`
-	User            User             `json:"user,omitempty" gorm:"foreignKey:UserID"`
-	LocationUpdates []LocationUpdate `json:"location_updates,omitempty" gorm:"foreignKey:TripID"`
+	Scooter Scooter `json:"scooter,omitempty" gorm:"foreignKey:ScooterID"`
+	User    User    `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
 // TableName returns the table name for the Trip model

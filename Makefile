@@ -1,21 +1,13 @@
-# Scootin' Aboot - Electric Scooter Management System
-# Makefile for development and build automation
-
 .PHONY: app simulator db build clean test help _build _server _simulator _test _clean _deps docs docs-validate docs-clean
 
-# Default target
 app:
 	@echo "Building and starting app with database..."
 	@docker-compose up --build
 
-# Help target
 help:
 	@echo "Scootin' Aboot - Available targets:"
 	@echo "  app          - Build and run app with database (default)"
 	@echo "  simulator    - Build and run simulator (Docker)"
-	@echo "  simulator-test - Test simulator connectivity to external app"
-	@echo "  simulator-run - Run simulator locally with logging"
-	@echo "  simulator-stop - Stop running simulator"
 	@echo "  simulator-tail-logs - Follow simulator logs"
 	@echo "  simulator-clean-logs - Clean log files"
 	@echo "  dev          - Run both server and simulator locally"
@@ -49,7 +41,6 @@ help:
 	@echo "  OpenAPI spec is available at: http://localhost:8080/api-docs.yaml"
 	@echo "  help        - Show this help message"
 
-# Local development targets (prefixed with _)
 _build: _deps
 	@echo "Building server..."
 	@go build -o bin/server ./cmd/server
@@ -85,18 +76,6 @@ simulator-tail-logs:
 	@echo "Following simulator logs (Ctrl+C to stop)..."
 	@tail -f simulator.log
 
-simulator-run:
-	@echo "Starting simulator with logging..."
-	@go run ./cmd/simulator > simulator.log 2>&1 &
-	@echo "Simulator started in background. Logs are being written to simulator.log"
-	@echo "Use 'make simulator-stop' to stop the simulator"
-	@echo "Use 'make simulator-tail-logs' to follow the logs"
-
-simulator-stop:
-	@echo "Stopping simulator..."
-	@pkill -f "go run ./cmd/simulator" || pkill -f "./bin/simulator" || echo "No simulator process found"
-	@echo "Simulator stopped"
-
 dev:
 	@echo "Starting development environment..."
 	@echo "Starting server in background..."
@@ -121,7 +100,6 @@ _deps:
 	@go mod download
 	@go mod tidy
 
-# Docker targets (primary workflow)
 simulator:
 	@echo "Building and starting simulator..."
 	@if ! docker network ls | grep -q "scootin-aboot-app_scootin-network"; then \
@@ -154,7 +132,6 @@ test:
 	@docker build --target test -t scootin-test .
 	@docker run --rm scootin-test go test -v ./...
 
-# Database seed commands
 seed:
 	@echo "⚠️  WARNING: This will TRUNCATE all tables and reload seed data!"
 	@echo "Tables that will be cleared: users, scooters, trips, location_updates"
