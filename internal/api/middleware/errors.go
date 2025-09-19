@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// ErrorResponse represents a standardized error response
 type ErrorResponse struct {
 	Error   string            `json:"error"`
 	Message string            `json:"message"`
@@ -17,16 +16,13 @@ type ErrorResponse struct {
 	Details map[string]string `json:"details,omitempty"`
 }
 
-// ErrorHandlerMiddleware handles errors and provides consistent error responses
 func ErrorHandlerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-		// Handle errors that were set by handlers
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
 
-			// Log the error
 			utils.Error("Request error",
 				zap.String("method", c.Request.Method),
 				zap.String("path", c.Request.URL.Path),
@@ -34,16 +30,13 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 				zap.Error(err.Err),
 			)
 
-			// Determine the appropriate status code and response
 			statusCode := http.StatusInternalServerError
 			message := "Internal server error"
 
-			// Check if it's a custom error type
 			if customErr, ok := err.Err.(*APIError); ok {
 				statusCode = customErr.Code
 				message = customErr.Message
 			} else {
-				// Handle common error types
 				switch err.Type {
 				case gin.ErrorTypeBind:
 					statusCode = http.StatusBadRequest
@@ -57,7 +50,6 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 				}
 			}
 
-			// Send error response
 			c.JSON(statusCode, ErrorResponse{
 				Error:   http.StatusText(statusCode),
 				Message: message,
@@ -67,19 +59,16 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 	}
 }
 
-// APIError represents a custom API error
 type APIError struct {
 	Code    int               `json:"code"`
 	Message string            `json:"message"`
 	Details map[string]string `json:"details,omitempty"`
 }
 
-// Error implements the error interface
 func (e *APIError) Error() string {
 	return e.Message
 }
 
-// NewAPIError creates a new API error
 func NewAPIError(code int, message string) *APIError {
 	return &APIError{
 		Code:    code,
@@ -87,7 +76,6 @@ func NewAPIError(code int, message string) *APIError {
 	}
 }
 
-// NewAPIErrorWithDetails creates a new API error with additional details
 func NewAPIErrorWithDetails(code int, message string, details map[string]string) *APIError {
 	return &APIError{
 		Code:    code,
@@ -96,7 +84,6 @@ func NewAPIErrorWithDetails(code int, message string, details map[string]string)
 	}
 }
 
-// Common error responses
 var (
 	ErrInvalidRequest      = NewAPIError(http.StatusBadRequest, "Invalid request")
 	ErrUnauthorized        = NewAPIError(http.StatusUnauthorized, "Unauthorized")
