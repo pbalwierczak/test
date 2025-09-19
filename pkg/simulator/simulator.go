@@ -45,23 +45,14 @@ func NewSimulator(cfg *config.Config) (*Simulator, error) {
 	// Create API client
 	client := NewAPIClient(cfg.SimulatorServerURL, cfg.APIKey)
 
-	// Create appropriate publisher based on configuration
-	var publisher EventPublisher
-
-	if cfg.SimulatorMode == "kafka" {
-		// Create Kafka producer
-		kafkaProducer, err := kafka.NewKafkaProducer(&cfg.KafkaConfig)
-		if err != nil {
-			cancel() // Clean up context on error
-			return nil, fmt.Errorf("failed to create Kafka producer: %w", err)
-		}
-		publisher = NewKafkaEventPublisher(kafkaProducer)
-		logger.Info("Using Kafka event publisher")
-	} else {
-		// Use REST publisher
-		publisher = NewRESTEventPublisher(client)
-		logger.Info("Using REST event publisher")
+	// Create Kafka producer
+	kafkaProducer, err := kafka.NewKafkaProducer(&cfg.KafkaConfig)
+	if err != nil {
+		cancel() // Clean up context on error
+		return nil, fmt.Errorf("failed to create Kafka producer: %w", err)
 	}
+	publisher := NewKafkaEventPublisher(kafkaProducer)
+	logger.Info("Using Kafka event publisher")
 
 	return &Simulator{
 		config:      cfg,

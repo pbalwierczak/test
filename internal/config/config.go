@@ -30,7 +30,6 @@ type Config struct {
 	SimulatorTripDurationMax int
 	SimulatorRestMin         int
 	SimulatorRestMax         int
-	SimulatorMode            string // "rest" or "kafka"
 
 	KafkaConfig KafkaConfig
 
@@ -85,7 +84,6 @@ func Load() (*Config, error) {
 		SimulatorTripDurationMax: getEnvAsInt("SIMULATOR_TRIP_DURATION_MAX", 10),
 		SimulatorRestMin:         getEnvAsInt("SIMULATOR_REST_MIN", 2),
 		SimulatorRestMax:         getEnvAsInt("SIMULATOR_REST_MAX", 5),
-		SimulatorMode:            getEnv("SIMULATOR_MODE", "kafka"),
 
 		KafkaConfig: KafkaConfig{
 			Brokers:          getEnvAsStringSlice("KAFKA_BROKERS", []string{"localhost:9092"}),
