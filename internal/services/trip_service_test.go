@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewTripServiceRefactored(t *testing.T) {
+func TestNewTripService(t *testing.T) {
 	mockSetup := &MockSetup{}
 	service, _, _, _, _, _ := mockSetup.CreateTestTripService()
 
 	assert.NotNil(t, service)
 }
 
-func TestTripService_StartTripRefactored(t *testing.T) {
+func TestTripService_StartTrip(t *testing.T) {
 	testCases := &TripTestCases{}
 	cases := testCases.StartTripTestCases()
 
@@ -51,7 +51,7 @@ func TestTripService_StartTripRefactored(t *testing.T) {
 	}
 }
 
-func TestTripService_EndTripRefactored(t *testing.T) {
+func TestTripService_EndTrip(t *testing.T) {
 	testCases := &TripTestCases{}
 	cases := testCases.EndTripTestCases()
 
@@ -86,7 +86,7 @@ func TestTripService_EndTripRefactored(t *testing.T) {
 	}
 }
 
-func TestTripService_UpdateLocationRefactored(t *testing.T) {
+func TestTripService_UpdateLocation(t *testing.T) {
 	testCases := &TripTestCases{}
 	cases := testCases.UpdateLocationTestCases()
 
@@ -115,7 +115,7 @@ func TestTripService_UpdateLocationRefactored(t *testing.T) {
 	}
 }
 
-func TestTripService_CancelTripRefactored(t *testing.T) {
+func TestTripService_CancelTrip(t *testing.T) {
 	testCases := &TripTestCases{}
 	cases := testCases.CancelTripTestCases()
 
@@ -147,7 +147,7 @@ func TestTripService_CancelTripRefactored(t *testing.T) {
 	}
 }
 
-func TestTripService_GetActiveTripRefactored(t *testing.T) {
+func TestTripService_GetActiveTrip(t *testing.T) {
 	testCases := &TripTestCases{}
 	cases := testCases.GetActiveTripTestCases()
 
@@ -183,7 +183,7 @@ func TestTripService_GetActiveTripRefactored(t *testing.T) {
 	}
 }
 
-func TestTripService_GetActiveTripByUserRefactored(t *testing.T) {
+func TestTripService_GetActiveTripByUser(t *testing.T) {
 	testCases := &TripTestCases{}
 	cases := testCases.GetActiveTripByUserTestCases()
 
@@ -219,7 +219,7 @@ func TestTripService_GetActiveTripByUserRefactored(t *testing.T) {
 	}
 }
 
-func TestTripService_GetTripRefactored(t *testing.T) {
+func TestTripService_GetTrip(t *testing.T) {
 	testCases := &TripTestCases{}
 	cases := testCases.GetTripTestCases()
 
