@@ -85,16 +85,6 @@ func (r *gormScooterRepository) GetByStatus(ctx context.Context, status models.S
 	return scooters, err
 }
 
-// GetAvailable retrieves available scooters
-func (r *gormScooterRepository) GetAvailable(ctx context.Context) ([]*models.Scooter, error) {
-	return r.GetByStatus(ctx, models.ScooterStatusAvailable)
-}
-
-// GetOccupied retrieves occupied scooters
-func (r *gormScooterRepository) GetOccupied(ctx context.Context) ([]*models.Scooter, error) {
-	return r.GetByStatus(ctx, models.ScooterStatusOccupied)
-}
-
 // GetInBounds retrieves scooters within geographic bounds
 func (r *gormScooterRepository) GetInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64) ([]*models.Scooter, error) {
 	var scooters []*models.Scooter
@@ -143,21 +133,6 @@ func (r *gormScooterRepository) GetClosestWithRadius(ctx context.Context, latitu
 	filteredScooters := FilterAndSortByDistance(scooters, latitude, longitude, radius, limit)
 
 	return filteredScooters, nil
-}
-
-// GetInRadius retrieves scooters within a radius of a given location
-func (r *gormScooterRepository) GetInRadius(ctx context.Context, latitude, longitude, radiusKm float64) ([]*models.Scooter, error) {
-	return r.GetClosestWithRadius(ctx, latitude, longitude, radiusKm, "", 0)
-}
-
-// GetAvailableInBounds retrieves available scooters within geographic bounds
-func (r *gormScooterRepository) GetAvailableInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64) ([]*models.Scooter, error) {
-	var scooters []*models.Scooter
-	err := r.db.WithContext(ctx).
-		Where("status = ? AND current_latitude BETWEEN ? AND ? AND current_longitude BETWEEN ? AND ?",
-			models.ScooterStatusAvailable, minLat, maxLat, minLng, maxLng).
-		Find(&scooters).Error
-	return scooters, err
 }
 
 // GetByStatusInBounds retrieves scooters by status within geographic bounds

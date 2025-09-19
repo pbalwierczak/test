@@ -57,16 +57,6 @@ func (m *MockScooterRepository) GetByStatus(ctx context.Context, status models.S
 	return args.Get(0).([]*models.Scooter), args.Error(1)
 }
 
-func (m *MockScooterRepository) GetAvailable(ctx context.Context) ([]*models.Scooter, error) {
-	args := m.Called(ctx)
-	return args.Get(0).([]*models.Scooter), args.Error(1)
-}
-
-func (m *MockScooterRepository) GetOccupied(ctx context.Context) ([]*models.Scooter, error) {
-	args := m.Called(ctx)
-	return args.Get(0).([]*models.Scooter), args.Error(1)
-}
-
 func (m *MockScooterRepository) GetInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64) ([]*models.Scooter, error) {
 	args := m.Called(ctx, minLat, maxLat, minLng, maxLng)
 	return args.Get(0).([]*models.Scooter), args.Error(1)
@@ -79,16 +69,6 @@ func (m *MockScooterRepository) GetClosest(ctx context.Context, latitude, longit
 
 func (m *MockScooterRepository) GetClosestWithRadius(ctx context.Context, latitude, longitude, radius float64, status string, limit int) ([]*models.Scooter, error) {
 	args := m.Called(ctx, latitude, longitude, radius, status, limit)
-	return args.Get(0).([]*models.Scooter), args.Error(1)
-}
-
-func (m *MockScooterRepository) GetInRadius(ctx context.Context, latitude, longitude, radiusKm float64) ([]*models.Scooter, error) {
-	args := m.Called(ctx, latitude, longitude, radiusKm)
-	return args.Get(0).([]*models.Scooter), args.Error(1)
-}
-
-func (m *MockScooterRepository) GetAvailableInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64) ([]*models.Scooter, error) {
-	args := m.Called(ctx, minLat, maxLat, minLng, maxLng)
 	return args.Get(0).([]*models.Scooter), args.Error(1)
 }
 
