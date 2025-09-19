@@ -26,21 +26,6 @@ type User struct {
 	SearchCount  int      // Number of searches performed
 }
 
-// NewUser creates a new user simulator
-func NewUser(ctx context.Context, client *APIClient, id int, cfg *config.Config) (*User, error) {
-	movement := NewMovement(cfg)
-	return &User{
-		ID:           id,
-		ctx:          ctx,
-		client:       client,
-		config:       cfg,
-		movement:     movement,
-		Location:     movement.GetRandomLocation(),
-		SearchRadius: 1000, // Default 1km radius
-		SearchCount:  0,
-	}, nil
-}
-
 // NewUserWithID creates a new user simulator with a specific user ID
 func NewUserWithID(ctx context.Context, client *APIClient, id int, userID string, cfg *config.Config) (*User, error) {
 	movement := NewMovement(cfg)
@@ -123,6 +108,7 @@ func (u *User) searchForScooters() {
 
 	if len(scooters) == 0 {
 		utils.Debug("No available scooters found",
+			zap.String("test_user_id", u.UserID),
 			zap.Int("user_id", u.ID),
 			zap.String("search_type", searchType),
 			zap.Float64("lat", u.Location.Latitude),
@@ -134,7 +120,8 @@ func (u *User) searchForScooters() {
 
 	// Log that we found scooters (simulating user browsing)
 	utils.Info("Found available scooters",
-		zap.Int("user_id", u.ID),
+		zap.Int("test_user_id", u.ID),
+		zap.String("test_user_id", u.UserID),
 		zap.String("search_type", searchType),
 		zap.Int("count", len(scooters)),
 		zap.Float64("lat", u.Location.Latitude),
