@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -347,6 +348,377 @@ func TestTripService_UpdateLocation(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.expectedError)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			// Verify all expectations were met
+			tripRepo.AssertExpectations(t)
+			scooterRepo.AssertExpectations(t)
+			userRepo.AssertExpectations(t)
+			locationRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestTripService_CancelTrip(t *testing.T) {
+	tests := []struct {
+		name          string
+		scooterID     uuid.UUID
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		expectedError string
+		expectedTrip  *models.Trip
+	}{
+		{
+			name:      "successful trip cancellation",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				// Active trip exists
+				trip := &models.Trip{
+					ID:        uuid.New(),
+					ScooterID: uuid.New(),
+					UserID:    uuid.New(),
+					Status:    models.TripStatusActive,
+				}
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+
+				// Trip cancellation succeeds
+				tripRepo.On("CancelTrip", mock.Anything, mock.Anything).Return(nil)
+
+				// Scooter status update succeeds
+				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, mock.Anything, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(nil)
+			},
+			expectedError: "",
+		},
+		{
+			name:      "no active trip found",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
+			},
+			expectedError: "no active trip found for scooter",
+		},
+		{
+			name:      "repository error when getting active trip",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedError: "failed to get active trip: database error",
+		},
+		{
+			name:      "repository error when cancelling trip",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				trip := &models.Trip{
+					ID:        uuid.New(),
+					ScooterID: uuid.New(),
+					UserID:    uuid.New(),
+					Status:    models.TripStatusActive,
+				}
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+				tripRepo.On("CancelTrip", mock.Anything, mock.Anything).Return(errors.New("database error"))
+			},
+			expectedError: "failed to cancel trip: database error",
+		},
+		{
+			name:      "repository error when updating scooter status",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				trip := &models.Trip{
+					ID:        uuid.New(),
+					ScooterID: uuid.New(),
+					UserID:    uuid.New(),
+					Status:    models.TripStatusActive,
+				}
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+				tripRepo.On("CancelTrip", mock.Anything, mock.Anything).Return(nil)
+				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, mock.Anything, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(errors.New("database error"))
+			},
+			expectedError: "failed to update scooter status: database error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create mock repositories
+			tripRepo := &mocks.MockTripRepository{}
+			scooterRepo := &mocks.MockScooterRepository{}
+			userRepo := &mocks.MockUserRepository{}
+			locationRepo := &mocks.MockLocationUpdateRepository{}
+
+			// Setup mocks
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Create service
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Call method
+			trip, err := service.CancelTrip(context.Background(), tt.scooterID)
+
+			// Assertions
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, trip)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, trip)
+				assert.Equal(t, models.TripStatusCancelled, trip.Status)
+			}
+
+			// Verify all expectations were met
+			tripRepo.AssertExpectations(t)
+			scooterRepo.AssertExpectations(t)
+			userRepo.AssertExpectations(t)
+			locationRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestTripService_GetActiveTrip(t *testing.T) {
+	tests := []struct {
+		name          string
+		scooterID     uuid.UUID
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		expectedError string
+		expectedTrip  *models.Trip
+	}{
+		{
+			name:      "successful get active trip",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				trip := &models.Trip{
+					ID:        uuid.New(),
+					ScooterID: uuid.New(),
+					UserID:    uuid.New(),
+					Status:    models.TripStatusActive,
+				}
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+			},
+			expectedError: "",
+			expectedTrip: &models.Trip{
+				Status: models.TripStatusActive,
+			},
+		},
+		{
+			name:      "no active trip found",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
+			},
+			expectedError: "",
+			expectedTrip:  nil,
+		},
+		{
+			name:      "repository error",
+			scooterID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedError: "failed to get active trip: database error",
+			expectedTrip:  nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create mock repositories
+			tripRepo := &mocks.MockTripRepository{}
+			scooterRepo := &mocks.MockScooterRepository{}
+			userRepo := &mocks.MockUserRepository{}
+			locationRepo := &mocks.MockLocationUpdateRepository{}
+
+			// Setup mocks
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Create service
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Call method
+			trip, err := service.GetActiveTrip(context.Background(), tt.scooterID)
+
+			// Assertions
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, trip)
+			} else {
+				assert.NoError(t, err)
+				if tt.expectedTrip == nil {
+					assert.Nil(t, trip)
+				} else {
+					assert.NotNil(t, trip)
+					assert.Equal(t, tt.expectedTrip.Status, trip.Status)
+				}
+			}
+
+			// Verify all expectations were met
+			tripRepo.AssertExpectations(t)
+			scooterRepo.AssertExpectations(t)
+			userRepo.AssertExpectations(t)
+			locationRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestTripService_GetActiveTripByUser(t *testing.T) {
+	tests := []struct {
+		name          string
+		userID        uuid.UUID
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		expectedError string
+		expectedTrip  *models.Trip
+	}{
+		{
+			name:   "successful get active trip by user",
+			userID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				trip := &models.Trip{
+					ID:     uuid.New(),
+					UserID: uuid.New(),
+					Status: models.TripStatusActive,
+				}
+				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(trip, nil)
+			},
+			expectedError: "",
+			expectedTrip: &models.Trip{
+				Status: models.TripStatusActive,
+			},
+		},
+		{
+			name:   "no active trip found for user",
+			userID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, nil)
+			},
+			expectedError: "",
+			expectedTrip:  nil,
+		},
+		{
+			name:   "repository error",
+			userID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedError: "failed to get active trip: database error",
+			expectedTrip:  nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create mock repositories
+			tripRepo := &mocks.MockTripRepository{}
+			scooterRepo := &mocks.MockScooterRepository{}
+			userRepo := &mocks.MockUserRepository{}
+			locationRepo := &mocks.MockLocationUpdateRepository{}
+
+			// Setup mocks
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Create service
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Call method
+			trip, err := service.GetActiveTripByUser(context.Background(), tt.userID)
+
+			// Assertions
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, trip)
+			} else {
+				assert.NoError(t, err)
+				if tt.expectedTrip == nil {
+					assert.Nil(t, trip)
+				} else {
+					assert.NotNil(t, trip)
+					assert.Equal(t, tt.expectedTrip.Status, trip.Status)
+				}
+			}
+
+			// Verify all expectations were met
+			tripRepo.AssertExpectations(t)
+			scooterRepo.AssertExpectations(t)
+			userRepo.AssertExpectations(t)
+			locationRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestTripService_GetTrip(t *testing.T) {
+	tests := []struct {
+		name          string
+		tripID        uuid.UUID
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		expectedError string
+		expectedTrip  *models.Trip
+	}{
+		{
+			name:   "successful get trip",
+			tripID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				trip := &models.Trip{
+					ID:     uuid.New(),
+					UserID: uuid.New(),
+					Status: models.TripStatusCompleted,
+				}
+				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(trip, nil)
+			},
+			expectedError: "",
+			expectedTrip: &models.Trip{
+				Status: models.TripStatusCompleted,
+			},
+		},
+		{
+			name:   "trip not found",
+			tripID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, nil)
+			},
+			expectedError: "trip not found",
+			expectedTrip:  nil,
+		},
+		{
+			name:   "repository error",
+			tripID: uuid.New(),
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedError: "failed to get trip: database error",
+			expectedTrip:  nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create mock repositories
+			tripRepo := &mocks.MockTripRepository{}
+			scooterRepo := &mocks.MockScooterRepository{}
+			userRepo := &mocks.MockUserRepository{}
+			locationRepo := &mocks.MockLocationUpdateRepository{}
+
+			// Setup mocks
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Create service
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+
+			// Call method
+			trip, err := service.GetTrip(context.Background(), tt.tripID)
+
+			// Assertions
+			if tt.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+				assert.Nil(t, trip)
+			} else {
+				assert.NoError(t, err)
+				if tt.expectedTrip == nil {
+					assert.Nil(t, trip)
+				} else {
+					assert.NotNil(t, trip)
+					assert.Equal(t, tt.expectedTrip.Status, trip.Status)
+				}
 			}
 
 			// Verify all expectations were met
