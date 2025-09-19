@@ -112,20 +112,7 @@ func (s *scooterService) GetScooters(ctx context.Context, params ScooterQueryPar
 		return nil, fmt.Errorf("invalid query parameters: %w", err)
 	}
 
-	var scooters []*models.Scooter
-	var err error
-
-	if params.Status != "" && (params.MinLat != 0 || params.MaxLat != 0 || params.MinLng != 0 || params.MaxLng != 0) {
-		status := models.ScooterStatus(params.Status)
-		scooters, err = s.scooterRepo.GetByStatusInBounds(ctx, status, params.MinLat, params.MaxLat, params.MinLng, params.MaxLng)
-	} else if params.Status != "" {
-		status := models.ScooterStatus(params.Status)
-		scooters, err = s.scooterRepo.GetByStatus(ctx, status)
-	} else if params.MinLat != 0 || params.MaxLat != 0 || params.MinLng != 0 || params.MaxLng != 0 {
-		scooters, err = s.scooterRepo.GetInBounds(ctx, params.MinLat, params.MaxLat, params.MinLng, params.MaxLng)
-	} else {
-		scooters, err = s.scooterRepo.List(ctx, params.Limit, params.Offset)
-	}
+	scooters, err := s.queryScootersByFilters(ctx, params)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query scooters: %w", err)
@@ -318,4 +305,29 @@ func (s *scooterService) mapScooterToInfo(scooter *models.Scooter) *ScooterInfo 
 		LastSeen:         scooter.LastSeen,
 		CreatedAt:        scooter.CreatedAt,
 	}
+}
+
+func (s *scooterService) queryScootersByFilters(ctx context.Context, params ScooterQueryParams) ([]*models.Scooter, error) {
+	hasStatusFilter := params.Status != ""
+	hasLocationFilter := s.hasLocationBounds(params)
+
+	switch {
+	case hasStatusFilter && hasLocationFilter:
+		status := models.ScooterStatus(params.Status)
+		return s.scooterRepo.GetByStatusInBounds(ctx, status, params.MinLat, params.MaxLat, params.MinLng, params.MaxLng)
+
+	case hasStatusFilter:
+		status := models.ScooterStatus(params.Status)
+		return s.scooterRepo.GetByStatus(ctx, status)
+
+	case hasLocationFilter:
+		return s.scooterRepo.GetInBounds(ctx, params.MinLat, params.MaxLat, params.MinLng, params.MaxLng)
+
+	default:
+		return s.scooterRepo.List(ctx, params.Limit, params.Offset)
+	}
+}
+
+func (s *scooterService) hasLocationBounds(params ScooterQueryParams) bool {
+	return params.MinLat != 0 || params.MaxLat != 0 || params.MinLng != 0 || params.MaxLng != 0
 }
