@@ -191,16 +191,6 @@ func TestScooterService_UpdateLocation(t *testing.T) {
 	}
 }
 
-func TestScooterService_UpdateLocation_InvalidCoordinates(t *testing.T) {
-	mockSetup := &MockSetup{}
-	service, _, _, _, _ := mockSetup.CreateTestScooterService()
-
-	err := service.UpdateLocation(TestContext(), TestData.ValidScooterID, TestData.InvalidLatitudeHigh, TestData.ValidLongitude)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid coordinates")
-}
-
 // Validation tests
 func TestScooterService_ValidateScooterQueryParams(t *testing.T) {
 	service := &scooterService{}

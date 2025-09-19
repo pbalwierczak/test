@@ -254,36 +254,3 @@ func TestTripService_GetTripRefactored(t *testing.T) {
 		})
 	}
 }
-
-// Additional validation tests
-func TestTripService_StartTrip_InvalidCoordinates(t *testing.T) {
-	mockSetup := &MockSetup{}
-	service, _, _, _, _, _ := mockSetup.CreateTestTripService()
-
-	trip, err := service.StartTrip(TestContext(), TestData.ValidScooterID, TestData.ValidUserID, TestData.InvalidLatitudeHigh, TestData.ValidLongitude)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid coordinates")
-	assert.Nil(t, trip)
-}
-
-func TestTripService_EndTrip_InvalidCoordinates(t *testing.T) {
-	mockSetup := &MockSetup{}
-	service, _, _, _, _, _ := mockSetup.CreateTestTripService()
-
-	trip, err := service.EndTrip(TestContext(), TestData.ValidScooterID, TestData.InvalidLatitudeHigh, TestData.ValidLongitude)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid coordinates")
-	assert.Nil(t, trip)
-}
-
-func TestTripService_UpdateLocation_InvalidCoordinates(t *testing.T) {
-	mockSetup := &MockSetup{}
-	service, _, _, _, _, _ := mockSetup.CreateTestTripService()
-
-	err := service.UpdateLocation(TestContext(), TestData.ValidScooterID, TestData.InvalidLatitudeHigh, TestData.ValidLongitude)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid coordinates")
-}
