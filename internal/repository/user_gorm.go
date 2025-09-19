@@ -9,17 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// gormUserRepository implements UserRepository using GORM
 type gormUserRepository struct {
 	db *gorm.DB
 }
 
-// Create creates a new user
 func (r *gormUserRepository) Create(ctx context.Context, user *models.User) error {
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
-// GetByID retrieves a user by ID
 func (r *gormUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	var user models.User
 	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
@@ -32,17 +29,14 @@ func (r *gormUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models
 	return &user, nil
 }
 
-// Update updates a user
 func (r *gormUserRepository) Update(ctx context.Context, user *models.User) error {
 	return r.db.WithContext(ctx).Save(user).Error
 }
 
-// Delete deletes a user by ID
 func (r *gormUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&models.User{}, "id = ?", id).Error
 }
 
-// List retrieves users with pagination
 func (r *gormUserRepository) List(ctx context.Context, limit, offset int) ([]*models.User, error) {
 	var users []*models.User
 	query := r.db.WithContext(ctx)
