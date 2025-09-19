@@ -105,10 +105,16 @@ status:
 	@echo "📊 Service Status:"
 	@echo ""
 	@echo "Main App Services:"
-	@docker-compose ps 2>/dev/null || echo "  No main app services running"
+	@docker-compose ps --services 2>/dev/null | while read service; do \
+		if [ "$$service" != "scootin-simulator" ]; then \
+			docker-compose ps $$service 2>/dev/null | tail -n +2; \
+		fi; \
+	done || echo "  No main app services running"
 	@echo ""
 	@echo "Simulator Services:"
-	@docker-compose -f docker-compose.simulator.yml ps 2>/dev/null || echo "  No simulator services running"
+	@docker-compose -f docker-compose.simulator.yml ps --services 2>/dev/null | while read service; do \
+		docker-compose -f docker-compose.simulator.yml ps $$service 2>/dev/null | tail -n +2; \
+	done || echo "  No simulator services running"
 	@echo ""
 	@if docker ps | grep -q "scootin-app"; then \
 		echo "🌐 App is running at: http://localhost:8080"; \
