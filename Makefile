@@ -1,13 +1,37 @@
-.PHONY: app simulator db build clean test help _build _server _simulator _test _clean _deps docs docs-validate docs-clean
+.PHONY: app simulator start-app start-sim start-simulator logs-app logs-sim logs-simulator kill-app kill-sim kill-simulator kill-all status clean test seed help
 
-app:
-	@echo "Building and starting app with database..."
+# Default target
+.DEFAULT_GOAL := help
+
+help:
+	@echo "🚀 Scootin' Aboot - Quick Start Commands:"
+	@echo ""
+	@echo "  make start-app     - Start app with database in background"
+	@echo "  make start-sim     - Start simulator in background (alias: start-simulator)"
+	@echo "  make logs-app      - View app logs (Ctrl+C to exit)"
+	@echo "  make logs-sim      - View simulator logs (Ctrl+C to exit, alias: logs-simulator)"
+	@echo "  make kill-app      - Stop app and database"
+	@echo "  make kill-sim      - Stop simulator (alias: kill-simulator)"
+	@echo "  make kill-all      - Stop everything"
+	@echo "  make status        - Show running services"
+	@echo ""
+	@echo "🌐 Once running:"
+	@echo "  App: http://localhost:8080"
+	@echo "  API docs: http://localhost:8080/docs"
+	@echo "  Health: http://localhost:8080/api/v1/health"
+	@echo ""
+	@echo "📋 Other useful commands:"
+	@echo "  make seed          - Load sample data into database"
+	@echo "  make clean         - Clean up everything"
+	@echo "  make test          - Run tests"
+
+start-app:
+	@echo "🚀 Starting app with database in background..."
 	@echo "Cleaning up any existing containers..."
 	@docker-compose down -v 2>/dev/null || true
 	@echo "Starting services..."
 	@docker-compose up --build -d
 	@echo "Waiting for services to be ready..."
-	@echo "Checking service status..."
 	@for i in $$(seq 1 60); do \
 		if docker-compose ps | grep -q "scootin-app.*Up"; then \
 			break; \
@@ -20,47 +44,76 @@ app:
 		docker-compose logs --tail=50; \
 		exit 1; \
 	fi
-	@echo "✅ All services are running!"
-	@echo "📊 Service status:"
-	@docker-compose ps
+	@echo "✅ App is running in background!"
+	@echo "🌐 Available at: http://localhost:8080"
+	@echo "📚 API docs: http://localhost:8080/docs"
 	@echo ""
-	@echo "🌐 Application available at: http://localhost:8080"
-	@echo "📚 API docs available at: http://localhost:8080/docs"
-	@echo "💚 Health check: http://localhost:8080/api/v1/health"
-	@echo ""
-	@echo "To view logs: docker-compose logs -f"
-	@echo "To stop: docker-compose down"
+	@echo "💡 Next steps:"
+	@echo "  make logs-app      - View app logs"
+	@echo "  make start-sim     - Start simulator"
+	@echo "  make seed          - Load sample data"
+	@echo "  make status        - Check service status"
+	@echo "  make kill-app      - Stop app"
 
-help:
-	@echo "Scootin' Aboot - Available targets:"
-	@echo "  app          - Build and run app with database (default)"
-	@echo "  simulator    - Build and run simulator (Docker)"
-	@echo "  simulator-tail-logs - Follow simulator logs"
-	@echo "  simulator-clean-logs - Clean log files"
-	@echo "  build        - Build all Docker images"
-	@echo "  clean        - Clean up Docker containers and images"
-	@echo "  test         - Run tests in Docker container"
-	@echo "  logs         - Follow application logs"
-	@echo "  status       - Show service status and health"
-	@echo "  stop         - Stop all services"
-	@echo "  restart      - Restart all services"
+start-sim: start-simulator
+start-simulator:
+	@echo "🎮 Starting simulator in background..."
+	@if ! docker network ls | grep -q "scootin-aboot-app_scootin-network"; then \
+		echo "❌ Error: Network not found! Please start the app first: make start-app"; \
+		exit 1; \
+	fi
+	@if ! docker ps | grep -q "scootin-app"; then \
+		echo "❌ Error: App not running! Please start the app first: make start-app"; \
+		exit 1; \
+	fi
+	@echo "✅ App is running, starting simulator..."
+	@docker-compose -f docker-compose.simulator.yml up --build -d
+	@echo "✅ Simulator is running in background!"
 	@echo ""
-	@echo "Local development targets (prefixed with _):"
-	@echo "  _build      - Build both server and simulator locally"
-	@echo "  _test       - Run all tests locally"
-	@echo "  _clean      - Clean build artifacts"
-	@echo "  _deps       - Download dependencies"
-	@echo "  seed        - Truncate and reload seed data into database"
+	@echo "💡 Next steps:"
+	@echo "  make logs-sim      - View simulator logs"
+	@echo "  make status        - Check all services"
+	@echo "  make kill-sim      - Stop simulator"
+
+logs-app:
+	@echo "📋 Following app logs (Ctrl+C to exit)..."
+	@docker-compose logs -f scootin-app
+
+logs-sim: logs-simulator
+logs-simulator:
+	@echo "📋 Following simulator logs (Ctrl+C to exit)..."
+	@docker-compose -f docker-compose.simulator.yml logs -f scootin-simulator
+
+kill-app:
+	@echo "🛑 Stopping app and database..."
+	@docker-compose down
+	@echo "✅ App stopped!"
+
+kill-sim: kill-simulator
+kill-simulator:
+	@echo "🛑 Stopping simulator..."
+	@docker-compose -f docker-compose.simulator.yml down
+	@echo "✅ Simulator stopped!"
+
+kill-all:
+	@echo "🛑 Stopping everything..."
+	@docker-compose down
+	@docker-compose -f docker-compose.simulator.yml down
+	@echo "✅ All services stopped!"
+
+status:
+	@echo "📊 Service Status:"
 	@echo ""
-	@echo "Documentation targets:"
-	@echo "  docs          - Show documentation help"
-	@echo "  docs-validate - Validate OpenAPI specification using Docker"
-	@echo "  docs-clean    - Clean documentation artifacts"
+	@echo "Main App Services:"
+	@docker-compose ps 2>/dev/null || echo "  No main app services running"
 	@echo ""
-	@echo "API Documentation:"
-	@echo "  Swagger UI is available at: http://localhost:8080/docs"
-	@echo "  OpenAPI spec is available at: http://localhost:8080/api-docs.yaml"
-	@echo "  help        - Show this help message"
+	@echo "Simulator Services:"
+	@docker-compose -f docker-compose.simulator.yml ps 2>/dev/null || echo "  No simulator services running"
+	@echo ""
+	@if docker ps | grep -q "scootin-app"; then \
+		echo "🌐 App is running at: http://localhost:8080"; \
+		echo "📚 API docs: http://localhost:8080/docs"; \
+	fi
 
 _build: _deps
 	@echo "Building server..."
@@ -78,67 +131,13 @@ _clean:
 	@rm -rf bin/
 	@go clean
 
-simulator-clean-logs:
-	@echo "Cleaning log files..."
-	@rm -f simulator.log
-	@rm -f server.log
-	@rm -f *.log
-	@echo "Log files cleaned!"
-
-simulator-tail-logs:
-	@echo "Following simulator logs (Ctrl+C to stop)..."
-	@tail -f simulator.log
-
-_deps:
-	@echo "Downloading dependencies..."
-	@go mod download
-	@go mod tidy
-
-simulator:
-	@echo "Building and starting simulator..."
-	@if ! docker network ls | grep -q "scootin-aboot-app_scootin-network"; then \
-		echo "❌ Error: scootin-network does not exist!"; \
-		echo "Please start the main application first with: make app"; \
-		exit 1; \
-	fi
-	@if ! docker ps | grep -q "scootin-app"; then \
-		echo "❌ Error: scootin-app container is not running!"; \
-		echo "Please start the main application first with: make app"; \
-		exit 1; \
-	fi
-	@echo "✅ Main app is running, starting simulator..."
-	@docker-compose -f docker-compose.simulator.yml up --build
-
-build:
-	@echo "Building all Docker images..."
-	@docker build -t scootin-app .
-	@docker build -f Dockerfile.simulator -t scootin-simulator .
-
 clean:
-	@echo "Cleaning up Docker containers and images..."
+	@echo "🧹 Cleaning up everything..."
 	@docker-compose down -v
 	@docker-compose -f docker-compose.simulator.yml down
 	@docker rmi scootin-app scootin-simulator 2>/dev/null || true
 	@docker system prune -f
-
-logs:
-	@echo "Following application logs (Ctrl+C to stop)..."
-	@docker-compose logs -f
-
-status:
-	@echo "Service status:"
-	@docker-compose ps
-	@echo ""
-	@echo "Health checks:"
-	@docker-compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
-
-stop:
-	@echo "Stopping all services..."
-	@docker-compose down
-
-restart:
-	@echo "Restarting services..."
-	@docker-compose restart
+	@echo "✅ Cleanup complete!"
 
 test:
 	@echo "Running tests in Docker container..."
@@ -155,4 +154,10 @@ seed:
 	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/scooters.sql
 	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/sample_trips.sql
 	@echo "Seed data loaded successfully!"
+
+# Convenience aliases
+app: start-app
+simulator: start-simulator
+logs: logs-app
+stop: kill-all
 
