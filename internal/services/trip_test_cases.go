@@ -34,16 +34,16 @@ func (tc *TripTestCases) StartTripTestCases() []struct {
 		SetupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 	}{
 		{
-			Name:      "successful trip start",
-			ScooterID: TestData.ValidScooterID,
-			UserID:    TestData.ValidUserID,
-			Latitude:  TestData.ValidLatitude,
-			Longitude: TestData.ValidLongitude,
+			Name:          "successful trip start",
+			ScooterID:     TestData.ValidScooterID,
+			UserID:        TestData.ValidUserID,
+			Latitude:      TestData.ValidLatitude,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
+
 				user := NewTestUserBuilder().WithID(TestData.ValidUserID).Build()
 				userRepo.On("GetByID", mock.Anything, TestData.ValidUserID).Return(user, nil)
 				tripRepo.On("GetActiveByUserID", mock.Anything, TestData.ValidUserID).Return(nil, nil)
@@ -54,30 +54,29 @@ func (tc *TripTestCases) StartTripTestCases() []struct {
 					WithLocation(TestData.ValidLatitude, TestData.ValidLongitude).
 					Build()
 				scooterRepo.On("GetByIDForUpdate", mock.Anything, TestData.ValidScooterID).Return(scooter, nil)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 				tripRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.Trip")).Return(nil)
 				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, TestData.ValidScooterID, models.ScooterStatusOccupied, models.ScooterStatusAvailable).Return(nil)
 				scooterRepo.On("UpdateLocation", mock.Anything, TestData.ValidScooterID, TestData.ValidLatitude, TestData.ValidLongitude).Return(nil)
 			},
 		},
 		{
-			Name:      "invalid coordinates - latitude too high",
-			ScooterID: TestData.ValidScooterID,
-			UserID:    TestData.ValidUserID,
-			Latitude:  TestData.InvalidLatitudeHigh,
-			Longitude: TestData.ValidLongitude,
+			Name:          "invalid coordinates - latitude too high",
+			ScooterID:     TestData.ValidScooterID,
+			UserID:        TestData.ValidUserID,
+			Latitude:      TestData.InvalidLatitudeHigh,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "invalid coordinates: invalid latitude: must be between -90 and 90",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
+				// No mocks needed for validation errors
 			},
 		},
 		{
-			Name:      "user not found",
-			ScooterID: TestData.ValidScooterID,
-			UserID:    TestData.ValidUserID,
-			Latitude:  TestData.ValidLatitude,
-			Longitude: TestData.ValidLongitude,
+			Name:          "user not found",
+			ScooterID:     TestData.ValidScooterID,
+			UserID:        TestData.ValidUserID,
+			Latitude:      TestData.ValidLatitude,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "user not found",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
@@ -86,11 +85,11 @@ func (tc *TripTestCases) StartTripTestCases() []struct {
 			},
 		},
 		{
-			Name:      "user already has active trip",
-			ScooterID: TestData.ValidScooterID,
-			UserID:    TestData.ValidUserID,
-			Latitude:  TestData.ValidLatitude,
-			Longitude: TestData.ValidLongitude,
+			Name:          "user already has active trip",
+			ScooterID:     TestData.ValidScooterID,
+			UserID:        TestData.ValidUserID,
+			Latitude:      TestData.ValidLatitude,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "user already has an active trip",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
@@ -102,11 +101,11 @@ func (tc *TripTestCases) StartTripTestCases() []struct {
 			},
 		},
 		{
-			Name:      "scooter not found",
-			ScooterID: TestData.ValidScooterID,
-			UserID:    TestData.ValidUserID,
-			Latitude:  TestData.ValidLatitude,
-			Longitude: TestData.ValidLongitude,
+			Name:          "scooter not found",
+			ScooterID:     TestData.ValidScooterID,
+			UserID:        TestData.ValidUserID,
+			Latitude:      TestData.ValidLatitude,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "scooter not found",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
@@ -118,11 +117,11 @@ func (tc *TripTestCases) StartTripTestCases() []struct {
 			},
 		},
 		{
-			Name:      "scooter not available",
-			ScooterID: TestData.ValidScooterID,
-			UserID:    TestData.ValidUserID,
-			Latitude:  TestData.ValidLatitude,
-			Longitude: TestData.ValidLongitude,
+			Name:          "scooter not available",
+			ScooterID:     TestData.ValidScooterID,
+			UserID:        TestData.ValidUserID,
+			Latitude:      TestData.ValidLatitude,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "scooter is not available",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
@@ -160,49 +159,48 @@ func (tc *TripTestCases) EndTripTestCases() []struct {
 		SetupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 	}{
 		{
-			Name:      "successful trip end",
-			ScooterID: TestData.ValidScooterID,
-			Latitude:  TestData.ValidLatitude + 0.001,
-			Longitude: TestData.ValidLongitude + 0.001,
+			Name:          "successful trip end",
+			ScooterID:     TestData.ValidScooterID,
+			Latitude:      TestData.ValidLatitude + 0.001,
+			Longitude:     TestData.ValidLongitude + 0.001,
 			ExpectedError: "",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
+
 				trip := NewTestTripBuilder().
 					WithScooterID(TestData.ValidScooterID).
 					WithUserID(TestData.ValidUserID).
-					WithStartTime(time.Now().Add(-10 * time.Minute)).
+					WithStartTime(time.Now().Add(-10*time.Minute)).
 					WithStatus(models.TripStatusActive).
 					WithStartLocation(TestData.ValidLatitude, TestData.ValidLongitude).
 					Build()
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(trip, nil)
-				tripRepo.On("EndTrip", mock.Anything, TestData.ValidScooterID, TestData.ValidLatitude+0.001, TestData.ValidLongitude+0.001).Return(nil)
-				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, TestData.ValidScooterID, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(nil)
-				scooterRepo.On("UpdateLocation", mock.Anything, TestData.ValidScooterID, TestData.ValidLatitude+0.001, TestData.ValidLongitude+0.001).Return(nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+				tripRepo.On("EndTrip", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, mock.Anything, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(nil)
+				scooterRepo.On("UpdateLocation", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 		},
 		{
-			Name:      "no active trip found",
-			ScooterID: TestData.ValidScooterID,
-			Latitude:  TestData.ValidLatitude,
-			Longitude: TestData.ValidLongitude,
+			Name:          "no active trip found",
+			ScooterID:     TestData.ValidScooterID,
+			Latitude:      TestData.ValidLatitude,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "no active trip found for scooter",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 		},
 		{
-			Name:      "invalid coordinates",
-			ScooterID: TestData.ValidScooterID,
-			Latitude:  TestData.InvalidLatitudeHigh,
-			Longitude: TestData.ValidLongitude,
+			Name:          "invalid coordinates",
+			ScooterID:     TestData.ValidScooterID,
+			Latitude:      TestData.InvalidLatitudeHigh,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "invalid coordinates: invalid latitude: must be between -90 and 90",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
+				// No mocks needed for validation errors
 			},
 		},
 	}
@@ -226,46 +224,45 @@ func (tc *TripTestCases) UpdateLocationTestCases() []struct {
 		SetupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 	}{
 		{
-			Name:      "successful location update",
-			ScooterID: TestData.ValidScooterID,
-			Latitude:  TestData.ValidLatitude + 0.001,
-			Longitude: TestData.ValidLongitude + 0.001,
+			Name:          "successful location update",
+			ScooterID:     TestData.ValidScooterID,
+			Latitude:      TestData.ValidLatitude + 0.001,
+			Longitude:     TestData.ValidLongitude + 0.001,
 			ExpectedError: "",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
+
 				trip := NewTestTripBuilder().
 					WithScooterID(TestData.ValidScooterID).
 					WithUserID(TestData.ValidUserID).
 					WithStatus(models.TripStatusActive).
 					Build()
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(trip, nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
 				locationRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.LocationUpdate")).Return(nil)
 				scooterRepo.On("UpdateLocation", mock.Anything, TestData.ValidScooterID, TestData.ValidLatitude+0.001, TestData.ValidLongitude+0.001).Return(nil)
 			},
 		},
 		{
-			Name:      "no active trip found",
-			ScooterID: TestData.ValidScooterID,
-			Latitude:  TestData.ValidLatitude,
-			Longitude: TestData.ValidLongitude,
+			Name:          "no active trip found",
+			ScooterID:     TestData.ValidScooterID,
+			Latitude:      TestData.ValidLatitude,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "no active trip found for scooter",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 		},
 		{
-			Name:      "invalid coordinates",
-			ScooterID: TestData.ValidScooterID,
-			Latitude:  TestData.InvalidLatitudeHigh,
-			Longitude: TestData.ValidLongitude,
+			Name:          "invalid coordinates",
+			ScooterID:     TestData.ValidScooterID,
+			Latitude:      TestData.InvalidLatitudeHigh,
+			Longitude:     TestData.ValidLongitude,
 			ExpectedError: "invalid coordinates: invalid latitude: must be between -90 and 90",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
+				// No mocks needed for validation errors
 			},
 		},
 	}
@@ -285,76 +282,76 @@ func (tc *TripTestCases) CancelTripTestCases() []struct {
 		SetupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 	}{
 		{
-			Name:      "successful trip cancellation",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "successful trip cancellation",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
+
 				trip := NewTestTripBuilder().
 					WithScooterID(TestData.ValidScooterID).
 					WithUserID(TestData.ValidUserID).
 					WithStatus(models.TripStatusActive).
 					Build()
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(trip, nil)
-				tripRepo.On("CancelTrip", mock.Anything, TestData.ValidScooterID).Return(nil)
-				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, TestData.ValidScooterID, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+				tripRepo.On("CancelTrip", mock.Anything, mock.Anything).Return(nil)
+				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, mock.Anything, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(nil)
 			},
 		},
 		{
-			Name:      "no active trip found",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "no active trip found",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "no active trip found for scooter",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 		},
 		{
-			Name:      "repository error when getting active trip",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "repository error when getting active trip",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "failed to get active trip: database error",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, errors.New("database error"))
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 		},
 		{
-			Name:      "repository error when cancelling trip",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "repository error when cancelling trip",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "failed to cancel trip: database error",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
+
 				trip := NewTestTripBuilder().
 					WithScooterID(TestData.ValidScooterID).
 					WithUserID(TestData.ValidUserID).
 					WithStatus(models.TripStatusActive).
 					Build()
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(trip, nil)
-				tripRepo.On("CancelTrip", mock.Anything, TestData.ValidScooterID).Return(errors.New("database error"))
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+				tripRepo.On("CancelTrip", mock.Anything, mock.Anything).Return(errors.New("database error"))
 			},
 		},
 		{
-			Name:      "repository error when updating scooter status",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "repository error when updating scooter status",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "failed to update scooter status: database error",
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
 				mockSetup := &MockSetup{}
 				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
+
 				trip := NewTestTripBuilder().
 					WithScooterID(TestData.ValidScooterID).
 					WithUserID(TestData.ValidUserID).
 					WithStatus(models.TripStatusActive).
 					Build()
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(trip, nil)
-				tripRepo.On("CancelTrip", mock.Anything, TestData.ValidScooterID).Return(nil)
-				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, TestData.ValidScooterID, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(errors.New("database error"))
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
+				tripRepo.On("CancelTrip", mock.Anything, mock.Anything).Return(nil)
+				scooterRepo.On("UpdateStatusWithCheck", mock.Anything, mock.Anything, models.ScooterStatusAvailable, models.ScooterStatusOccupied).Return(errors.New("database error"))
 			},
 		},
 	}
@@ -376,44 +373,37 @@ func (tc *TripTestCases) GetActiveTripTestCases() []struct {
 		SetupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 	}{
 		{
-			Name:      "successful get active trip",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "successful get active trip",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "",
 			ExpectedTrip: &models.Trip{
 				Status: models.TripStatusActive,
 			},
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
 				trip := NewTestTripBuilder().
 					WithScooterID(TestData.ValidScooterID).
 					WithUserID(TestData.ValidUserID).
 					WithStatus(models.TripStatusActive).
 					Build()
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(trip, nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(trip, nil)
 			},
 		},
 		{
-			Name:      "no active trip found",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "no active trip found",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "",
 			ExpectedTrip:  nil,
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, nil)
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 		},
 		{
-			Name:      "repository error",
-			ScooterID: TestData.ValidScooterID,
+			Name:          "repository error",
+			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "failed to get active trip: database error",
 			ExpectedTrip:  nil,
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, errors.New("database error"))
+				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 		},
 	}
@@ -435,43 +425,36 @@ func (tc *TripTestCases) GetActiveTripByUserTestCases() []struct {
 		SetupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 	}{
 		{
-			Name:      "successful get active trip by user",
-			UserID:    TestData.ValidUserID,
+			Name:          "successful get active trip by user",
+			UserID:        TestData.ValidUserID,
 			ExpectedError: "",
 			ExpectedTrip: &models.Trip{
 				Status: models.TripStatusActive,
 			},
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
 				trip := NewTestTripBuilder().
 					WithUserID(TestData.ValidUserID).
 					WithStatus(models.TripStatusActive).
 					Build()
-				tripRepo.On("GetActiveByUserID", mock.Anything, TestData.ValidUserID).Return(trip, nil)
+				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(trip, nil)
 			},
 		},
 		{
-			Name:      "no active trip found for user",
-			UserID:    TestData.ValidUserID,
+			Name:          "no active trip found for user",
+			UserID:        TestData.ValidUserID,
 			ExpectedError: "",
 			ExpectedTrip:  nil,
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByUserID", mock.Anything, TestData.ValidUserID).Return(nil, nil)
+				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 		},
 		{
-			Name:      "repository error",
-			UserID:    TestData.ValidUserID,
+			Name:          "repository error",
+			UserID:        TestData.ValidUserID,
 			ExpectedError: "failed to get active trip: database error",
 			ExpectedTrip:  nil,
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetActiveByUserID", mock.Anything, TestData.ValidUserID).Return(nil, errors.New("database error"))
+				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 		},
 	}
@@ -493,44 +476,37 @@ func (tc *TripTestCases) GetTripTestCases() []struct {
 		SetupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 	}{
 		{
-			Name:      "successful get trip",
-			TripID:    TestData.ValidTripID,
+			Name:          "successful get trip",
+			TripID:        TestData.ValidTripID,
 			ExpectedError: "",
 			ExpectedTrip: &models.Trip{
 				Status: models.TripStatusCompleted,
 			},
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				
 				trip := NewTestTripBuilder().
 					WithID(TestData.ValidTripID).
 					WithUserID(TestData.ValidUserID).
 					WithStatus(models.TripStatusCompleted).
 					Build()
-				tripRepo.On("GetByID", mock.Anything, TestData.ValidTripID).Return(trip, nil)
+				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(trip, nil)
 			},
 		},
 		{
-			Name:      "trip not found",
-			TripID:    TestData.ValidTripID,
+			Name:          "trip not found",
+			TripID:        TestData.ValidTripID,
 			ExpectedError: "trip not found",
 			ExpectedTrip:  nil,
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetByID", mock.Anything, TestData.ValidTripID).Return(nil, nil)
+				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 		},
 		{
-			Name:      "repository error",
-			TripID:    TestData.ValidTripID,
+			Name:          "repository error",
+			TripID:        TestData.ValidTripID,
 			ExpectedError: "failed to get trip: database error",
 			ExpectedTrip:  nil,
 			SetupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
-				mockSetup := &MockSetup{}
-				mockSetup.SetupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
-				tripRepo.On("GetByID", mock.Anything, TestData.ValidTripID).Return(nil, errors.New("database error"))
+				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 		},
 	}

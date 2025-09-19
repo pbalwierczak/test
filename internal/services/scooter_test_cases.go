@@ -91,9 +91,9 @@ func (tc *ScooterTestCases) GetScooterTestCases() []struct {
 			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "",
 			SetupMocks: func(scooterRepo *mocks.MockScooterRepository, tripRepo *mocks.MockTripRepository) {
-				scooter := NewTestScooterBuilder().WithID(TestData.ValidScooterID).Build()
+				scooter := NewTestScooterBuilder().WithID(TestData.ValidScooterID).WithStatus(models.ScooterStatusAvailable).Build()
 				scooterRepo.On("GetByID", mock.Anything, TestData.ValidScooterID).Return(scooter, nil)
-				tripRepo.On("GetActiveByScooterID", mock.Anything, TestData.ValidScooterID).Return(nil, nil)
+				// No trip query needed for available scooters
 			},
 		},
 		{
