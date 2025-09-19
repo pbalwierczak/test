@@ -6,7 +6,6 @@ import (
 	"scootin-aboot/pkg/utils"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type ErrorResponse struct {
@@ -24,10 +23,10 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 			err := c.Errors.Last()
 
 			utils.Error("Request error",
-				zap.String("method", c.Request.Method),
-				zap.String("path", c.Request.URL.Path),
-				zap.String("client_ip", c.ClientIP()),
-				zap.Error(err.Err),
+				utils.String("method", c.Request.Method),
+				utils.String("path", c.Request.URL.Path),
+				utils.String("client_ip", c.ClientIP()),
+				utils.ErrorField(err.Err),
 			)
 
 			statusCode := http.StatusInternalServerError

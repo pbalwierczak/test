@@ -9,11 +9,8 @@ import (
 
 	"scootin-aboot/internal/config"
 	"scootin-aboot/pkg/utils"
-
-	"go.uber.org/zap"
 )
 
-// User simulates a mobile client user
 type User struct {
 	ID           int
 	UserID       string // Store the actual user ID from database
@@ -26,7 +23,6 @@ type User struct {
 	SearchCount  int      // Number of searches performed
 }
 
-// NewUserWithID creates a new user simulator with a specific user ID
 func NewUserWithID(ctx context.Context, client *APIClient, id int, userID string, cfg *config.Config) (*User, error) {
 	movement := NewMovement(cfg)
 	return &User{
@@ -42,95 +38,83 @@ func NewUserWithID(ctx context.Context, client *APIClient, id int, userID string
 	}, nil
 }
 
-// Simulate runs the user simulation loop
 func (u *User) Simulate() {
-	utils.Info("User simulation started", zap.Int("user_id", u.ID))
+	utils.Info("User simulation started", utils.Int("user_id", u.ID))
 
 	for {
 		select {
 		case <-u.ctx.Done():
-			utils.Info("User simulation stopped", zap.Int("user_id", u.ID))
+			utils.Info("User simulation stopped", utils.Int("user_id", u.ID))
 			return
 		default:
-			// Only search for scooters
 			u.searchForScooters()
 			u.rest()
 		}
 	}
 }
 
-// searchForScooters searches for available scooters using different strategies
 func (u *User) searchForScooters() {
 	u.SearchCount++
 
-	// Move user location occasionally (simulate walking around)
 	if u.SearchCount%5 == 0 {
 		u.moveToNewLocation()
 	}
 
-	// Vary search radius occasionally
 	if u.SearchCount%3 == 0 {
 		u.updateSearchRadius()
 	}
 
-	// Choose search strategy based on search count
 	var scooters []APIScooter
 	var err error
 	var searchType string
 
 	switch u.SearchCount % 4 {
 	case 0:
-		// Search for closest scooters with current radius
 		scooters, err = u.findClosestScooters()
 		searchType = "closest"
 	case 1:
-		// Search for scooters in geographic bounds
 		scooters, err = u.findScootersInBounds()
 		searchType = "bounds"
 	case 2:
-		// Search with a different radius
 		scooters, err = u.findClosestScootersWithRadius(u.SearchRadius * 2)
 		searchType = "expanded_radius"
 	default:
-		// Search all available scooters
 		scooters, err = u.findAvailableScooters()
 		searchType = "all_available"
 	}
 
 	if err != nil {
 		utils.Error("Failed to find available scooters",
-			zap.Int("user_id", u.ID),
-			zap.String("search_type", searchType),
-			zap.Error(err),
+			utils.Int("user_id", u.ID),
+			utils.String("search_type", searchType),
+			utils.ErrorField(err),
 		)
 		return
 	}
 
 	if len(scooters) == 0 {
 		utils.Debug("No available scooters found",
-			zap.String("test_user_id", u.UserID),
-			zap.Int("user_id", u.ID),
-			zap.String("search_type", searchType),
-			zap.Float64("lat", u.Location.Latitude),
-			zap.Float64("lng", u.Location.Longitude),
-			zap.Int("radius", u.SearchRadius),
+			utils.String("test_user_id", u.UserID),
+			utils.Int("user_id", u.ID),
+			utils.String("search_type", searchType),
+			utils.Float64("lat", u.Location.Latitude),
+			utils.Float64("lng", u.Location.Longitude),
+			utils.Int("radius", u.SearchRadius),
 		)
 		return
 	}
 
-	// Log that we found scooters (simulating user browsing)
 	utils.Info("Found available scooters",
-		zap.Int("test_user_id", u.ID),
-		zap.String("test_user_id", u.UserID),
-		zap.String("search_type", searchType),
-		zap.Int("count", len(scooters)),
-		zap.Float64("lat", u.Location.Latitude),
-		zap.Float64("lng", u.Location.Longitude),
-		zap.Int("radius", u.SearchRadius),
+		utils.Int("test_user_id", u.ID),
+		utils.String("test_user_id", u.UserID),
+		utils.String("search_type", searchType),
+		utils.Int("count", len(scooters)),
+		utils.Float64("lat", u.Location.Latitude),
+		utils.Float64("lng", u.Location.Longitude),
+		utils.Int("radius", u.SearchRadius),
 	)
 }
 
-// findAvailableScooters finds available scooters
 func (u *User) findAvailableScooters() ([]APIScooter, error) {
 	scooters, err := u.client.GetAvailableScooters(u.ctx)
 	if err != nil {
@@ -140,7 +124,6 @@ func (u *User) findAvailableScooters() ([]APIScooter, error) {
 	return scooters, nil
 }
 
-// findClosestScooters finds the closest scooters to the user's current location
 func (u *User) findClosestScooters() ([]APIScooter, error) {
 	scooters, err := u.client.GetClosestScooters(u.ctx, u.Location.Latitude, u.Location.Longitude, u.SearchRadius, 10)
 	if err != nil {
@@ -150,7 +133,6 @@ func (u *User) findClosestScooters() ([]APIScooter, error) {
 	return scooters, nil
 }
 
-// findClosestScootersWithRadius finds the closest scooters with a specific radius
 func (u *User) findClosestScootersWithRadius(radius int) ([]APIScooter, error) {
 	scooters, err := u.client.GetClosestScooters(u.ctx, u.Location.Latitude, u.Location.Longitude, radius, 10)
 	if err != nil {
@@ -160,7 +142,6 @@ func (u *User) findClosestScootersWithRadius(radius int) ([]APIScooter, error) {
 	return scooters, nil
 }
 
-// findScootersInBounds finds scooters within geographic bounds around the user
 func (u *User) findScootersInBounds() ([]APIScooter, error) {
 	// Create a bounding box around the user's location
 	// Convert radius from meters to approximate degrees
@@ -180,40 +161,37 @@ func (u *User) findScootersInBounds() ([]APIScooter, error) {
 	return scooters, nil
 }
 
-// moveToNewLocation moves the user to a new random location
 func (u *User) moveToNewLocation() {
 	oldLocation := u.Location
 	u.Location = u.movement.GetRandomLocation()
 
 	utils.Debug("User moved to new location",
-		zap.Int("user_id", u.ID),
-		zap.Float64("old_lat", oldLocation.Latitude),
-		zap.Float64("old_lng", oldLocation.Longitude),
-		zap.Float64("new_lat", u.Location.Latitude),
-		zap.Float64("new_lng", u.Location.Longitude),
+		utils.Int("user_id", u.ID),
+		utils.Float64("old_lat", oldLocation.Latitude),
+		utils.Float64("old_lng", oldLocation.Longitude),
+		utils.Float64("new_lat", u.Location.Latitude),
+		utils.Float64("new_lng", u.Location.Longitude),
 	)
 }
 
-// updateSearchRadius updates the search radius to a random value
 func (u *User) updateSearchRadius() {
 	// Random radius between 500m and 3000m
 	radii := []int{500, 750, 1000, 1500, 2000, 2500, 3000}
 	u.SearchRadius = radii[rand.Intn(len(radii))]
 
 	utils.Debug("User updated search radius",
-		zap.Int("user_id", u.ID),
-		zap.Int("new_radius", u.SearchRadius),
+		utils.Int("user_id", u.ID),
+		utils.Int("new_radius", u.SearchRadius),
 	)
 }
 
-// rest simulates the rest period between searches
 func (u *User) rest() {
 	// Calculate rest duration (2-5 seconds)
 	duration := time.Duration(u.config.SimulatorRestMin+rand.Intn(u.config.SimulatorRestMax-u.config.SimulatorRestMin+1)) * time.Second
 
 	utils.Debug("User resting between searches",
-		zap.Int("user_id", u.ID),
-		zap.Duration("duration", duration),
+		utils.Int("user_id", u.ID),
+		utils.Duration("duration", duration),
 	)
 
 	select {
