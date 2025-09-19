@@ -41,8 +41,3 @@ func (m *MockUserRepository) List(ctx context.Context, limit, offset int) ([]*mo
 	args := m.Called(ctx, limit, offset)
 	return args.Get(0).([]*models.User), args.Error(1)
 }
-
-func (m *MockUserRepository) GetUserCount(ctx context.Context) (int64, error) {
-	args := m.Called(ctx)
-	return args.Get(0).(int64), args.Error(1)
-}

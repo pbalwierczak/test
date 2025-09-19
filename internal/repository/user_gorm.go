@@ -57,10 +57,3 @@ func (r *gormUserRepository) List(ctx context.Context, limit, offset int) ([]*mo
 	err := query.Find(&users).Error
 	return users, err
 }
-
-// GetUserCount returns the total number of users
-func (r *gormUserRepository) GetUserCount(ctx context.Context) (int64, error) {
-	var count int64
-	err := r.db.WithContext(ctx).Model(&models.User{}).Count(&count).Error
-	return count, err
-}
