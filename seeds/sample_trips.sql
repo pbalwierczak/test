@@ -21,16 +21,7 @@ INSERT INTO trips (id, scooter_id, user_id, start_time, end_time, start_latitude
 -- Montreal trip 2 (completed)
 ('850e8400-e29b-41d4-a716-446655440004', '750e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440004', 
  NOW() - INTERVAL '5 hours', NOW() - INTERVAL '4 hours 30 minutes', 45.5000, -73.5650, 45.5150, -73.5550, 'completed', 
- NOW() - INTERVAL '5 hours', NOW() - INTERVAL '4 hours 30 minutes'),
-
--- Active trips (ongoing)
-('850e8400-e29b-41d4-a716-446655440005', '650e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440005', 
- NOW() - INTERVAL '30 minutes', NULL, 45.4230, -75.6990, NULL, NULL, 'active', 
- NOW() - INTERVAL '30 minutes', NOW() - INTERVAL '30 minutes'),
-
-('850e8400-e29b-41d4-a716-446655440006', '750e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440006', 
- NOW() - INTERVAL '15 minutes', NULL, 45.5030, -73.5690, NULL, NULL, 'active', 
- NOW() - INTERVAL '15 minutes', NOW() - INTERVAL '15 minutes');
+ NOW() - INTERVAL '5 hours', NOW() - INTERVAL '4 hours 30 minutes');
 
 -- Location updates for completed trips
 -- Trip 1 location updates (Ottawa)
@@ -65,20 +56,3 @@ INSERT INTO location_updates (id, trip_id, latitude, longitude, timestamp, creat
 ('950e8400-e29b-41d4-a716-446655440019', '850e8400-e29b-41d4-a716-446655440004', 45.5080, -73.5570, NOW() - INTERVAL '4 hours 51 minutes', NOW() - INTERVAL '4 hours 51 minutes'),
 ('950e8400-e29b-41d4-a716-446655440020', '850e8400-e29b-41d4-a716-446655440004', 45.5150, -73.5550, NOW() - INTERVAL '4 hours 30 minutes', NOW() - INTERVAL '4 hours 30 minutes');
 
--- Active trip location updates
--- Trip 5 (active Ottawa)
-INSERT INTO location_updates (id, trip_id, latitude, longitude, timestamp, created_at) VALUES
-('950e8400-e29b-41d4-a716-446655440021', '850e8400-e29b-41d4-a716-446655440005', 45.4230, -75.6990, NOW() - INTERVAL '30 minutes', NOW() - INTERVAL '30 minutes'),
-('950e8400-e29b-41d4-a716-446655440022', '850e8400-e29b-41d4-a716-446655440005', 45.4240, -75.6980, NOW() - INTERVAL '27 minutes', NOW() - INTERVAL '27 minutes'),
-('950e8400-e29b-41d4-a716-446655440023', '850e8400-e29b-41d4-a716-446655440005', 45.4250, -75.6970, NOW() - INTERVAL '24 minutes', NOW() - INTERVAL '24 minutes'),
-('950e8400-e29b-41d4-a716-446655440024', '850e8400-e29b-41d4-a716-446655440005', 45.4260, -75.6960, NOW() - INTERVAL '21 minutes', NOW() - INTERVAL '21 minutes'),
-('950e8400-e29b-41d4-a716-446655440025', '850e8400-e29b-41d4-a716-446655440005', 45.4270, -75.6950, NOW() - INTERVAL '18 minutes', NOW() - INTERVAL '18 minutes'),
-('950e8400-e29b-41d4-a716-446655440026', '850e8400-e29b-41d4-a716-446655440005', 45.4280, -75.6940, NOW() - INTERVAL '15 minutes', NOW() - INTERVAL '15 minutes');
-
--- Trip 6 (active Montreal)
-INSERT INTO location_updates (id, trip_id, latitude, longitude, timestamp, created_at) VALUES
-('950e8400-e29b-41d4-a716-446655440027', '850e8400-e29b-41d4-a716-446655440006', 45.5030, -73.5690, NOW() - INTERVAL '15 minutes', NOW() - INTERVAL '15 minutes'),
-('950e8400-e29b-41d4-a716-446655440028', '850e8400-e29b-41d4-a716-446655440006', 45.5040, -73.5680, NOW() - INTERVAL '12 minutes', NOW() - INTERVAL '12 minutes'),
-('950e8400-e29b-41d4-a716-446655440029', '850e8400-e29b-41d4-a716-446655440006', 45.5050, -73.5670, NOW() - INTERVAL '9 minutes', NOW() - INTERVAL '9 minutes'),
-('950e8400-e29b-41d4-a716-446655440030', '850e8400-e29b-41d4-a716-446655440006', 45.5060, -73.5660, NOW() - INTERVAL '6 minutes', NOW() - INTERVAL '6 minutes'),
-('950e8400-e29b-41d4-a716-446655440031', '850e8400-e29b-41d4-a716-446655440006', 45.5070, -73.5650, NOW() - INTERVAL '3 minutes', NOW() - INTERVAL '3 minutes');
