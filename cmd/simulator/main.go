@@ -9,8 +9,6 @@ import (
 	"scootin-aboot/internal/config"
 	"scootin-aboot/pkg/simulator"
 	"scootin-aboot/pkg/utils"
-
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -25,16 +23,16 @@ func main() {
 	defer utils.Sync()
 
 	utils.Info("Simulator Configuration",
-		zap.Int("scooters", cfg.SimulatorScooters),
-		zap.Int("users", cfg.SimulatorUsers),
-		zap.String("server_url", cfg.SimulatorServerURL),
-		zap.Int("speed", cfg.SimulatorSpeed),
-		zap.Int("trip_duration_min", cfg.SimulatorTripDurationMin),
-		zap.Int("trip_duration_max", cfg.SimulatorTripDurationMax),
-		zap.Int("rest_min", cfg.SimulatorRestMin),
-		zap.Int("rest_max", cfg.SimulatorRestMax),
-		zap.String("log_level", cfg.LogLevel),
-		zap.String("log_format", cfg.LogFormat),
+		utils.Int("scooters", cfg.SimulatorScooters),
+		utils.Int("users", cfg.SimulatorUsers),
+		utils.String("server_url", cfg.SimulatorServerURL),
+		utils.Int("speed", cfg.SimulatorSpeed),
+		utils.Int("trip_duration_min", cfg.SimulatorTripDurationMin),
+		utils.Int("trip_duration_max", cfg.SimulatorTripDurationMax),
+		utils.Int("rest_min", cfg.SimulatorRestMin),
+		utils.Int("rest_max", cfg.SimulatorRestMax),
+		utils.String("log_level", cfg.LogLevel),
+		utils.String("log_format", cfg.LogFormat),
 	)
 
 	utils.Info("Starting Scootin' Aboot simulator")
@@ -42,7 +40,7 @@ func main() {
 	sim := simulator.NewSimulator(cfg)
 
 	if err := sim.Start(); err != nil {
-		utils.Fatal("Failed to start simulator", zap.Error(err))
+		utils.Fatal("Failed to start simulator", utils.ErrorField(err))
 	}
 
 	sigChan := make(chan os.Signal, 1)

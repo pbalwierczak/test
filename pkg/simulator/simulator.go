@@ -8,8 +8,6 @@ import (
 
 	"scootin-aboot/internal/config"
 	"scootin-aboot/pkg/utils"
-
-	"go.uber.org/zap"
 )
 
 // Simulator orchestrates the entire simulation
@@ -57,9 +55,9 @@ func NewSimulator(cfg *config.Config) *Simulator {
 // Start begins the simulation
 func (s *Simulator) Start() error {
 	utils.Info("Starting simulation",
-		zap.Int("scooters", s.config.SimulatorScooters),
-		zap.Int("users", s.config.SimulatorUsers),
-		zap.String("server_url", s.config.SimulatorServerURL),
+		utils.Int("scooters", s.config.SimulatorScooters),
+		utils.Int("users", s.config.SimulatorUsers),
+		utils.String("server_url", s.config.SimulatorServerURL),
 	)
 
 	// Initialize scooters
@@ -92,7 +90,7 @@ func (s *Simulator) Stop() {
 	// Check for active trips before shutdown
 	activeTrips := s.getActiveTripsCount()
 	if activeTrips > 0 {
-		utils.Info("Active trips detected, ending them gracefully", zap.Int("active_trips", activeTrips))
+		utils.Info("Active trips detected, ending them gracefully", utils.Int("active_trips", activeTrips))
 
 		// End all active trips before shutting down
 		s.endAllActiveTrips()
@@ -110,8 +108,8 @@ func (s *Simulator) Stop() {
 
 			if time.Since(start) > timeout {
 				utils.Info("Timeout reached, forcing shutdown",
-					zap.Int("remaining_trips", remainingTrips),
-					zap.Duration("timeout", timeout))
+					utils.Int("remaining_trips", remainingTrips),
+					utils.Duration("timeout", timeout))
 				break
 			}
 
@@ -147,9 +145,9 @@ func (s *Simulator) endAllActiveTrips() {
 	for _, scooter := range s.scooters {
 		if scooter.Status == "occupied" && scooter.CurrentTrip != nil {
 			utils.Info("Ending trip for scooter",
-				zap.Int("scooter_id", scooter.ID),
-				zap.String("trip_id", scooter.CurrentTrip.ID),
-				zap.String("user_id", scooter.CurrentTrip.UserID),
+				utils.Int("scooter_id", scooter.ID),
+				utils.String("trip_id", scooter.CurrentTrip.ID),
+				utils.String("user_id", scooter.CurrentTrip.UserID),
 			)
 
 			// End the trip by calling the scooter's EndCurrentTrip method
@@ -177,9 +175,9 @@ func (s *Simulator) initializeScooters() error {
 	if len(apiScooters) < maxScooters {
 		maxScooters = len(apiScooters)
 		utils.Info("Limited scooters to available count",
-			zap.Int("requested", s.config.SimulatorScooters),
-			zap.Int("available", len(apiScooters)),
-			zap.Int("using", maxScooters))
+			utils.Int("requested", s.config.SimulatorScooters),
+			utils.Int("available", len(apiScooters)),
+			utils.Int("using", maxScooters))
 	}
 
 	s.scooters = make([]*Scooter, maxScooters)
@@ -198,7 +196,7 @@ func (s *Simulator) initializeScooters() error {
 	s.stats.AvailableScooters = len(s.scooters)
 	s.stats.mu.Unlock()
 
-	utils.Info("Initialized scooters", zap.Int("count", len(s.scooters)))
+	utils.Info("Initialized scooters", utils.Int("count", len(s.scooters)))
 	return nil
 }
 
@@ -223,9 +221,9 @@ func (s *Simulator) initializeUsers() error {
 	if len(seededUserIDs) < maxUsers {
 		maxUsers = len(seededUserIDs)
 		utils.Info("Limited users to available seeded count",
-			zap.Int("requested", s.config.SimulatorUsers),
-			zap.Int("available", len(seededUserIDs)),
-			zap.Int("using", maxUsers))
+			utils.Int("requested", s.config.SimulatorUsers),
+			utils.Int("available", len(seededUserIDs)),
+			utils.Int("using", maxUsers))
 	}
 
 	s.users = make([]*User, maxUsers)
@@ -242,7 +240,7 @@ func (s *Simulator) initializeUsers() error {
 	s.stats.TotalUsers = len(s.users)
 	s.stats.mu.Unlock()
 
-	utils.Info("Initialized users", zap.Int("count", len(s.users)))
+	utils.Info("Initialized users", utils.Int("count", len(s.users)))
 	return nil
 }
 
@@ -302,13 +300,13 @@ func (s *Simulator) reportStatistics() {
 	uptime := time.Since(startTime)
 
 	utils.Info("Simulation Statistics",
-		zap.Duration("uptime", uptime),
-		zap.Int("active_trips", activeTrips),
-		zap.Int("completed_trips", completedTrips),
-		zap.Int("available_scooters", availableScooters),
-		zap.Int("occupied_scooters", occupiedScooters),
-		zap.Int("total_users", totalUsers),
-		zap.Int("total_scooters", totalScooters),
+		utils.Duration("uptime", uptime),
+		utils.Int("active_trips", activeTrips),
+		utils.Int("completed_trips", completedTrips),
+		utils.Int("available_scooters", availableScooters),
+		utils.Int("occupied_scooters", occupiedScooters),
+		utils.Int("total_users", totalUsers),
+		utils.Int("total_scooters", totalScooters),
 	)
 }
 

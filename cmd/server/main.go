@@ -19,7 +19,6 @@ import (
 	"scootin-aboot/pkg/utils"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -36,38 +35,38 @@ func main() {
 	dsn := cfg.GetDatabaseDSN()
 	gormDB, err := database.ConnectDatabase(dsn)
 	if err != nil {
-		utils.Fatal("Failed to connect to database", zap.Error(err))
+		utils.Fatal("Failed to connect to database", utils.ErrorField(err))
 	}
 
 	migrationDB, err := database.ConnectDatabase(dsn)
 	if err != nil {
-		utils.Fatal("Failed to connect to database for migrations", zap.Error(err))
+		utils.Fatal("Failed to connect to database for migrations", utils.ErrorField(err))
 	}
 
 	sqlDB, err := migrationDB.DB()
 	if err != nil {
-		utils.Fatal("Failed to get underlying sql.DB for migrations", zap.Error(err))
+		utils.Fatal("Failed to get underlying sql.DB for migrations", utils.ErrorField(err))
 	}
 
 	migrationsPath, err := database.GetMigrationsPath()
 	if err != nil {
-		utils.Fatal("Failed to get migrations path", zap.Error(err))
+		utils.Fatal("Failed to get migrations path", utils.ErrorField(err))
 	}
 
 	if err := database.MigrateUp(sqlDB, migrationsPath); err != nil {
-		utils.Fatal("Failed to run database migrations", zap.Error(err))
+		utils.Fatal("Failed to run database migrations", utils.ErrorField(err))
 	}
 
 	if err := sqlDB.Close(); err != nil {
-		utils.Error("Failed to close migration database connection", zap.Error(err))
+		utils.Error("Failed to close migration database connection", utils.ErrorField(err))
 	}
 
 	stopHealthCheck := database.StartHealthCheck(gormDB, 30*time.Second)
 
 	utils.Info("Starting Scootin' Aboot server",
-		zap.String("host", cfg.ServerHost),
-		zap.String("port", cfg.ServerPort),
-		zap.String("log_level", cfg.LogLevel),
+		utils.String("host", cfg.ServerHost),
+		utils.String("port", cfg.ServerPort),
+		utils.String("log_level", cfg.LogLevel),
 	)
 
 	if cfg.LogLevel == "debug" {
@@ -101,7 +100,7 @@ func main() {
 	routes.SetupRoutes(router, cfg.APIKey, tripService, scooterService)
 
 	address := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)
-	utils.Info("Server starting", zap.String("address", address))
+	utils.Info("Server starting", utils.String("address", address))
 
 	srv := &http.Server{
 		Addr:    address,
@@ -110,7 +109,7 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			utils.Fatal("Failed to start server", zap.Error(err))
+			utils.Fatal("Failed to start server", utils.ErrorField(err))
 		}
 	}()
 
@@ -123,17 +122,17 @@ func main() {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		utils.Fatal("Server forced to shutdown", zap.Error(err))
+		utils.Fatal("Server forced to shutdown", utils.ErrorField(err))
 	}
 
 	stopHealthCheck()
 
 	mainSqlDB, err := gormDB.DB()
 	if err != nil {
-		utils.Error("Failed to get main database connection for closing", zap.Error(err))
+		utils.Error("Failed to get main database connection for closing", utils.ErrorField(err))
 	} else {
 		if err := mainSqlDB.Close(); err != nil {
-			utils.Error("Failed to close database connection", zap.Error(err))
+			utils.Error("Failed to close database connection", utils.ErrorField(err))
 		}
 	}
 
