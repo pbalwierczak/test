@@ -83,7 +83,6 @@ func ValidateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
 	return nil
 }
 
-
 type LocationProvider interface {
 	GetLatitude() float64
 	GetLongitude() float64
