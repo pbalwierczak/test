@@ -153,10 +153,10 @@ func (s *scooterService) GetScooters(ctx context.Context, params ScooterQueryPar
 func (s *scooterService) GetScooter(ctx context.Context, id uuid.UUID) (*ScooterDetailsResult, error) {
 	scooter, err := s.scooterRepo.GetByID(ctx, id)
 	if err != nil {
+		if errors.Is(err, repository.ErrScooterNotFound) {
+			return nil, err
+		}
 		return nil, fmt.Errorf("failed to get scooter: %w", err)
-	}
-	if scooter == nil {
-		return nil, errors.New("scooter not found")
 	}
 
 	var activeTrip *TripInfo

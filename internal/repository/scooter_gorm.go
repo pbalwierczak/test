@@ -24,7 +24,7 @@ func (r *gormScooterRepository) GetByID(ctx context.Context, id uuid.UUID) (*mod
 	err := r.db.WithContext(ctx).First(&scooter, "id = ?", id).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil
+			return nil, ErrScooterNotFound
 		}
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (r *gormScooterRepository) GetByIDForUpdate(ctx context.Context, id uuid.UU
 		First(&scooter, "id = ?", id).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, nil
+			return nil, ErrScooterNotFound
 		}
 		return nil, err
 	}

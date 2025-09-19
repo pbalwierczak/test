@@ -3,8 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"scootin-aboot/internal/api/middleware"
+	"scootin-aboot/internal/repository"
 	"scootin-aboot/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -24,10 +27,13 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 		mockScooterService.On("GetScooters", mock.Anything, mock.AnythingOfType("services.ScooterQueryParams")).
 			Return(expectedResult, nil)
 
-		c, w := setupTestContext("GET", "/api/v1/scooters?status=available&limit=10&offset=0", nil)
+		router := gin.New()
+		router.Use(middleware.ErrorHandlerMiddleware())
+		router.GET("/test", handler.GetScooters)
 
-		// Act
-		handler.GetScooters(c)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test?status=available&limit=10&offset=0", nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -84,14 +90,17 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 		mockScooterService.On("GetScooters", mock.Anything, mock.AnythingOfType("services.ScooterQueryParams")).
 			Return(nil, assert.AnError)
 
-		c, w := setupTestContext("GET", "/api/v1/scooters", nil)
+		router := gin.New()
+		router.Use(middleware.ErrorHandlerMiddleware())
+		router.GET("/test", handler.GetScooters)
 
-		// Act
-		handler.GetScooters(c)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test", nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assertErrorResponse(t, w, http.StatusInternalServerError, "Failed to retrieve scooters")
+		assertErrorResponse(t, w, http.StatusInternalServerError, "Internal server error")
 
 		mockScooterService.AssertExpectations(t)
 	})
@@ -101,10 +110,10 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		c, w := setupTestContext("GET", "/api/v1/scooters?limit=invalid", nil)
-
-		// Act
-		handler.GetScooters(c)
+		router := createTestRouter(handler.GetScooters)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test?limit=invalid", nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
 		assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -204,10 +213,10 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		c, w := setupTestContext("GET", "/api/v1/scooters/"+TestData.InvalidUUID, nil)
-
-		// Act
-		handler.GetScooter(c)
+		router := createTestRouterWithParam(handler.GetScooter)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test/"+TestData.InvalidUUID, nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
 		assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -224,14 +233,14 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 		mockScooterService.On("GetScooter", mock.Anything, TestData.ValidScooterID).
 			Return(nil, assert.AnError)
 
-		c, w := setupTestContext("GET", "/api/v1/scooters/"+TestData.ValidScooterID.String(), nil)
-
-		// Act
-		handler.GetScooter(c)
+		router := createTestRouterWithParam(handler.GetScooter)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test/"+TestData.ValidScooterID.String(), nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assertErrorResponse(t, w, http.StatusInternalServerError, "Failed to retrieve scooter")
+		assertErrorResponse(t, w, http.StatusInternalServerError, "Internal server error")
 
 		mockScooterService.AssertExpectations(t)
 	})
@@ -241,21 +250,19 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
+		// Simulate repository.ErrScooterNotFound error
 		mockScooterService.On("GetScooter", mock.Anything, TestData.ValidScooterID).
-			Return(nil, assert.AnError)
+			Return(nil, repository.ErrScooterNotFound)
 
-		// Override the error message to simulate "scooter not found"
-		mockScooterService.ExpectedCalls = nil
-		mockScooterService.On("GetScooter", mock.Anything, TestData.ValidScooterID).
-			Return(nil, assert.AnError)
-
-		c, w := setupTestContext("GET", "/api/v1/scooters/"+TestData.ValidScooterID.String(), nil)
-
-		// Act
-		handler.GetScooter(c)
+		router := createTestRouterWithParam(handler.GetScooter)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test/"+TestData.ValidScooterID.String(), nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assertErrorResponse(t, w, http.StatusNotFound, "Resource not found")
+
 		mockScooterService.AssertExpectations(t)
 	})
 }
@@ -299,10 +306,10 @@ func TestScooterHandler_GetClosestScooters(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		c, w := setupTestContext("GET", "/api/v1/scooters/closest", nil)
-
-		// Act
-		handler.GetClosestScooters(c)
+		router := createTestRouter(handler.GetClosestScooters)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test", nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
 		assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -320,14 +327,14 @@ func TestScooterHandler_GetClosestScooters(t *testing.T) {
 		mockScooterService.On("GetClosestScooters", mock.Anything, mock.AnythingOfType("services.ClosestScootersQueryParams")).
 			Return(nil, assert.AnError)
 
-		c, w := setupTestContext("GET", "/api/v1/scooters/closest?lat=52.5200&lng=13.4050", nil)
-
-		// Act
-		handler.GetClosestScooters(c)
+		router := createTestRouter(handler.GetClosestScooters)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/test?lat=52.5200&lng=13.4050", nil)
+		router.ServeHTTP(w, req)
 
 		// Assert
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assertErrorResponse(t, w, http.StatusInternalServerError, "Failed to retrieve closest scooters")
+		assertErrorResponse(t, w, http.StatusInternalServerError, "Internal server error")
 
 		mockScooterService.AssertExpectations(t)
 	})

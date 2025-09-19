@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"scootin-aboot/internal/api/handlers/mocks"
+	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -67,6 +68,48 @@ func setupTestContext(method, url string, body io.Reader) (*gin.Context, *httpte
 	return c, w
 }
 
+func setupTestContextWithMiddleware(method, url string, body io.Reader) (*gin.Context, *httptest.ResponseRecorder) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(middleware.ErrorHandlerMiddleware())
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(method, url, body)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	router.ServeHTTP(w, req)
+
+	// Create a context for the handler
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	if id := extractIDFromURL(url); id != "" {
+		c.Params = gin.Params{
+			{Key: "id", Value: id},
+		}
+	}
+
+	return c, w
+}
+
+func createTestRouter(handler gin.HandlerFunc) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(middleware.ErrorHandlerMiddleware())
+	router.GET("/test", handler)
+	return router
+}
+
+func createTestRouterWithParam(handler gin.HandlerFunc) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(middleware.ErrorHandlerMiddleware())
+	router.GET("/test/:id", handler)
+	return router
+}
+
 func extractIDFromURL(url string) string {
 	parts := strings.Split(url, "/")
 	for i, part := range parts {
@@ -94,10 +137,18 @@ func assertJSONResponse(t *testing.T, expected interface{}, actual string) {
 func assertErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatus int, expectedMessage string) {
 	assert.Equal(t, expectedStatus, w.Code)
 
-	var response map[string]string
+	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, expectedMessage, response["error"])
+
+	// Check if it's the new error format (with message field) or old format (with error field)
+	if message, exists := response["message"]; exists {
+		assert.Equal(t, expectedMessage, message)
+	} else if errorMsg, exists := response["error"]; exists {
+		assert.Equal(t, expectedMessage, errorMsg)
+	} else {
+		t.Errorf("Expected error response to contain 'message' or 'error' field")
+	}
 }
 
 func createValidScooterListResult() *services.ScooterListResult {

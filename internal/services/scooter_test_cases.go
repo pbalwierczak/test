@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"scootin-aboot/internal/models"
+	"scootin-aboot/internal/repository"
 	"scootin-aboot/internal/repository/mocks"
 
 	"github.com/google/uuid"
@@ -101,7 +102,7 @@ func (tc *ScooterTestCases) GetScooterTestCases() []struct {
 			ScooterID:     TestData.ValidScooterID,
 			ExpectedError: "scooter not found",
 			SetupMocks: func(scooterRepo *mocks.MockScooterRepository, tripRepo *mocks.MockTripRepository) {
-				scooterRepo.On("GetByID", mock.Anything, TestData.ValidScooterID).Return(nil, nil)
+				scooterRepo.On("GetByID", mock.Anything, TestData.ValidScooterID).Return(nil, repository.ErrScooterNotFound)
 			},
 		},
 		{
