@@ -38,16 +38,23 @@ A comprehensive backend service for managing electric scooters in Ottawa and Mon
    make start-app
    ```
 
-3. **Start the simulator** (in another terminal):
+3. **Load sample data** (required for simulator):
+   ```bash
+   make seed
+   ```
+
+4. **Start the simulator**:
    ```bash
    make start-sim
    ```
 
-4. **View logs**:
+5. **View logs**:
    ```bash
    make logs-app    # View application logs
    make logs-sim    # View simulator logs
    ```
+
+> 📖 **Detailed Simulator Setup**: For comprehensive simulator configuration, troubleshooting, and advanced usage, see [SIMULATOR_SETUP.md](SIMULATOR_SETUP.md).
 
 ### Available Commands
 
@@ -113,6 +120,36 @@ The simulator publishes events to Kafka topics that are consumed by the server:
 - **Reliability**: Events are persisted and can be replayed
 - **Observability**: Complete event flow visibility
 - **Flexibility**: Easy to add new event consumers
+
+## Simulator System
+
+The application includes a comprehensive simulator system for testing and development. The simulator creates realistic scooter and user behavior, including:
+
+- **Scooter Simulation**: Multiple scooters with realistic movement patterns
+- **User Simulation**: Virtual users starting and ending trips
+- **Location Updates**: Periodic GPS updates during active trips
+- **Event Publishing**: Real-time Kafka event publishing
+
+### Quick Simulator Start
+
+```bash
+# Start the main application
+make start-app
+
+# Load sample data (required for simulator)
+make seed
+
+# Start the simulator (in another terminal)
+make start-sim
+
+# Monitor both services
+make logs-app    # Application logs
+make logs-sim    # Simulator logs
+```
+
+### Simulator Documentation
+
+For detailed simulator setup, configuration, troubleshooting, and advanced usage, see the dedicated [SIMULATOR_SETUP.md](SIMULATOR_SETUP.md) documentation.
 
 ## Configuration
 
