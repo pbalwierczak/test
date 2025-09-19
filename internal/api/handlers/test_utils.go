@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 	"time"
 
 	"scootin-aboot/internal/api/handlers/mocks"
-	"scootin-aboot/internal/models"
 	"scootin-aboot/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -174,33 +172,4 @@ func createValidClosestScootersResult() *services.ClosestScootersResult {
 		},
 		Radius: TestData.ValidRadius,
 	}
-}
-
-func createValidTrip() *models.Trip {
-	now := time.Now()
-	return &models.Trip{
-		ID:             TestData.ValidTripID,
-		ScooterID:      TestData.ValidScooterID,
-		UserID:         TestData.ValidUserID,
-		StartTime:      now.Add(-30 * time.Minute),
-		EndTime:        &now,
-		StartLatitude:  TestData.ValidLatitude,
-		StartLongitude: TestData.ValidLongitude,
-		EndLatitude:    &TestData.ValidLatitude,
-		EndLongitude:   &TestData.ValidLongitude,
-		Status:         models.TripStatusCompleted,
-	}
-}
-
-func toJSON(obj interface{}) *bytes.Buffer {
-	jsonData, _ := json.Marshal(obj)
-	return bytes.NewBuffer(jsonData)
-}
-
-type mockError struct {
-	message string
-}
-
-func (e *mockError) Error() string {
-	return e.message
 }
