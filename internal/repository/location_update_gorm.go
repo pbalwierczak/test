@@ -60,28 +60,28 @@ func (r *gormLocationUpdateRepository) List(ctx context.Context, limit, offset i
 	return updates, err
 }
 
-// GetByTripID retrieves location updates for a trip
-func (r *gormLocationUpdateRepository) GetByTripID(ctx context.Context, tripID uuid.UUID) ([]*models.LocationUpdate, error) {
+// GetByScooterID retrieves location updates for a scooter
+func (r *gormLocationUpdateRepository) GetByScooterID(ctx context.Context, scooterID uuid.UUID) ([]*models.LocationUpdate, error) {
 	var updates []*models.LocationUpdate
-	err := r.db.WithContext(ctx).Where("trip_id = ?", tripID).Find(&updates).Error
+	err := r.db.WithContext(ctx).Where("scooter_id = ?", scooterID).Find(&updates).Error
 	return updates, err
 }
 
-// GetByTripIDOrdered retrieves location updates for a trip ordered by timestamp
-func (r *gormLocationUpdateRepository) GetByTripIDOrdered(ctx context.Context, tripID uuid.UUID) ([]*models.LocationUpdate, error) {
+// GetByScooterIDOrdered retrieves location updates for a scooter ordered by timestamp
+func (r *gormLocationUpdateRepository) GetByScooterIDOrdered(ctx context.Context, scooterID uuid.UUID) ([]*models.LocationUpdate, error) {
 	var updates []*models.LocationUpdate
 	err := r.db.WithContext(ctx).
-		Where("trip_id = ?", tripID).
+		Where("scooter_id = ?", scooterID).
 		Order("timestamp ASC").
 		Find(&updates).Error
 	return updates, err
 }
 
-// GetLatestByTripID retrieves the latest location update for a trip
-func (r *gormLocationUpdateRepository) GetLatestByTripID(ctx context.Context, tripID uuid.UUID) (*models.LocationUpdate, error) {
+// GetLatestByScooterID retrieves the latest location update for a scooter
+func (r *gormLocationUpdateRepository) GetLatestByScooterID(ctx context.Context, scooterID uuid.UUID) (*models.LocationUpdate, error) {
 	var update models.LocationUpdate
 	err := r.db.WithContext(ctx).
-		Where("trip_id = ?", tripID).
+		Where("scooter_id = ?", scooterID).
 		Order("timestamp DESC").
 		First(&update).Error
 	if err != nil {
@@ -102,11 +102,11 @@ func (r *gormLocationUpdateRepository) GetByDateRange(ctx context.Context, start
 	return updates, err
 }
 
-// GetByTripIDAndDateRange retrieves location updates for a trip within a date range
-func (r *gormLocationUpdateRepository) GetByTripIDAndDateRange(ctx context.Context, tripID uuid.UUID, start, end time.Time) ([]*models.LocationUpdate, error) {
+// GetByScooterIDAndDateRange retrieves location updates for a scooter within a date range
+func (r *gormLocationUpdateRepository) GetByScooterIDAndDateRange(ctx context.Context, scooterID uuid.UUID, start, end time.Time) ([]*models.LocationUpdate, error) {
 	var updates []*models.LocationUpdate
 	err := r.db.WithContext(ctx).
-		Where("trip_id = ? AND timestamp BETWEEN ? AND ?", tripID, start, end).
+		Where("scooter_id = ? AND timestamp BETWEEN ? AND ?", scooterID, start, end).
 		Find(&updates).Error
 	return updates, err
 }
@@ -151,11 +151,11 @@ func (r *gormLocationUpdateRepository) GetUpdateCount(ctx context.Context) (int6
 	return count, err
 }
 
-// GetUpdateCountByTrip returns the number of location updates for a trip
-func (r *gormLocationUpdateRepository) GetUpdateCountByTrip(ctx context.Context, tripID uuid.UUID) (int64, error) {
+// GetUpdateCountByScooter returns the number of location updates for a scooter
+func (r *gormLocationUpdateRepository) GetUpdateCountByScooter(ctx context.Context, scooterID uuid.UUID) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&models.LocationUpdate{}).
-		Where("trip_id = ?", tripID).
+		Where("scooter_id = ?", scooterID).
 		Count(&count).Error
 	return count, err
 }

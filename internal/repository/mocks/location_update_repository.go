@@ -43,18 +43,18 @@ func (m *MockLocationUpdateRepository) List(ctx context.Context, limit, offset i
 	return args.Get(0).([]*models.LocationUpdate), args.Error(1)
 }
 
-func (m *MockLocationUpdateRepository) GetByTripID(ctx context.Context, tripID uuid.UUID) ([]*models.LocationUpdate, error) {
-	args := m.Called(ctx, tripID)
+func (m *MockLocationUpdateRepository) GetByScooterID(ctx context.Context, scooterID uuid.UUID) ([]*models.LocationUpdate, error) {
+	args := m.Called(ctx, scooterID)
 	return args.Get(0).([]*models.LocationUpdate), args.Error(1)
 }
 
-func (m *MockLocationUpdateRepository) GetByTripIDOrdered(ctx context.Context, tripID uuid.UUID) ([]*models.LocationUpdate, error) {
-	args := m.Called(ctx, tripID)
+func (m *MockLocationUpdateRepository) GetByScooterIDOrdered(ctx context.Context, scooterID uuid.UUID) ([]*models.LocationUpdate, error) {
+	args := m.Called(ctx, scooterID)
 	return args.Get(0).([]*models.LocationUpdate), args.Error(1)
 }
 
-func (m *MockLocationUpdateRepository) GetLatestByTripID(ctx context.Context, tripID uuid.UUID) (*models.LocationUpdate, error) {
-	args := m.Called(ctx, tripID)
+func (m *MockLocationUpdateRepository) GetLatestByScooterID(ctx context.Context, scooterID uuid.UUID) (*models.LocationUpdate, error) {
+	args := m.Called(ctx, scooterID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -66,8 +66,8 @@ func (m *MockLocationUpdateRepository) GetByDateRange(ctx context.Context, start
 	return args.Get(0).([]*models.LocationUpdate), args.Error(1)
 }
 
-func (m *MockLocationUpdateRepository) GetByTripIDAndDateRange(ctx context.Context, tripID uuid.UUID, start, end time.Time) ([]*models.LocationUpdate, error) {
-	args := m.Called(ctx, tripID, start, end)
+func (m *MockLocationUpdateRepository) GetByScooterIDAndDateRange(ctx context.Context, scooterID uuid.UUID, start, end time.Time) ([]*models.LocationUpdate, error) {
+	args := m.Called(ctx, scooterID, start, end)
 	return args.Get(0).([]*models.LocationUpdate), args.Error(1)
 }
 
@@ -86,7 +86,7 @@ func (m *MockLocationUpdateRepository) GetUpdateCount(ctx context.Context) (int6
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockLocationUpdateRepository) GetUpdateCountByTrip(ctx context.Context, tripID uuid.UUID) (int64, error) {
-	args := m.Called(ctx, tripID)
+func (m *MockLocationUpdateRepository) GetUpdateCountByScooter(ctx context.Context, scooterID uuid.UUID) (int64, error) {
+	args := m.Called(ctx, scooterID)
 	return args.Get(0).(int64), args.Error(1)
 }

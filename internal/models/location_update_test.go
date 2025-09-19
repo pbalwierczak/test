@@ -11,15 +11,15 @@ import (
 
 func TestLocationUpdateModel(t *testing.T) {
 	t.Run("CreateLocationUpdate", func(t *testing.T) {
-		tripID := uuid.New()
+		scooterID := uuid.New()
 		latitude := 45.4215
 		longitude := -75.6972
 		timestamp := time.Now()
 
-		lu, err := CreateLocationUpdate(tripID, latitude, longitude, timestamp)
+		lu, err := CreateLocationUpdate(scooterID, latitude, longitude, timestamp)
 		require.NoError(t, err)
 
-		assert.Equal(t, tripID, lu.TripID)
+		assert.Equal(t, scooterID, lu.ScooterID)
 		assert.Equal(t, latitude, lu.Latitude)
 		assert.Equal(t, longitude, lu.Longitude)
 		assert.Equal(t, timestamp, lu.Timestamp)
@@ -30,12 +30,12 @@ func TestLocationUpdateModel(t *testing.T) {
 	})
 
 	t.Run("CreateLocationUpdateWithInvalidCoordinates", func(t *testing.T) {
-		tripID := uuid.New()
+		scooterID := uuid.New()
 		latitude := 91.0 // Invalid latitude
 		longitude := -75.6972
 		timestamp := time.Now()
 
-		lu, err := CreateLocationUpdate(tripID, latitude, longitude, timestamp)
+		lu, err := CreateLocationUpdate(scooterID, latitude, longitude, timestamp)
 		assert.Error(t, err)
 		assert.Nil(t, lu)
 		assert.Contains(t, err.Error(), "invalid latitude")

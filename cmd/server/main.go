@@ -99,6 +99,7 @@ func main() {
 	scooterService := services.NewScooterService(
 		repo.Scooter(),
 		repo.Trip(),
+		repo.LocationUpdate(),
 	)
 
 	// Create Gin router

@@ -11,13 +11,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestNewScooterService(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
 
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	assert.NotNil(t, service)
 	assert.IsType(t, &scooterService{}, service)
@@ -26,7 +28,8 @@ func TestNewScooterService(t *testing.T) {
 func TestScooterService_GetScooters_NoFilters(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ScooterQueryParams{
@@ -65,7 +68,8 @@ func TestScooterService_GetScooters_NoFilters(t *testing.T) {
 func TestScooterService_GetScooters_StatusFilter(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ScooterQueryParams{
@@ -98,7 +102,8 @@ func TestScooterService_GetScooters_StatusFilter(t *testing.T) {
 func TestScooterService_GetScooters_GeographicBounds(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ScooterQueryParams{
@@ -134,7 +139,8 @@ func TestScooterService_GetScooters_GeographicBounds(t *testing.T) {
 func TestScooterService_GetScooters_StatusAndBounds(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ScooterQueryParams{
@@ -171,7 +177,8 @@ func TestScooterService_GetScooters_StatusAndBounds(t *testing.T) {
 func TestScooterService_GetScooters_Pagination(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ScooterQueryParams{
@@ -209,7 +216,8 @@ func TestScooterService_GetScooters_Pagination(t *testing.T) {
 func TestScooterService_GetScooters_InvalidParams(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 
@@ -260,7 +268,8 @@ func TestScooterService_GetScooters_InvalidParams(t *testing.T) {
 func TestScooterService_GetScooters_RepositoryError(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ScooterQueryParams{
@@ -282,7 +291,8 @@ func TestScooterService_GetScooters_RepositoryError(t *testing.T) {
 func TestScooterService_GetScooter_Success(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	scooterID := uuid.New()
@@ -314,7 +324,8 @@ func TestScooterService_GetScooter_Success(t *testing.T) {
 func TestScooterService_GetScooter_NotFound(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	scooterID := uuid.New()
@@ -332,7 +343,8 @@ func TestScooterService_GetScooter_NotFound(t *testing.T) {
 func TestScooterService_GetScooter_WithActiveTrip(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	scooterID := uuid.New()
@@ -375,7 +387,8 @@ func TestScooterService_GetScooter_WithActiveTrip(t *testing.T) {
 func TestScooterService_GetScooter_WithoutActiveTrip(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	scooterID := uuid.New()
@@ -406,7 +419,8 @@ func TestScooterService_GetScooter_WithoutActiveTrip(t *testing.T) {
 func TestScooterService_GetScooter_RepositoryError(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	scooterID := uuid.New()
@@ -425,7 +439,8 @@ func TestScooterService_GetScooter_RepositoryError(t *testing.T) {
 func TestScooterService_GetScooter_TripQueryError(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	scooterID := uuid.New()
@@ -458,7 +473,8 @@ func TestScooterService_GetScooter_TripQueryError(t *testing.T) {
 func TestScooterService_GetClosestScooters_Success(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ClosestScootersQueryParams{
@@ -497,7 +513,8 @@ func TestScooterService_GetClosestScooters_Success(t *testing.T) {
 func TestScooterService_GetClosestScooters_WithStatusFilter(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ClosestScootersQueryParams{
@@ -532,7 +549,8 @@ func TestScooterService_GetClosestScooters_WithStatusFilter(t *testing.T) {
 func TestScooterService_GetClosestScooters_InvalidCoordinates(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 
@@ -572,7 +590,8 @@ func TestScooterService_GetClosestScooters_InvalidCoordinates(t *testing.T) {
 func TestScooterService_GetClosestScooters_InvalidRadius(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 
@@ -612,7 +631,8 @@ func TestScooterService_GetClosestScooters_InvalidRadius(t *testing.T) {
 func TestScooterService_GetClosestScooters_InvalidLimit(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 
@@ -652,7 +672,8 @@ func TestScooterService_GetClosestScooters_InvalidLimit(t *testing.T) {
 func TestScooterService_GetClosestScooters_RepositoryError(t *testing.T) {
 	mockScooterRepo := &mocks.MockScooterRepository{}
 	mockTripRepo := &mocks.MockTripRepository{}
-	service := NewScooterService(mockScooterRepo, mockTripRepo)
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
 
 	ctx := context.Background()
 	params := ClosestScootersQueryParams{
@@ -873,4 +894,159 @@ func TestMapScooterToInfo_MinimalScooter(t *testing.T) {
 	assert.Equal(t, string(scooter.Status), result.Status)
 	assert.Equal(t, scooter.CurrentLatitude, result.CurrentLatitude)
 	assert.Equal(t, scooter.CurrentLongitude, result.CurrentLongitude)
+}
+
+func TestScooterService_UpdateLocation_Success(t *testing.T) {
+	mockScooterRepo := &mocks.MockScooterRepository{}
+	mockTripRepo := &mocks.MockTripRepository{}
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
+
+	ctx := context.Background()
+	scooterID := uuid.New()
+	latitude := 45.4215
+	longitude := -75.6972
+
+	// Mock scooter exists
+	scooter := &models.Scooter{
+		ID:               scooterID,
+		Status:           models.ScooterStatusAvailable,
+		CurrentLatitude:  45.0,
+		CurrentLongitude: -75.0,
+		LastSeen:         time.Now(),
+		CreatedAt:        time.Now(),
+	}
+
+	mockScooterRepo.On("GetByID", ctx, scooterID).Return(scooter, nil)
+	mockLocationRepo.On("Create", ctx, mock.AnythingOfType("*models.LocationUpdate")).Return(nil)
+	mockScooterRepo.On("UpdateLocation", ctx, scooterID, latitude, longitude).Return(nil)
+
+	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
+
+	assert.NoError(t, err)
+	mockScooterRepo.AssertExpectations(t)
+	mockLocationRepo.AssertExpectations(t)
+}
+
+func TestScooterService_UpdateLocation_InvalidCoordinates(t *testing.T) {
+	mockScooterRepo := &mocks.MockScooterRepository{}
+	mockTripRepo := &mocks.MockTripRepository{}
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
+
+	ctx := context.Background()
+	scooterID := uuid.New()
+	latitude := 91.0 // Invalid latitude
+	longitude := -75.6972
+
+	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid coordinates")
+}
+
+func TestScooterService_UpdateLocation_ScooterNotFound(t *testing.T) {
+	mockScooterRepo := &mocks.MockScooterRepository{}
+	mockTripRepo := &mocks.MockTripRepository{}
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
+
+	ctx := context.Background()
+	scooterID := uuid.New()
+	latitude := 45.4215
+	longitude := -75.6972
+
+	mockScooterRepo.On("GetByID", ctx, scooterID).Return(nil, nil)
+
+	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "scooter not found")
+	mockScooterRepo.AssertExpectations(t)
+}
+
+func TestScooterService_UpdateLocation_GetScooterError(t *testing.T) {
+	mockScooterRepo := &mocks.MockScooterRepository{}
+	mockTripRepo := &mocks.MockTripRepository{}
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
+
+	ctx := context.Background()
+	scooterID := uuid.New()
+	latitude := 45.4215
+	longitude := -75.6972
+
+	expectedError := errors.New("database error")
+	mockScooterRepo.On("GetByID", ctx, scooterID).Return(nil, expectedError)
+
+	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to get scooter")
+	mockScooterRepo.AssertExpectations(t)
+}
+
+func TestScooterService_UpdateLocation_CreateLocationUpdateError(t *testing.T) {
+	mockScooterRepo := &mocks.MockScooterRepository{}
+	mockTripRepo := &mocks.MockTripRepository{}
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
+
+	ctx := context.Background()
+	scooterID := uuid.New()
+	latitude := 45.4215
+	longitude := -75.6972
+
+	scooter := &models.Scooter{
+		ID:               scooterID,
+		Status:           models.ScooterStatusAvailable,
+		CurrentLatitude:  45.0,
+		CurrentLongitude: -75.0,
+		LastSeen:         time.Now(),
+		CreatedAt:        time.Now(),
+	}
+
+	expectedError := errors.New("database error")
+	mockScooterRepo.On("GetByID", ctx, scooterID).Return(scooter, nil)
+	mockLocationRepo.On("Create", ctx, mock.AnythingOfType("*models.LocationUpdate")).Return(expectedError)
+
+	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to create location update")
+	mockScooterRepo.AssertExpectations(t)
+	mockLocationRepo.AssertExpectations(t)
+}
+
+func TestScooterService_UpdateLocation_UpdateScooterLocationError(t *testing.T) {
+	mockScooterRepo := &mocks.MockScooterRepository{}
+	mockTripRepo := &mocks.MockTripRepository{}
+	mockLocationRepo := &mocks.MockLocationUpdateRepository{}
+	service := NewScooterService(mockScooterRepo, mockTripRepo, mockLocationRepo)
+
+	ctx := context.Background()
+	scooterID := uuid.New()
+	latitude := 45.4215
+	longitude := -75.6972
+
+	scooter := &models.Scooter{
+		ID:               scooterID,
+		Status:           models.ScooterStatusAvailable,
+		CurrentLatitude:  45.0,
+		CurrentLongitude: -75.0,
+		LastSeen:         time.Now(),
+		CreatedAt:        time.Now(),
+	}
+
+	expectedError := errors.New("database error")
+	mockScooterRepo.On("GetByID", ctx, scooterID).Return(scooter, nil)
+	mockLocationRepo.On("Create", ctx, mock.AnythingOfType("*models.LocationUpdate")).Return(nil)
+	mockScooterRepo.On("UpdateLocation", ctx, scooterID, latitude, longitude).Return(expectedError)
+
+	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to update scooter location")
+	mockScooterRepo.AssertExpectations(t)
+	mockLocationRepo.AssertExpectations(t)
 }

@@ -23,13 +23,13 @@ func (h *ScooterHandler) UpdateLocation(c *gin.Context) {
 		return
 	}
 
-	// Use trip service to update location
-	err = h.tripService.UpdateLocation(c.Request.Context(), scooterID, req.Latitude, req.Longitude)
+	// Use scooter service to update location
+	err = h.scooterService.UpdateLocation(c.Request.Context(), scooterID, req.Latitude, req.Longitude)
 	if err != nil {
 		// Map service errors to appropriate HTTP status codes
 		switch err.Error() {
-		case "no active trip found for scooter":
-			c.JSON(http.StatusNotFound, gin.H{"error": "No active trip found for scooter"})
+		case "scooter not found":
+			c.JSON(http.StatusNotFound, gin.H{"error": "Scooter not found"})
 		default:
 			if err.Error() == "invalid coordinates: invalid latitude: must be between -90 and 90" ||
 				err.Error() == "invalid coordinates: invalid longitude: must be between -180 and 180" {
@@ -41,25 +41,10 @@ func (h *ScooterHandler) UpdateLocation(c *gin.Context) {
 		return
 	}
 
-	// Get the active trip to return trip ID in response
-	trip, err := h.tripService.GetActiveTrip(c.Request.Context(), scooterID)
-	if err != nil {
-		// If we can't get the trip, still return success for location update
-		// but without trip ID
-		response := LocationUpdateResponse{
-			UpdateID:  uuid.New(),
-			Latitude:  req.Latitude,
-			Longitude: req.Longitude,
-			Timestamp: req.Timestamp,
-		}
-		c.JSON(http.StatusOK, response)
-		return
-	}
-
 	// Convert to response
 	response := LocationUpdateResponse{
 		UpdateID:  uuid.New(),
-		TripID:    trip.ID,
+		ScooterID: scooterID,
 		Latitude:  req.Latitude,
 		Longitude: req.Longitude,
 		Timestamp: req.Timestamp,

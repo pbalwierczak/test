@@ -75,7 +75,7 @@ type LocationUpdateRequest struct {
 // LocationUpdateResponse represents the response for location update
 type LocationUpdateResponse struct {
 	UpdateID  uuid.UUID `json:"update_id"`
-	TripID    uuid.UUID `json:"trip_id"`
+	ScooterID uuid.UUID `json:"scooter_id"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
 	Timestamp time.Time `json:"timestamp"`

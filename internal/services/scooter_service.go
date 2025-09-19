@@ -19,22 +19,28 @@ type ScooterService interface {
 	GetScooters(ctx context.Context, params ScooterQueryParams) (*ScooterListResult, error)
 	GetScooter(ctx context.Context, id uuid.UUID) (*ScooterDetailsResult, error)
 	GetClosestScooters(ctx context.Context, params ClosestScootersQueryParams) (*ClosestScootersResult, error)
+
+	// Location operations
+	UpdateLocation(ctx context.Context, scooterID uuid.UUID, lat, lng float64) error
 }
 
 // scooterService implements ScooterService interface
 type scooterService struct {
-	scooterRepo repository.ScooterRepository
-	tripRepo    repository.TripRepository
+	scooterRepo  repository.ScooterRepository
+	tripRepo     repository.TripRepository
+	locationRepo repository.LocationUpdateRepository
 }
 
 // NewScooterService creates a new scooter service instance
 func NewScooterService(
 	scooterRepo repository.ScooterRepository,
 	tripRepo repository.TripRepository,
+	locationRepo repository.LocationUpdateRepository,
 ) ScooterService {
 	return &scooterService{
-		scooterRepo: scooterRepo,
-		tripRepo:    tripRepo,
+		scooterRepo:  scooterRepo,
+		tripRepo:     tripRepo,
+		locationRepo: locationRepo,
 	}
 }
 
@@ -309,6 +315,43 @@ func (s *scooterService) validateClosestScootersParams(params ClosestScootersQue
 	}
 	if params.Limit > 50 {
 		return errors.New("limit cannot exceed 50")
+	}
+
+	return nil
+}
+
+// UpdateLocation updates the location of a scooter and creates a location update record
+func (s *scooterService) UpdateLocation(ctx context.Context, scooterID uuid.UUID, lat, lng float64) error {
+	// Validate coordinates
+	if err := validation.ValidateCoordinates(lat, lng); err != nil {
+		return fmt.Errorf("invalid coordinates: %w", err)
+	}
+
+	// Check if scooter exists
+	scooter, err := s.scooterRepo.GetByID(ctx, scooterID)
+	if err != nil {
+		return fmt.Errorf("failed to get scooter: %w", err)
+	}
+	if scooter == nil {
+		return errors.New("scooter not found")
+	}
+
+	// Create location update record
+	locationUpdate := &models.LocationUpdate{
+		ScooterID: scooterID,
+		Latitude:  lat,
+		Longitude: lng,
+		Timestamp: time.Now(),
+	}
+
+	// Save location update
+	if err := s.locationRepo.Create(ctx, locationUpdate); err != nil {
+		return fmt.Errorf("failed to create location update: %w", err)
+	}
+
+	// Update scooter's current location
+	if err := s.scooterRepo.UpdateLocation(ctx, scooterID, lat, lng); err != nil {
+		return fmt.Errorf("failed to update scooter location: %w", err)
 	}
 
 	return nil

@@ -18,14 +18,14 @@ type LocationUpdateRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context, limit, offset int) ([]*models.LocationUpdate, error)
 
-	// Trip-specific queries
-	GetByTripID(ctx context.Context, tripID uuid.UUID) ([]*models.LocationUpdate, error)
-	GetByTripIDOrdered(ctx context.Context, tripID uuid.UUID) ([]*models.LocationUpdate, error)
-	GetLatestByTripID(ctx context.Context, tripID uuid.UUID) (*models.LocationUpdate, error)
+	// Scooter-specific queries
+	GetByScooterID(ctx context.Context, scooterID uuid.UUID) ([]*models.LocationUpdate, error)
+	GetByScooterIDOrdered(ctx context.Context, scooterID uuid.UUID) ([]*models.LocationUpdate, error)
+	GetLatestByScooterID(ctx context.Context, scooterID uuid.UUID) (*models.LocationUpdate, error)
 
 	// Time-based queries
 	GetByDateRange(ctx context.Context, start, end time.Time) ([]*models.LocationUpdate, error)
-	GetByTripIDAndDateRange(ctx context.Context, tripID uuid.UUID, start, end time.Time) ([]*models.LocationUpdate, error)
+	GetByScooterIDAndDateRange(ctx context.Context, scooterID uuid.UUID, start, end time.Time) ([]*models.LocationUpdate, error)
 
 	// Geographic queries
 	GetInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64) ([]*models.LocationUpdate, error)
@@ -33,5 +33,5 @@ type LocationUpdateRepository interface {
 
 	// Statistics
 	GetUpdateCount(ctx context.Context) (int64, error)
-	GetUpdateCountByTrip(ctx context.Context, tripID uuid.UUID) (int64, error)
+	GetUpdateCountByScooter(ctx context.Context, scooterID uuid.UUID) (int64, error)
 }

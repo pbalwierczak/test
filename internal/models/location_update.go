@@ -9,10 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// LocationUpdate represents a location update during a trip
+// LocationUpdate represents a location update for a scooter
 type LocationUpdate struct {
 	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	TripID    uuid.UUID      `json:"trip_id" gorm:"type:uuid;not null"`
+	ScooterID uuid.UUID      `json:"scooter_id" gorm:"type:uuid;not null"`
 	Latitude  float64        `json:"latitude" gorm:"type:decimal(10,8);not null"`
 	Longitude float64        `json:"longitude" gorm:"type:decimal(11,8);not null"`
 	Timestamp time.Time      `json:"timestamp" gorm:"not null"`
@@ -20,7 +20,7 @@ type LocationUpdate struct {
 	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
 
 	// Relationships
-	Trip Trip `json:"trip,omitempty" gorm:"foreignKey:TripID"`
+	Scooter Scooter `json:"scooter,omitempty" gorm:"foreignKey:ScooterID"`
 }
 
 // TableName returns the table name for the LocationUpdate model
@@ -58,9 +58,9 @@ func (lu *LocationUpdate) ValidateCoordinates() error {
 }
 
 // CreateLocationUpdate creates a new location update
-func CreateLocationUpdate(tripID uuid.UUID, latitude, longitude float64, timestamp time.Time) (*LocationUpdate, error) {
+func CreateLocationUpdate(scooterID uuid.UUID, latitude, longitude float64, timestamp time.Time) (*LocationUpdate, error) {
 	lu := &LocationUpdate{
-		TripID:    tripID,
+		ScooterID: scooterID,
 		Latitude:  latitude,
 		Longitude: longitude,
 		Timestamp: timestamp,

@@ -215,7 +215,7 @@ func (s *tripService) UpdateLocation(ctx context.Context, scooterID uuid.UUID, l
 
 	// Create location update record
 	locationUpdate := &models.LocationUpdate{
-		TripID:    trip.ID,
+		ScooterID: scooterID,
 		Latitude:  lat,
 		Longitude: lng,
 		Timestamp: time.Now(),
