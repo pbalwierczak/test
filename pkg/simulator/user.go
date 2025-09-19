@@ -91,11 +91,11 @@ func (u *User) simulateTrip() {
 		zap.String("trip_id", tripID),
 	)
 
-	// Simulate driving
-	u.simulateDriving(scooter.ID, tripID)
+	// Simulate driving and get final location
+	finalLocation := u.simulateDriving(scooter.ID, tripID)
 
-	// End trip
-	if err := u.endTrip(scooter.ID, scooter.Latitude, scooter.Longitude); err != nil {
+	// End trip at the final location
+	if err := u.endTrip(scooter.ID, finalLocation.Latitude, finalLocation.Longitude); err != nil {
 		utils.Error("Failed to end trip",
 			zap.Int("user_id", u.ID),
 			zap.String("scooter_id", scooter.ID),
@@ -157,8 +157,8 @@ func (u *User) endTrip(scooterID string, endLat, endLng float64) error {
 	return u.client.EndTrip(u.ctx, scooterID, userID, endLat, endLng)
 }
 
-// simulateDriving simulates the driving portion of the trip
-func (u *User) simulateDriving(scooterID, tripID string) {
+// simulateDriving simulates the driving portion of the trip and returns the final location
+func (u *User) simulateDriving(scooterID, tripID string) Location {
 	// Calculate trip duration (5-10 seconds)
 	duration := time.Duration(u.config.SimulatorTripDurationMin+rand.Intn(u.config.SimulatorTripDurationMax-u.config.SimulatorTripDurationMin+1)) * time.Second
 
@@ -185,10 +185,10 @@ func (u *User) simulateDriving(scooterID, tripID string) {
 	for {
 		select {
 		case <-u.ctx.Done():
-			return
+			return currentLocation
 		case <-tripTimer.C:
 			// Trip duration completed
-			return
+			return currentLocation
 		case <-ticker.C:
 			// Update location
 			currentLocation = u.movement.CalculateMovement(currentLocation, direction, 3*time.Second)
