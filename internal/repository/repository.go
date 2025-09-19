@@ -6,4 +6,5 @@ type Repository interface {
 	Trip() TripRepository
 	User() UserRepository
 	LocationUpdate() LocationUpdateRepository
+	UnitOfWork() UnitOfWork
 }

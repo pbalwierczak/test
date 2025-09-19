@@ -5,11 +5,15 @@ import (
 )
 
 type gormRepository struct {
-	db *gorm.DB
+	db         *gorm.DB
+	unitOfWork UnitOfWork
 }
 
 func NewGormRepository(db *gorm.DB) Repository {
-	return &gormRepository{db: db}
+	return &gormRepository{
+		db:         db,
+		unitOfWork: NewUnitOfWork(db),
+	}
 }
 
 func (r *gormRepository) Scooter() ScooterRepository {
@@ -26,4 +30,8 @@ func (r *gormRepository) User() UserRepository {
 
 func (r *gormRepository) LocationUpdate() LocationUpdateRepository {
 	return &gormLocationUpdateRepository{db: r.db}
+}
+
+func (r *gormRepository) UnitOfWork() UnitOfWork {
+	return r.unitOfWork
 }

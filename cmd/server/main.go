@@ -83,12 +83,14 @@ func main() {
 		repo.Scooter(),
 		repo.User(),
 		repo.LocationUpdate(),
+		repo.UnitOfWork(),
 	)
 
 	scooterService := services.NewScooterService(
 		repo.Scooter(),
 		repo.Trip(),
 		repo.LocationUpdate(),
+		repo.UnitOfWork(),
 	)
 
 	router := gin.New()

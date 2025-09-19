@@ -14,6 +14,18 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// setupBasicUnitOfWork sets up basic Unit of Work mocking for tests
+func setupBasicUnitOfWork(unitOfWork *mocks.MockUnitOfWork, tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+	mockTx := &mocks.MockUnitOfWorkTx{}
+	unitOfWork.On("Begin", mock.Anything).Return(mockTx, nil)
+	mockTx.On("UserRepository").Return(userRepo)
+	mockTx.On("TripRepository").Return(tripRepo)
+	mockTx.On("ScooterRepository").Return(scooterRepo)
+	mockTx.On("LocationUpdateRepository").Return(locationRepo)
+	mockTx.On("Commit").Return(nil)
+	mockTx.On("Rollback").Return(nil)
+}
+
 func TestTripService_StartTrip(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -21,7 +33,7 @@ func TestTripService_StartTrip(t *testing.T) {
 		userID        uuid.UUID
 		lat           float64
 		lng           float64
-		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 		expectedError string
 		expectedTrip  *models.Trip
 	}{
@@ -31,7 +43,16 @@ func TestTripService_StartTrip(t *testing.T) {
 			userID:    uuid.New(),
 			lat:       45.4215,
 			lng:       -75.6972,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
+				// Mock Unit of Work behavior
+				mockTx := &mocks.MockUnitOfWorkTx{}
+				unitOfWork.On("Begin", mock.Anything).Return(mockTx, nil)
+				mockTx.On("UserRepository").Return(userRepo)
+				mockTx.On("TripRepository").Return(tripRepo)
+				mockTx.On("ScooterRepository").Return(scooterRepo)
+				mockTx.On("Commit").Return(nil)
+
 				// User exists
 				userRepo.On("GetByID", mock.Anything, mock.Anything).Return(&models.User{ID: uuid.New()}, nil)
 
@@ -67,7 +88,8 @@ func TestTripService_StartTrip(t *testing.T) {
 			userID:    uuid.New(),
 			lat:       91.0,
 			lng:       -75.6972,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				// No mocks needed - validation fails before any repository calls
 			},
 			expectedError: "invalid coordinates: invalid latitude: must be between -90 and 90",
@@ -78,7 +100,9 @@ func TestTripService_StartTrip(t *testing.T) {
 			userID:    uuid.New(),
 			lat:       45.4215,
 			lng:       -75.6972,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				userRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 			expectedError: "user not found",
@@ -89,7 +113,8 @@ func TestTripService_StartTrip(t *testing.T) {
 			userID:    uuid.New(),
 			lat:       45.4215,
 			lng:       -75.6972,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				userRepo.On("GetByID", mock.Anything, mock.Anything).Return(&models.User{ID: uuid.New()}, nil)
 				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(&models.Trip{ID: uuid.New()}, nil)
 			},
@@ -101,7 +126,8 @@ func TestTripService_StartTrip(t *testing.T) {
 			userID:    uuid.New(),
 			lat:       45.4215,
 			lng:       -75.6972,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				userRepo.On("GetByID", mock.Anything, mock.Anything).Return(&models.User{ID: uuid.New()}, nil)
 				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, nil)
 				scooterRepo.On("GetByIDForUpdate", mock.Anything, mock.Anything).Return(nil, nil)
@@ -114,7 +140,8 @@ func TestTripService_StartTrip(t *testing.T) {
 			userID:    uuid.New(),
 			lat:       45.4215,
 			lng:       -75.6972,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				userRepo.On("GetByID", mock.Anything, mock.Anything).Return(&models.User{ID: uuid.New()}, nil)
 				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, nil)
 
@@ -139,10 +166,11 @@ func TestTripService_StartTrip(t *testing.T) {
 			locationRepo := &mocks.MockLocationUpdateRepository{}
 
 			// Setup mocks
-			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+			unitOfWork := &mocks.MockUnitOfWork{}
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Create service
-			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Call method
 			trip, err := service.StartTrip(context.Background(), tt.scooterID, tt.userID, tt.lat, tt.lng)
@@ -177,7 +205,7 @@ func TestTripService_EndTrip(t *testing.T) {
 		scooterID     uuid.UUID
 		lat           float64
 		lng           float64
-		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 		expectedError string
 	}{
 		{
@@ -185,7 +213,8 @@ func TestTripService_EndTrip(t *testing.T) {
 			scooterID: uuid.New(),
 			lat:       45.4216,
 			lng:       -75.6973,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				// Active trip exists
 				trip := &models.Trip{
 					ID:             uuid.New(),
@@ -214,7 +243,8 @@ func TestTripService_EndTrip(t *testing.T) {
 			scooterID: uuid.New(),
 			lat:       45.4216,
 			lng:       -75.6973,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 			expectedError: "no active trip found for scooter",
@@ -224,7 +254,8 @@ func TestTripService_EndTrip(t *testing.T) {
 			scooterID: uuid.New(),
 			lat:       91.0,
 			lng:       -75.6973,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				// No mocks needed - validation fails before any repository calls
 			},
 			expectedError: "invalid coordinates: invalid latitude: must be between -90 and 90",
@@ -240,10 +271,11 @@ func TestTripService_EndTrip(t *testing.T) {
 			locationRepo := &mocks.MockLocationUpdateRepository{}
 
 			// Setup mocks
-			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+			unitOfWork := &mocks.MockUnitOfWork{}
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Create service
-			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Call method
 			trip, err := service.EndTrip(context.Background(), tt.scooterID, tt.lat, tt.lng)
@@ -277,7 +309,7 @@ func TestTripService_UpdateLocation(t *testing.T) {
 		scooterID     uuid.UUID
 		lat           float64
 		lng           float64
-		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 		expectedError string
 	}{
 		{
@@ -285,7 +317,8 @@ func TestTripService_UpdateLocation(t *testing.T) {
 			scooterID: uuid.New(),
 			lat:       45.4216,
 			lng:       -75.6973,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				// Active trip exists
 				trip := &models.Trip{
 					ID:        uuid.New(),
@@ -308,7 +341,8 @@ func TestTripService_UpdateLocation(t *testing.T) {
 			scooterID: uuid.New(),
 			lat:       45.4216,
 			lng:       -75.6973,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 			expectedError: "no active trip found for scooter",
@@ -318,7 +352,8 @@ func TestTripService_UpdateLocation(t *testing.T) {
 			scooterID: uuid.New(),
 			lat:       91.0,
 			lng:       -75.6973,
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				// No mocks needed - validation fails before any repository calls
 			},
 			expectedError: "invalid coordinates: invalid latitude: must be between -90 and 90",
@@ -334,10 +369,11 @@ func TestTripService_UpdateLocation(t *testing.T) {
 			locationRepo := &mocks.MockLocationUpdateRepository{}
 
 			// Setup mocks
-			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+			unitOfWork := &mocks.MockUnitOfWork{}
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Create service
-			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Call method
 			err := service.UpdateLocation(context.Background(), tt.scooterID, tt.lat, tt.lng)
@@ -363,14 +399,15 @@ func TestTripService_CancelTrip(t *testing.T) {
 	tests := []struct {
 		name          string
 		scooterID     uuid.UUID
-		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 		expectedError string
 		expectedTrip  *models.Trip
 	}{
 		{
 			name:      "successful trip cancellation",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				// Active trip exists
 				trip := &models.Trip{
 					ID:        uuid.New(),
@@ -391,7 +428,8 @@ func TestTripService_CancelTrip(t *testing.T) {
 		{
 			name:      "no active trip found",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 			expectedError: "no active trip found for scooter",
@@ -399,7 +437,8 @@ func TestTripService_CancelTrip(t *testing.T) {
 		{
 			name:      "repository error when getting active trip",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 			expectedError: "failed to get active trip: database error",
@@ -407,7 +446,8 @@ func TestTripService_CancelTrip(t *testing.T) {
 		{
 			name:      "repository error when cancelling trip",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				trip := &models.Trip{
 					ID:        uuid.New(),
 					ScooterID: uuid.New(),
@@ -422,7 +462,8 @@ func TestTripService_CancelTrip(t *testing.T) {
 		{
 			name:      "repository error when updating scooter status",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				trip := &models.Trip{
 					ID:        uuid.New(),
 					ScooterID: uuid.New(),
@@ -446,10 +487,11 @@ func TestTripService_CancelTrip(t *testing.T) {
 			locationRepo := &mocks.MockLocationUpdateRepository{}
 
 			// Setup mocks
-			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+			unitOfWork := &mocks.MockUnitOfWork{}
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Create service
-			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Call method
 			trip, err := service.CancelTrip(context.Background(), tt.scooterID)
@@ -478,14 +520,15 @@ func TestTripService_GetActiveTrip(t *testing.T) {
 	tests := []struct {
 		name          string
 		scooterID     uuid.UUID
-		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 		expectedError string
 		expectedTrip  *models.Trip
 	}{
 		{
 			name:      "successful get active trip",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				trip := &models.Trip{
 					ID:        uuid.New(),
 					ScooterID: uuid.New(),
@@ -502,7 +545,8 @@ func TestTripService_GetActiveTrip(t *testing.T) {
 		{
 			name:      "no active trip found",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 			expectedError: "",
@@ -511,7 +555,8 @@ func TestTripService_GetActiveTrip(t *testing.T) {
 		{
 			name:      "repository error",
 			scooterID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByScooterID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 			expectedError: "failed to get active trip: database error",
@@ -528,10 +573,11 @@ func TestTripService_GetActiveTrip(t *testing.T) {
 			locationRepo := &mocks.MockLocationUpdateRepository{}
 
 			// Setup mocks
-			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+			unitOfWork := &mocks.MockUnitOfWork{}
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Create service
-			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Call method
 			trip, err := service.GetActiveTrip(context.Background(), tt.scooterID)
@@ -564,14 +610,15 @@ func TestTripService_GetActiveTripByUser(t *testing.T) {
 	tests := []struct {
 		name          string
 		userID        uuid.UUID
-		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 		expectedError string
 		expectedTrip  *models.Trip
 	}{
 		{
 			name:   "successful get active trip by user",
 			userID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				trip := &models.Trip{
 					ID:     uuid.New(),
 					UserID: uuid.New(),
@@ -587,7 +634,8 @@ func TestTripService_GetActiveTripByUser(t *testing.T) {
 		{
 			name:   "no active trip found for user",
 			userID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 			expectedError: "",
@@ -596,7 +644,8 @@ func TestTripService_GetActiveTripByUser(t *testing.T) {
 		{
 			name:   "repository error",
 			userID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetActiveByUserID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 			expectedError: "failed to get active trip: database error",
@@ -613,10 +662,11 @@ func TestTripService_GetActiveTripByUser(t *testing.T) {
 			locationRepo := &mocks.MockLocationUpdateRepository{}
 
 			// Setup mocks
-			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+			unitOfWork := &mocks.MockUnitOfWork{}
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Create service
-			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Call method
 			trip, err := service.GetActiveTripByUser(context.Background(), tt.userID)
@@ -649,14 +699,15 @@ func TestTripService_GetTrip(t *testing.T) {
 	tests := []struct {
 		name          string
 		tripID        uuid.UUID
-		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository)
+		setupMocks    func(*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork)
 		expectedError string
 		expectedTrip  *models.Trip
 	}{
 		{
 			name:   "successful get trip",
 			tripID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				trip := &models.Trip{
 					ID:     uuid.New(),
 					UserID: uuid.New(),
@@ -672,7 +723,8 @@ func TestTripService_GetTrip(t *testing.T) {
 		{
 			name:   "trip not found",
 			tripID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, nil)
 			},
 			expectedError: "trip not found",
@@ -681,7 +733,8 @@ func TestTripService_GetTrip(t *testing.T) {
 		{
 			name:   "repository error",
 			tripID: uuid.New(),
-			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) {
+			setupMocks: func(tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository, unitOfWork *mocks.MockUnitOfWork) {
+				setupBasicUnitOfWork(unitOfWork, tripRepo, scooterRepo, userRepo, locationRepo)
 				tripRepo.On("GetByID", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 			expectedError: "failed to get trip: database error",
@@ -698,10 +751,11 @@ func TestTripService_GetTrip(t *testing.T) {
 			locationRepo := &mocks.MockLocationUpdateRepository{}
 
 			// Setup mocks
-			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo)
+			unitOfWork := &mocks.MockUnitOfWork{}
+			tt.setupMocks(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Create service
-			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo)
+			service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 
 			// Call method
 			trip, err := service.GetTrip(context.Background(), tt.tripID)

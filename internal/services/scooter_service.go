@@ -24,17 +24,20 @@ type scooterService struct {
 	scooterRepo  repository.ScooterRepository
 	tripRepo     repository.TripRepository
 	locationRepo repository.LocationUpdateRepository
+	unitOfWork   repository.UnitOfWork
 }
 
 func NewScooterService(
 	scooterRepo repository.ScooterRepository,
 	tripRepo repository.TripRepository,
 	locationRepo repository.LocationUpdateRepository,
+	unitOfWork repository.UnitOfWork,
 ) ScooterService {
 	return &scooterService{
 		scooterRepo:  scooterRepo,
 		tripRepo:     tripRepo,
 		locationRepo: locationRepo,
+		unitOfWork:   unitOfWork,
 	}
 }
 
@@ -270,7 +273,29 @@ func (s *scooterService) UpdateLocation(ctx context.Context, scooterID uuid.UUID
 		return fmt.Errorf("invalid coordinates: %w", err)
 	}
 
-	scooter, err := s.scooterRepo.GetByID(ctx, scooterID)
+	// Start a transaction using Unit of Work
+	tx, err := s.unitOfWork.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	// Ensure transaction is rolled back if there's an error
+	var committed bool
+	defer func() {
+		if !committed {
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				// Log rollback error but don't override the original error
+				// In production, you'd want to use proper logging here
+			}
+		}
+	}()
+
+	// Get repositories from transaction
+	scooterRepo := tx.ScooterRepository()
+	locationRepo := tx.LocationUpdateRepository()
+
+	// Check if scooter exists
+	scooter, err := scooterRepo.GetByID(ctx, scooterID)
 	if err != nil {
 		return fmt.Errorf("failed to get scooter: %w", err)
 	}
@@ -278,6 +303,7 @@ func (s *scooterService) UpdateLocation(ctx context.Context, scooterID uuid.UUID
 		return errors.New("scooter not found")
 	}
 
+	// Create location update record
 	locationUpdate := &models.LocationUpdate{
 		ScooterID: scooterID,
 		Latitude:  lat,
@@ -285,14 +311,21 @@ func (s *scooterService) UpdateLocation(ctx context.Context, scooterID uuid.UUID
 		Timestamp: time.Now(),
 	}
 
-	if err := s.locationRepo.Create(ctx, locationUpdate); err != nil {
+	if err := locationRepo.Create(ctx, locationUpdate); err != nil {
 		return fmt.Errorf("failed to create location update: %w", err)
 	}
 
-	if err := s.scooterRepo.UpdateLocation(ctx, scooterID, lat, lng); err != nil {
+	// Update scooter location
+	if err := scooterRepo.UpdateLocation(ctx, scooterID, lat, lng); err != nil {
 		return fmt.Errorf("failed to update scooter location: %w", err)
 	}
 
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	committed = true
 	return nil
 }
 
