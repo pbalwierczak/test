@@ -7,8 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// StartTrip starts a new trip for a scooter
-// POST /api/v1/scooters/{id}/trip/start
 func (h *ScooterHandler) StartTrip(c *gin.Context) {
 	scooterIDStr := c.Param("id")
 	scooterID, err := uuid.Parse(scooterIDStr)
@@ -23,10 +21,8 @@ func (h *ScooterHandler) StartTrip(c *gin.Context) {
 		return
 	}
 
-	// Use trip service to start the trip
 	trip, err := h.tripService.StartTrip(c.Request.Context(), scooterID, req.UserID, req.StartLatitude, req.StartLongitude)
 	if err != nil {
-		// Map service errors to appropriate HTTP status codes
 		switch err.Error() {
 		case "scooter not found":
 			c.JSON(http.StatusNotFound, gin.H{"error": "Scooter not found"})
@@ -49,7 +45,6 @@ func (h *ScooterHandler) StartTrip(c *gin.Context) {
 		return
 	}
 
-	// Convert trip to response
 	response := StartTripResponse{
 		TripID:         trip.ID,
 		ScooterID:      trip.ScooterID,
@@ -63,8 +58,6 @@ func (h *ScooterHandler) StartTrip(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
-// EndTrip ends an active trip for a scooter
-// POST /api/v1/scooters/{id}/trip/end
 func (h *ScooterHandler) EndTrip(c *gin.Context) {
 	scooterIDStr := c.Param("id")
 	scooterID, err := uuid.Parse(scooterIDStr)
@@ -79,10 +72,8 @@ func (h *ScooterHandler) EndTrip(c *gin.Context) {
 		return
 	}
 
-	// Use trip service to end the trip
 	trip, err := h.tripService.EndTrip(c.Request.Context(), scooterID, req.EndLatitude, req.EndLongitude)
 	if err != nil {
-		// Map service errors to appropriate HTTP status codes
 		switch err.Error() {
 		case "no active trip found for scooter":
 			c.JSON(http.StatusNotFound, gin.H{"error": "No active trip found for scooter"})
@@ -97,13 +88,11 @@ func (h *ScooterHandler) EndTrip(c *gin.Context) {
 		return
 	}
 
-	// Calculate trip duration
 	var duration int64
 	if trip.EndTime != nil {
 		duration = int64(trip.EndTime.Sub(trip.StartTime).Seconds())
 	}
 
-	// Convert trip to response
 	response := EndTripResponse{
 		TripID:         trip.ID,
 		ScooterID:      trip.ScooterID,

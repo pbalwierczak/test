@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestData contains common test data used across tests
 var TestData = struct {
 	ValidScooterID   uuid.UUID
 	ValidUserID      uuid.UUID
@@ -50,7 +49,6 @@ var TestData = struct {
 	ValidOffset:      0,
 }
 
-// setupTestContext creates a test context with the given method, URL, and body
 func setupTestContext(method, url string, body io.Reader) (*gin.Context, *httptest.ResponseRecorder) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -62,7 +60,6 @@ func setupTestContext(method, url string, body io.Reader) (*gin.Context, *httpte
 	}
 	c.Request = req
 
-	// Set up URL parameters for testing
 	if id := extractIDFromURL(url); id != "" {
 		c.Params = gin.Params{
 			{Key: "id", Value: id},
@@ -72,9 +69,7 @@ func setupTestContext(method, url string, body io.Reader) (*gin.Context, *httpte
 	return c, w
 }
 
-// extractIDFromURL extracts the ID parameter from a URL path
 func extractIDFromURL(url string) string {
-	// Simple extraction for scooter ID from URLs like /api/v1/scooters/{id}/...
 	parts := strings.Split(url, "/")
 	for i, part := range parts {
 		if part == "scooters" && i+1 < len(parts) {
@@ -84,24 +79,20 @@ func extractIDFromURL(url string) string {
 	return ""
 }
 
-// createMockServices creates mock services for testing
 func createMockServices() (*mocks.MockScooterService, *mocks.MockTripService) {
 	return &mocks.MockScooterService{}, &mocks.MockTripService{}
 }
 
-// createScooterHandler creates a ScooterHandler with mock services
 func createScooterHandler(mockScooterService *mocks.MockScooterService, mockTripService *mocks.MockTripService) *ScooterHandler {
 	return NewScooterHandler(mockTripService, mockScooterService)
 }
 
-// assertJSONResponse asserts that the response body matches the expected JSON
 func assertJSONResponse(t *testing.T, expected interface{}, actual string) {
 	expectedJSON, err := json.Marshal(expected)
 	assert.NoError(t, err)
 	assert.JSONEq(t, string(expectedJSON), actual)
 }
 
-// assertErrorResponse asserts that the response is an error with the expected message
 func assertErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatus int, expectedMessage string) {
 	assert.Equal(t, expectedStatus, w.Code)
 
@@ -111,7 +102,6 @@ func assertErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedSta
 	assert.Equal(t, expectedMessage, response["error"])
 }
 
-// createValidScooterListResult creates a valid ScooterListResult for testing
 func createValidScooterListResult() *services.ScooterListResult {
 	return &services.ScooterListResult{
 		Scooters: []*services.ScooterInfo{
@@ -130,7 +120,6 @@ func createValidScooterListResult() *services.ScooterListResult {
 	}
 }
 
-// createValidScooterDetailsResult creates a valid ScooterDetailsResult for testing
 func createValidScooterDetailsResult() *services.ScooterDetailsResult {
 	return &services.ScooterDetailsResult{
 		ID:               TestData.ValidScooterID,
@@ -144,7 +133,6 @@ func createValidScooterDetailsResult() *services.ScooterDetailsResult {
 	}
 }
 
-// createValidScooterDetailsResultWithTrip creates a valid ScooterDetailsResult with active trip
 func createValidScooterDetailsResultWithTrip() *services.ScooterDetailsResult {
 	now := time.Now()
 	return &services.ScooterDetailsResult{
@@ -165,7 +153,6 @@ func createValidScooterDetailsResultWithTrip() *services.ScooterDetailsResult {
 	}
 }
 
-// createValidClosestScootersResult creates a valid ClosestScootersResult for testing
 func createValidClosestScootersResult() *services.ClosestScootersResult {
 	return &services.ClosestScootersResult{
 		Scooters: []*services.ScooterWithDistance{
@@ -189,7 +176,6 @@ func createValidClosestScootersResult() *services.ClosestScootersResult {
 	}
 }
 
-// createValidTrip creates a valid Trip for testing
 func createValidTrip() *models.Trip {
 	now := time.Now()
 	return &models.Trip{
@@ -206,7 +192,6 @@ func createValidTrip() *models.Trip {
 	}
 }
 
-// createValidStartTripRequest creates a valid StartTripRequest for testing
 func createValidStartTripRequest() StartTripRequest {
 	return StartTripRequest{
 		UserID:         TestData.ValidUserID,
@@ -215,7 +200,6 @@ func createValidStartTripRequest() StartTripRequest {
 	}
 }
 
-// createValidEndTripRequest creates a valid EndTripRequest for testing
 func createValidEndTripRequest() EndTripRequest {
 	return EndTripRequest{
 		EndLatitude:  TestData.ValidLatitude,
@@ -223,7 +207,6 @@ func createValidEndTripRequest() EndTripRequest {
 	}
 }
 
-// createValidLocationUpdateRequest creates a valid LocationUpdateRequest for testing
 func createValidLocationUpdateRequest() LocationUpdateRequest {
 	return LocationUpdateRequest{
 		Latitude:  TestData.ValidLatitude,
@@ -232,13 +215,11 @@ func createValidLocationUpdateRequest() LocationUpdateRequest {
 	}
 }
 
-// toJSON converts an object to JSON bytes
 func toJSON(obj interface{}) *bytes.Buffer {
 	jsonData, _ := json.Marshal(obj)
 	return bytes.NewBuffer(jsonData)
 }
 
-// mockError is a simple error implementation for testing
 type mockError struct {
 	message string
 }

@@ -7,8 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// UpdateLocation updates the location of a scooter during a trip
-// POST /api/v1/scooters/{id}/location
 func (h *ScooterHandler) UpdateLocation(c *gin.Context) {
 	scooterIDStr := c.Param("id")
 	scooterID, err := uuid.Parse(scooterIDStr)
@@ -23,10 +21,8 @@ func (h *ScooterHandler) UpdateLocation(c *gin.Context) {
 		return
 	}
 
-	// Use scooter service to update location
 	err = h.scooterService.UpdateLocation(c.Request.Context(), scooterID, req.Latitude, req.Longitude)
 	if err != nil {
-		// Map service errors to appropriate HTTP status codes
 		switch err.Error() {
 		case "scooter not found":
 			c.JSON(http.StatusNotFound, gin.H{"error": "Scooter not found"})
@@ -41,7 +37,6 @@ func (h *ScooterHandler) UpdateLocation(c *gin.Context) {
 		return
 	}
 
-	// Convert to response
 	response := LocationUpdateResponse{
 		UpdateID:  uuid.New(),
 		ScooterID: scooterID,
