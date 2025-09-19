@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"scootin-aboot/pkg/utils"
+	"scootin-aboot/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,11 +22,11 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
 
-			utils.Error("Request error",
-				utils.String("method", c.Request.Method),
-				utils.String("path", c.Request.URL.Path),
-				utils.String("client_ip", c.ClientIP()),
-				utils.ErrorField(err.Err),
+			logger.Error("Request error",
+				logger.String("method", c.Request.Method),
+				logger.String("path", c.Request.URL.Path),
+				logger.String("client_ip", c.ClientIP()),
+				logger.ErrorField(err.Err),
 			)
 
 			statusCode := http.StatusInternalServerError

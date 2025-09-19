@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"scootin-aboot/internal/config"
-	"scootin-aboot/pkg/utils"
+	"scootin-aboot/pkg/logger"
 )
 
 type User struct {
@@ -39,12 +39,12 @@ func NewUserWithID(ctx context.Context, client *APIClient, id int, userID string
 }
 
 func (u *User) Simulate() {
-	utils.Info("User simulation started", utils.Int("user_id", u.ID))
+	logger.Info("User simulation started", logger.Int("user_id", u.ID))
 
 	for {
 		select {
 		case <-u.ctx.Done():
-			utils.Info("User simulation stopped", utils.Int("user_id", u.ID))
+			logger.Info("User simulation stopped", logger.Int("user_id", u.ID))
 			return
 		default:
 			u.searchForScooters()
@@ -84,34 +84,34 @@ func (u *User) searchForScooters() {
 	}
 
 	if err != nil {
-		utils.Error("Failed to find available scooters",
-			utils.Int("user_id", u.ID),
-			utils.String("search_type", searchType),
-			utils.ErrorField(err),
+		logger.Error("Failed to find available scooters",
+			logger.Int("user_id", u.ID),
+			logger.String("search_type", searchType),
+			logger.ErrorField(err),
 		)
 		return
 	}
 
 	if len(scooters) == 0 {
-		utils.Debug("No available scooters found",
-			utils.String("test_user_id", u.UserID),
-			utils.Int("user_id", u.ID),
-			utils.String("search_type", searchType),
-			utils.Float64("lat", u.Location.Latitude),
-			utils.Float64("lng", u.Location.Longitude),
-			utils.Int("radius", u.SearchRadius),
+		logger.Debug("No available scooters found",
+			logger.String("test_user_id", u.UserID),
+			logger.Int("user_id", u.ID),
+			logger.String("search_type", searchType),
+			logger.Float64("lat", u.Location.Latitude),
+			logger.Float64("lng", u.Location.Longitude),
+			logger.Int("radius", u.SearchRadius),
 		)
 		return
 	}
 
-	utils.Info("Found available scooters",
-		utils.Int("test_user_id", u.ID),
-		utils.String("test_user_id", u.UserID),
-		utils.String("search_type", searchType),
-		utils.Int("count", len(scooters)),
-		utils.Float64("lat", u.Location.Latitude),
-		utils.Float64("lng", u.Location.Longitude),
-		utils.Int("radius", u.SearchRadius),
+	logger.Info("Found available scooters",
+		logger.Int("test_user_id", u.ID),
+		logger.String("test_user_id", u.UserID),
+		logger.String("search_type", searchType),
+		logger.Int("count", len(scooters)),
+		logger.Float64("lat", u.Location.Latitude),
+		logger.Float64("lng", u.Location.Longitude),
+		logger.Int("radius", u.SearchRadius),
 	)
 }
 
@@ -165,12 +165,12 @@ func (u *User) moveToNewLocation() {
 	oldLocation := u.Location
 	u.Location = u.movement.GetRandomLocation()
 
-	utils.Debug("User moved to new location",
-		utils.Int("user_id", u.ID),
-		utils.Float64("old_lat", oldLocation.Latitude),
-		utils.Float64("old_lng", oldLocation.Longitude),
-		utils.Float64("new_lat", u.Location.Latitude),
-		utils.Float64("new_lng", u.Location.Longitude),
+	logger.Debug("User moved to new location",
+		logger.Int("user_id", u.ID),
+		logger.Float64("old_lat", oldLocation.Latitude),
+		logger.Float64("old_lng", oldLocation.Longitude),
+		logger.Float64("new_lat", u.Location.Latitude),
+		logger.Float64("new_lng", u.Location.Longitude),
 	)
 }
 
@@ -179,9 +179,9 @@ func (u *User) updateSearchRadius() {
 	radii := []int{500, 750, 1000, 1500, 2000, 2500, 3000}
 	u.SearchRadius = radii[rand.Intn(len(radii))]
 
-	utils.Debug("User updated search radius",
-		utils.Int("user_id", u.ID),
-		utils.Int("new_radius", u.SearchRadius),
+	logger.Debug("User updated search radius",
+		logger.Int("user_id", u.ID),
+		logger.Int("new_radius", u.SearchRadius),
 	)
 }
 
@@ -189,9 +189,9 @@ func (u *User) rest() {
 	// Calculate rest duration (2-5 seconds)
 	duration := time.Duration(u.config.SimulatorRestMin+rand.Intn(u.config.SimulatorRestMax-u.config.SimulatorRestMin+1)) * time.Second
 
-	utils.Debug("User resting between searches",
-		utils.Int("user_id", u.ID),
-		utils.Duration("duration", duration),
+	logger.Debug("User resting between searches",
+		logger.Int("user_id", u.ID),
+		logger.Duration("duration", duration),
 	)
 
 	select {

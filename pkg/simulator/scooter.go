@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"scootin-aboot/internal/config"
-	"scootin-aboot/pkg/utils"
+	"scootin-aboot/pkg/logger"
 
 	"github.com/google/uuid"
 )
@@ -98,11 +98,11 @@ func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APISco
 
 // Simulate runs the scooter simulation loop
 func (s *Scooter) Simulate() {
-	utils.Info("Scooter simulation started",
-		utils.Int("scooter_id", s.ID),
-		utils.String("status", s.Status),
-		utils.Float64("lat", s.Location.Latitude),
-		utils.Float64("lng", s.Location.Longitude),
+	logger.Info("Scooter simulation started",
+		logger.Int("scooter_id", s.ID),
+		logger.String("status", s.Status),
+		logger.Float64("lat", s.Location.Latitude),
+		logger.Float64("lng", s.Location.Longitude),
 	)
 
 	// Update location every 3 seconds
@@ -112,8 +112,8 @@ func (s *Scooter) Simulate() {
 	for {
 		select {
 		case <-s.Ctx.Done():
-			utils.Info("Scooter simulation stopped",
-				utils.Int("scooter_id", s.ID),
+			logger.Info("Scooter simulation stopped",
+				logger.Int("scooter_id", s.ID),
 			)
 			return
 		case <-ticker.C:
@@ -151,16 +151,16 @@ func (s *Scooter) updateLocation() {
 
 	// Send location update to server
 	if err := s.Client.UpdateLocation(s.Ctx, s.getScooterID(), s.Location.Latitude, s.Location.Longitude); err != nil {
-		utils.Error("Failed to update scooter location",
-			utils.Int("scooter_id", s.ID),
-			utils.ErrorField(err),
+		logger.Error("Failed to update scooter location",
+			logger.Int("scooter_id", s.ID),
+			logger.ErrorField(err),
 		)
 	} else {
-		utils.Debug("Scooter location updated",
-			utils.Int("scooter_id", s.ID),
-			utils.String("trip_id", s.CurrentTrip.ID),
-			utils.Float64("lat", s.Location.Latitude),
-			utils.Float64("lng", s.Location.Longitude),
+		logger.Debug("Scooter location updated",
+			logger.Int("scooter_id", s.ID),
+			logger.String("trip_id", s.CurrentTrip.ID),
+			logger.Float64("lat", s.Location.Latitude),
+			logger.Float64("lng", s.Location.Longitude),
 		)
 	}
 }
@@ -194,11 +194,11 @@ func (s *Scooter) StartTrip(tripID, userID string) {
 	}
 	s.Status = "occupied"
 
-	utils.Info("Scooter trip started",
-		utils.Int("scooter_id", s.ID),
-		utils.String("trip_id", tripID),
-		utils.String("user_id", userID),
-		utils.Float64("direction", s.CurrentTrip.Direction),
+	logger.Info("Scooter trip started",
+		logger.Int("scooter_id", s.ID),
+		logger.String("trip_id", tripID),
+		logger.String("user_id", userID),
+		logger.Float64("direction", s.CurrentTrip.Direction),
 	)
 }
 
@@ -207,11 +207,11 @@ func (s *Scooter) EndTrip() {
 	if s.CurrentTrip != nil {
 		duration := time.Since(s.CurrentTrip.StartTime)
 
-		utils.Info("Scooter trip ended",
-			utils.Int("scooter_id", s.ID),
-			utils.String("trip_id", s.CurrentTrip.ID),
-			utils.String("user_id", s.CurrentTrip.UserID),
-			utils.Duration("duration", duration),
+		logger.Info("Scooter trip ended",
+			logger.Int("scooter_id", s.ID),
+			logger.String("trip_id", s.CurrentTrip.ID),
+			logger.String("user_id", s.CurrentTrip.UserID),
+			logger.Duration("duration", duration),
 		)
 	}
 
@@ -269,8 +269,8 @@ func (s *Scooter) startRandomTrip() {
 	// Get available users (not currently in trips)
 	availableUsers := s.UserTracker.GetAvailableUsers()
 	if len(availableUsers) == 0 {
-		utils.Debug("No available users for trip",
-			utils.Int("scooter_id", s.ID),
+		logger.Debug("No available users for trip",
+			logger.Int("scooter_id", s.ID),
 		)
 		return
 	}
@@ -288,11 +288,11 @@ func (s *Scooter) startRandomTrip() {
 	// Send trip start request to server
 	response, err := s.Client.StartTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude)
 	if err != nil {
-		utils.Error("Failed to start trip on server",
-			utils.Int("scooter_id", s.ID),
-			utils.String("trip_id", tripID),
-			utils.String("user_id", userID),
-			utils.ErrorField(err),
+		logger.Error("Failed to start trip on server",
+			logger.Int("scooter_id", s.ID),
+			logger.String("trip_id", tripID),
+			logger.String("user_id", userID),
+			logger.ErrorField(err),
 		)
 		// Revert local state and user tracking if server call failed
 		s.EndTrip()
@@ -302,10 +302,10 @@ func (s *Scooter) startRandomTrip() {
 		if response != nil && response.TripID != "" {
 			s.CurrentTrip.ID = response.TripID
 		}
-		utils.Info("Trip started successfully",
-			utils.Int("scooter_id", s.ID),
-			utils.String("trip_id", s.CurrentTrip.ID),
-			utils.String("user_id", userID),
+		logger.Info("Trip started successfully",
+			logger.Int("scooter_id", s.ID),
+			logger.String("trip_id", s.CurrentTrip.ID),
+			logger.String("user_id", userID),
 		)
 
 		// Update statistics - trip started
@@ -324,17 +324,17 @@ func (s *Scooter) EndCurrentTrip() {
 
 	// Send trip end request to server
 	if err := s.Client.EndTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude); err != nil {
-		utils.Error("Failed to end trip on server",
-			utils.Int("scooter_id", s.ID),
-			utils.String("trip_id", tripID),
-			utils.String("user_id", userID),
-			utils.ErrorField(err),
+		logger.Error("Failed to end trip on server",
+			logger.Int("scooter_id", s.ID),
+			logger.String("trip_id", tripID),
+			logger.String("user_id", userID),
+			logger.ErrorField(err),
 		)
 	} else {
-		utils.Info("Trip ended successfully",
-			utils.Int("scooter_id", s.ID),
-			utils.String("trip_id", tripID),
-			utils.String("user_id", userID),
+		logger.Info("Trip ended successfully",
+			logger.Int("scooter_id", s.ID),
+			logger.String("trip_id", tripID),
+			logger.String("user_id", userID),
 		)
 	}
 

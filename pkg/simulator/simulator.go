@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"scootin-aboot/internal/config"
-	"scootin-aboot/pkg/utils"
+	"scootin-aboot/pkg/logger"
 )
 
 // Simulator orchestrates the entire simulation
@@ -54,10 +54,10 @@ func NewSimulator(cfg *config.Config) *Simulator {
 
 // Start begins the simulation
 func (s *Simulator) Start() error {
-	utils.Info("Starting simulation",
-		utils.Int("scooters", s.config.SimulatorScooters),
-		utils.Int("users", s.config.SimulatorUsers),
-		utils.String("server_url", s.config.SimulatorServerURL),
+	logger.Info("Starting simulation",
+		logger.Int("scooters", s.config.SimulatorScooters),
+		logger.Int("users", s.config.SimulatorUsers),
+		logger.String("server_url", s.config.SimulatorServerURL),
 	)
 
 	// Initialize scooters
@@ -79,18 +79,18 @@ func (s *Simulator) Start() error {
 	// Start statistics reporting
 	s.startStatisticsReporting()
 
-	utils.Info("Simulation started successfully")
+	logger.Info("Simulation started successfully")
 	return nil
 }
 
 // Stop gracefully stops the simulation
 func (s *Simulator) Stop() {
-	utils.Info("Stopping simulation gracefully...")
+	logger.Info("Stopping simulation gracefully...")
 
 	// Check for active trips before shutdown
 	activeTrips := s.getActiveTripsCount()
 	if activeTrips > 0 {
-		utils.Info("Active trips detected, ending them gracefully", utils.Int("active_trips", activeTrips))
+		logger.Info("Active trips detected, ending them gracefully", logger.Int("active_trips", activeTrips))
 
 		// End all active trips before shutting down
 		s.endAllActiveTrips()
@@ -102,14 +102,14 @@ func (s *Simulator) Stop() {
 		for {
 			remainingTrips := s.getActiveTripsCount()
 			if remainingTrips == 0 {
-				utils.Info("All trips ended successfully")
+				logger.Info("All trips ended successfully")
 				break
 			}
 
 			if time.Since(start) > timeout {
-				utils.Info("Timeout reached, forcing shutdown",
-					utils.Int("remaining_trips", remainingTrips),
-					utils.Duration("timeout", timeout))
+				logger.Info("Timeout reached, forcing shutdown",
+					logger.Int("remaining_trips", remainingTrips),
+					logger.Duration("timeout", timeout))
 				break
 			}
 
@@ -118,13 +118,13 @@ func (s *Simulator) Stop() {
 		}
 	}
 
-	utils.Info("Cancelling context to signal shutdown to all goroutines...")
+	logger.Info("Cancelling context to signal shutdown to all goroutines...")
 	s.cancel()
 
-	utils.Info("Waiting for all goroutines to complete...")
+	logger.Info("Waiting for all goroutines to complete...")
 	s.wg.Wait()
 
-	utils.Info("Simulation stopped gracefully - all trips completed")
+	logger.Info("Simulation stopped gracefully - all trips completed")
 }
 
 // getActiveTripsCount returns the number of scooters currently in trips
@@ -140,14 +140,14 @@ func (s *Simulator) getActiveTripsCount() int {
 
 // endAllActiveTrips ends all currently active trips
 func (s *Simulator) endAllActiveTrips() {
-	utils.Info("Ending all active trips...")
+	logger.Info("Ending all active trips...")
 
 	for _, scooter := range s.scooters {
 		if scooter.Status == "occupied" && scooter.CurrentTrip != nil {
-			utils.Info("Ending trip for scooter",
-				utils.Int("scooter_id", scooter.ID),
-				utils.String("trip_id", scooter.CurrentTrip.ID),
-				utils.String("user_id", scooter.CurrentTrip.UserID),
+			logger.Info("Ending trip for scooter",
+				logger.Int("scooter_id", scooter.ID),
+				logger.String("trip_id", scooter.CurrentTrip.ID),
+				logger.String("user_id", scooter.CurrentTrip.UserID),
 			)
 
 			// End the trip by calling the scooter's EndCurrentTrip method
@@ -155,7 +155,7 @@ func (s *Simulator) endAllActiveTrips() {
 		}
 	}
 
-	utils.Info("All active trips ended")
+	logger.Info("All active trips ended")
 }
 
 // initializeScooters fetches existing scooters from the API and creates scooter instances
@@ -174,10 +174,10 @@ func (s *Simulator) initializeScooters() error {
 	maxScooters := s.config.SimulatorScooters
 	if len(apiScooters) < maxScooters {
 		maxScooters = len(apiScooters)
-		utils.Info("Limited scooters to available count",
-			utils.Int("requested", s.config.SimulatorScooters),
-			utils.Int("available", len(apiScooters)),
-			utils.Int("using", maxScooters))
+		logger.Info("Limited scooters to available count",
+			logger.Int("requested", s.config.SimulatorScooters),
+			logger.Int("available", len(apiScooters)),
+			logger.Int("using", maxScooters))
 	}
 
 	s.scooters = make([]*Scooter, maxScooters)
@@ -196,7 +196,7 @@ func (s *Simulator) initializeScooters() error {
 	s.stats.AvailableScooters = len(s.scooters)
 	s.stats.mu.Unlock()
 
-	utils.Info("Initialized scooters", utils.Int("count", len(s.scooters)))
+	logger.Info("Initialized scooters", logger.Int("count", len(s.scooters)))
 	return nil
 }
 
@@ -220,10 +220,10 @@ func (s *Simulator) initializeUsers() error {
 	maxUsers := s.config.SimulatorUsers
 	if len(seededUserIDs) < maxUsers {
 		maxUsers = len(seededUserIDs)
-		utils.Info("Limited users to available seeded count",
-			utils.Int("requested", s.config.SimulatorUsers),
-			utils.Int("available", len(seededUserIDs)),
-			utils.Int("using", maxUsers))
+		logger.Info("Limited users to available seeded count",
+			logger.Int("requested", s.config.SimulatorUsers),
+			logger.Int("available", len(seededUserIDs)),
+			logger.Int("using", maxUsers))
 	}
 
 	s.users = make([]*User, maxUsers)
@@ -240,7 +240,7 @@ func (s *Simulator) initializeUsers() error {
 	s.stats.TotalUsers = len(s.users)
 	s.stats.mu.Unlock()
 
-	utils.Info("Initialized users", utils.Int("count", len(s.users)))
+	logger.Info("Initialized users", logger.Int("count", len(s.users)))
 	return nil
 }
 
@@ -299,14 +299,14 @@ func (s *Simulator) reportStatistics() {
 
 	uptime := time.Since(startTime)
 
-	utils.Info("Simulation Statistics",
-		utils.Duration("uptime", uptime),
-		utils.Int("active_trips", activeTrips),
-		utils.Int("completed_trips", completedTrips),
-		utils.Int("available_scooters", availableScooters),
-		utils.Int("occupied_scooters", occupiedScooters),
-		utils.Int("total_users", totalUsers),
-		utils.Int("total_scooters", totalScooters),
+	logger.Info("Simulation Statistics",
+		logger.Duration("uptime", uptime),
+		logger.Int("active_trips", activeTrips),
+		logger.Int("completed_trips", completedTrips),
+		logger.Int("available_scooters", availableScooters),
+		logger.Int("occupied_scooters", occupiedScooters),
+		logger.Int("total_users", totalUsers),
+		logger.Int("total_scooters", totalScooters),
 	)
 }
 
