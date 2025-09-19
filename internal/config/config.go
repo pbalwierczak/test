@@ -34,6 +34,15 @@ type Config struct {
 	LogFormat string
 }
 
+// City configuration constants
+const (
+	OttawaCenterLat   = 45.4215
+	OttawaCenterLng   = -75.6972
+	MontrealCenterLat = 45.5017
+	MontrealCenterLng = -73.5673
+	CityRadiusKm      = 15.0
+)
+
 func Load() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: .env file not found: %v", err)

@@ -125,7 +125,7 @@ func (s *scooterService) GetScooters(ctx context.Context, params ScooterQueryPar
 
 	total := int64(len(scooterInfos))
 
-	if params.Status == "" && (params.MinLat == 0 && params.MaxLat == 0 && params.MinLng == 0 && params.MaxLng == 0) {
+	if params.Status == "" && (!s.hasLocationBounds(params)) {
 		// Pagination was already applied by List method
 	} else {
 		start := params.Offset
