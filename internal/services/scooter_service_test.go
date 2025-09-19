@@ -188,7 +188,6 @@ func TestScooterService_GetScooters_Pagination(t *testing.T) {
 		Offset: 10,
 	}
 
-	// Create 15 scooters to test pagination
 	testScooters := make([]*models.Scooter, 15)
 	for i := 0; i < 15; i++ {
 		testScooters[i] = &models.Scooter{
@@ -207,7 +206,7 @@ func TestScooterService_GetScooters_Pagination(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	assert.Len(t, result.Scooters, 5) // Should be limited to 5
+	assert.Len(t, result.Scooters, 5)
 	assert.Equal(t, int64(15), result.Total)
 	assert.Equal(t, 5, result.Limit)
 	assert.Equal(t, 10, result.Offset)
@@ -318,7 +317,7 @@ func TestScooterService_GetScooter_Success(t *testing.T) {
 	assert.Equal(t, string(testScooter.Status), result.Status)
 	assert.Equal(t, testScooter.CurrentLatitude, result.CurrentLatitude)
 	assert.Equal(t, testScooter.CurrentLongitude, result.CurrentLongitude)
-	assert.Nil(t, result.ActiveTrip) // Should be nil for available scooter
+	assert.Nil(t, result.ActiveTrip)
 	mockScooterRepo.AssertExpectations(t)
 }
 
@@ -412,7 +411,7 @@ func TestScooterService_GetScooter_WithoutActiveTrip(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, scooterID, result.ID)
-	assert.Nil(t, result.ActiveTrip) // Should be nil when no active trip found
+	assert.Nil(t, result.ActiveTrip)
 	mockScooterRepo.AssertExpectations(t)
 	mockTripRepo.AssertExpectations(t)
 }
@@ -462,11 +461,10 @@ func TestScooterService_GetScooter_TripQueryError(t *testing.T) {
 
 	result, err := service.GetScooter(ctx, scooterID)
 
-	// Should not fail the request even if trip query fails
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, scooterID, result.ID)
-	assert.Nil(t, result.ActiveTrip) // Should be nil when trip query fails
+	assert.Nil(t, result.ActiveTrip)
 	mockScooterRepo.AssertExpectations(t)
 	mockTripRepo.AssertExpectations(t)
 }
@@ -481,7 +479,7 @@ func TestScooterService_GetClosestScooters_Success(t *testing.T) {
 	params := ClosestScootersQueryParams{
 		Latitude:  45.4215,
 		Longitude: -75.6972,
-		Radius:    1000, // 1km
+		Radius:    1000,
 		Limit:     10,
 		Status:    "available",
 	}
@@ -507,7 +505,7 @@ func TestScooterService_GetClosestScooters_Success(t *testing.T) {
 	assert.Equal(t, 45.4215, result.Center.Latitude)
 	assert.Equal(t, -75.6972, result.Center.Longitude)
 	assert.Equal(t, 1000.0, result.Radius)
-	assert.Greater(t, result.Scooters[0].Distance, 0.0) // Should have calculated distance
+	assert.Greater(t, result.Scooters[0].Distance, 0.0)
 	mockScooterRepo.AssertExpectations(t)
 }
 
@@ -614,7 +612,7 @@ func TestScooterService_GetClosestScooters_InvalidRadius(t *testing.T) {
 			params: ClosestScootersQueryParams{
 				Latitude:  45.4215,
 				Longitude: -75.6972,
-				Radius:    60000, // > 50km
+				Radius:    60000,
 				Limit:     10,
 			},
 		},
@@ -656,7 +654,7 @@ func TestScooterService_GetClosestScooters_InvalidLimit(t *testing.T) {
 				Latitude:  45.4215,
 				Longitude: -75.6972,
 				Radius:    1000,
-				Limit:     51, // > 50
+				Limit:     51,
 			},
 		},
 	}
@@ -911,7 +909,6 @@ func TestScooterService_UpdateLocation_Success(t *testing.T) {
 	latitude := 45.4215
 	longitude := -75.6972
 
-	// Mock scooter exists
 	scooter := &models.Scooter{
 		ID:               scooterID,
 		Status:           models.ScooterStatusAvailable,
@@ -921,13 +918,10 @@ func TestScooterService_UpdateLocation_Success(t *testing.T) {
 		CreatedAt:        time.Now(),
 	}
 
-	// Mock Unit of Work behavior
 	mockUnitOfWork.On("Begin", ctx).Return(mockTx, nil)
 	mockTx.On("ScooterRepository").Return(mockScooterRepo)
 	mockTx.On("LocationUpdateRepository").Return(mockLocationRepo)
 	mockTx.On("Commit").Return(nil)
-
-	// Mock repository calls within transaction
 	mockScooterRepo.On("GetByID", ctx, scooterID).Return(scooter, nil)
 	mockLocationRepo.On("Create", ctx, mock.AnythingOfType("*models.LocationUpdate")).Return(nil)
 	mockScooterRepo.On("UpdateLocation", ctx, scooterID, latitude, longitude).Return(nil)
@@ -949,7 +943,7 @@ func TestScooterService_UpdateLocation_InvalidCoordinates(t *testing.T) {
 
 	ctx := context.Background()
 	scooterID := uuid.New()
-	latitude := 91.0 // Invalid latitude
+	latitude := 91.0
 	longitude := -75.6972
 
 	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
@@ -972,13 +966,10 @@ func TestScooterService_UpdateLocation_ScooterNotFound(t *testing.T) {
 	latitude := 45.4215
 	longitude := -75.6972
 
-	// Mock Unit of Work behavior
 	mockUnitOfWork.On("Begin", ctx).Return(mockTx, nil)
 	mockTx.On("ScooterRepository").Return(mockScooterRepo)
 	mockTx.On("LocationUpdateRepository").Return(mockLocationRepo)
 	mockTx.On("Rollback").Return(nil)
-
-	// Mock repository calls within transaction
 	mockScooterRepo.On("GetByID", ctx, scooterID).Return(nil, nil)
 
 	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
@@ -1006,13 +997,10 @@ func TestScooterService_UpdateLocation_GetScooterError(t *testing.T) {
 
 	expectedError := errors.New("database error")
 
-	// Mock Unit of Work behavior
 	mockUnitOfWork.On("Begin", ctx).Return(mockTx, nil)
 	mockTx.On("ScooterRepository").Return(mockScooterRepo)
 	mockTx.On("LocationUpdateRepository").Return(mockLocationRepo)
 	mockTx.On("Rollback").Return(nil)
-
-	// Mock repository calls within transaction
 	mockScooterRepo.On("GetByID", ctx, scooterID).Return(nil, expectedError)
 
 	err := service.UpdateLocation(ctx, scooterID, latitude, longitude)
@@ -1049,13 +1037,10 @@ func TestScooterService_UpdateLocation_CreateLocationUpdateError(t *testing.T) {
 
 	expectedError := errors.New("database error")
 
-	// Mock Unit of Work behavior
 	mockUnitOfWork.On("Begin", ctx).Return(mockTx, nil)
 	mockTx.On("ScooterRepository").Return(mockScooterRepo)
 	mockTx.On("LocationUpdateRepository").Return(mockLocationRepo)
 	mockTx.On("Rollback").Return(nil)
-
-	// Mock repository calls within transaction
 	mockScooterRepo.On("GetByID", ctx, scooterID).Return(scooter, nil)
 	mockLocationRepo.On("Create", ctx, mock.AnythingOfType("*models.LocationUpdate")).Return(expectedError)
 
@@ -1094,13 +1079,10 @@ func TestScooterService_UpdateLocation_UpdateScooterLocationError(t *testing.T) 
 
 	expectedError := errors.New("database error")
 
-	// Mock Unit of Work behavior
 	mockUnitOfWork.On("Begin", ctx).Return(mockTx, nil)
 	mockTx.On("ScooterRepository").Return(mockScooterRepo)
 	mockTx.On("LocationUpdateRepository").Return(mockLocationRepo)
 	mockTx.On("Rollback").Return(nil)
-
-	// Mock repository calls within transaction
 	mockScooterRepo.On("GetByID", ctx, scooterID).Return(scooter, nil)
 	mockLocationRepo.On("Create", ctx, mock.AnythingOfType("*models.LocationUpdate")).Return(nil)
 	mockScooterRepo.On("UpdateLocation", ctx, scooterID, latitude, longitude).Return(expectedError)

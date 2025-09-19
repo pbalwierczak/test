@@ -129,7 +129,6 @@ func (s *scooterService) GetScooters(ctx context.Context, params ScooterQueryPar
 	total := int64(len(scooterInfos))
 
 	if params.Status == "" && (!s.hasLocationBounds(params)) {
-		// Pagination was already applied by List method
 	} else {
 		start := params.Offset
 		end := start + params.Limit
@@ -164,8 +163,7 @@ func (s *scooterService) GetScooter(ctx context.Context, id uuid.UUID) (*Scooter
 	if scooter.Status == models.ScooterStatusOccupied {
 		trip, err := s.tripRepo.GetActiveByScooterID(ctx, id)
 		if err != nil {
-			// Log error but don't fail the request
-			// In production, you might want to log this
+			// Trip fetch error is non-critical
 		} else if trip != nil {
 			activeTrip = &TripInfo{
 				TripID:         trip.ID,
@@ -205,7 +203,7 @@ func (s *scooterService) GetClosestScooters(ctx context.Context, params ClosestS
 
 		scootersWithDistance[i] = &ScooterWithDistance{
 			ScooterInfo: s.mapScooterToInfo(scooter),
-			Distance:    distance * 1000, // Convert km to meters
+			Distance:    distance * 1000,
 		}
 	}
 
@@ -220,7 +218,6 @@ func (s *scooterService) GetClosestScooters(ctx context.Context, params ClosestS
 }
 
 func (s *scooterService) validateScooterQueryParams(params ScooterQueryParams) error {
-	// Validate status
 	if params.Status != "" && params.Status != "available" && params.Status != "occupied" {
 		return errors.New("status must be 'available' or 'occupied'")
 	}
@@ -273,28 +270,21 @@ func (s *scooterService) UpdateLocation(ctx context.Context, scooterID uuid.UUID
 		return fmt.Errorf("invalid coordinates: %w", err)
 	}
 
-	// Start a transaction using Unit of Work
 	tx, err := s.unitOfWork.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	// Ensure transaction is rolled back if there's an error
 	var committed bool
 	defer func() {
 		if !committed {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				// Log rollback error but don't override the original error
-				// In production, you'd want to use proper logging here
-			}
+			tx.Rollback()
 		}
 	}()
 
-	// Get repositories from transaction
 	scooterRepo := tx.ScooterRepository()
 	locationRepo := tx.LocationUpdateRepository()
 
-	// Check if scooter exists
 	scooter, err := scooterRepo.GetByID(ctx, scooterID)
 	if err != nil {
 		return fmt.Errorf("failed to get scooter: %w", err)
@@ -303,7 +293,6 @@ func (s *scooterService) UpdateLocation(ctx context.Context, scooterID uuid.UUID
 		return errors.New("scooter not found")
 	}
 
-	// Create location update record
 	locationUpdate := &models.LocationUpdate{
 		ScooterID: scooterID,
 		Latitude:  lat,
@@ -315,12 +304,10 @@ func (s *scooterService) UpdateLocation(ctx context.Context, scooterID uuid.UUID
 		return fmt.Errorf("failed to create location update: %w", err)
 	}
 
-	// Update scooter location
 	if err := scooterRepo.UpdateLocation(ctx, scooterID, lat, lng); err != nil {
 		return fmt.Errorf("failed to update scooter location: %w", err)
 	}
 
-	// Commit the transaction
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
