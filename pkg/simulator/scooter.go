@@ -31,7 +31,7 @@ type Scooter struct {
 	ID                int
 	APIScooterID      string // Store the actual API scooter ID
 	Ctx               context.Context
-	Client            *APIClient
+	Publisher         EventPublisher
 	Config            *config.Config
 	Movement          *Movement
 	CurrentTrip       *Trip
@@ -51,7 +51,7 @@ type Trip struct {
 }
 
 // NewScooter creates a new scooter simulator
-func NewScooter(ctx context.Context, client *APIClient, id int, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
+func NewScooter(ctx context.Context, publisher EventPublisher, id int, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
 	movement := NewMovement(cfg)
 
 	// Start with random location
@@ -60,7 +60,7 @@ func NewScooter(ctx context.Context, client *APIClient, id int, cfg *config.Conf
 	return &Scooter{
 		ID:                id,
 		Ctx:               ctx,
-		Client:            client,
+		Publisher:         publisher,
 		Config:            cfg,
 		Movement:          movement,
 		Location:          location,
@@ -72,7 +72,7 @@ func NewScooter(ctx context.Context, client *APIClient, id int, cfg *config.Conf
 }
 
 // NewScooterFromAPI creates a new scooter simulator from API data
-func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APIScooter, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
+func NewScooterFromAPI(ctx context.Context, publisher EventPublisher, apiScooter APIScooter, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
 	movement := NewMovement(cfg)
 
 	// Use the scooter's current location from the API
@@ -85,7 +85,7 @@ func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APISco
 		ID:                0, // Internal ID for simulation
 		APIScooterID:      apiScooter.ID,
 		Ctx:               ctx,
-		Client:            client,
+		Publisher:         publisher,
 		Config:            cfg,
 		Movement:          movement,
 		Location:          location,
@@ -149,9 +149,11 @@ func (s *Scooter) updateLocation() {
 	s.Location = newLocation
 	s.LastSeen = time.Now()
 
-	// Send location update to server
-	if err := s.Client.UpdateLocation(s.Ctx, s.getScooterID(), s.Location.Latitude, s.Location.Longitude); err != nil {
-		logger.Error("Failed to update scooter location",
+	// Send location update via publisher
+	heading := s.CurrentTrip.Direction
+	speed := 15.0 // Mock speed for now
+	if err := s.Publisher.PublishLocationUpdated(s.Ctx, s.getScooterID(), s.CurrentTrip.ID, s.Location.Latitude, s.Location.Longitude, heading, speed); err != nil {
+		logger.Error("Failed to publish location update",
 			logger.Int("scooter_id", s.ID),
 			logger.ErrorField(err),
 		)
@@ -285,23 +287,18 @@ func (s *Scooter) startRandomTrip() {
 	// Start trip locally
 	s.StartTrip(tripID, userID)
 
-	// Send trip start request to server
-	response, err := s.Client.StartTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude)
-	if err != nil {
-		logger.Error("Failed to start trip on server",
+	// Send trip start event via publisher
+	if err := s.Publisher.PublishTripStarted(s.Ctx, tripID, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude); err != nil {
+		logger.Error("Failed to publish trip start event",
 			logger.Int("scooter_id", s.ID),
 			logger.String("trip_id", tripID),
 			logger.String("user_id", userID),
 			logger.ErrorField(err),
 		)
-		// Revert local state and user tracking if server call failed
+		// Revert local state and user tracking if publisher call failed
 		s.EndTrip()
 		s.UserTracker.MarkUserInactive(userID)
 	} else {
-		// Update local trip ID with server response
-		if response != nil && response.TripID != "" {
-			s.CurrentTrip.ID = response.TripID
-		}
 		logger.Info("Trip started successfully",
 			logger.Int("scooter_id", s.ID),
 			logger.String("trip_id", s.CurrentTrip.ID),
@@ -322,9 +319,9 @@ func (s *Scooter) EndCurrentTrip() {
 	tripID := s.CurrentTrip.ID
 	userID := s.CurrentTrip.UserID
 
-	// Send trip end request to server
-	if err := s.Client.EndTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude); err != nil {
-		logger.Error("Failed to end trip on server",
+	// Send trip end event via publisher
+	if err := s.Publisher.PublishTripEnded(s.Ctx, tripID, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude, s.CurrentTrip.StartTime); err != nil {
+		logger.Error("Failed to publish trip end event",
 			logger.Int("scooter_id", s.ID),
 			logger.String("trip_id", tripID),
 			logger.String("user_id", userID),

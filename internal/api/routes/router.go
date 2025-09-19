@@ -48,9 +48,6 @@ func SetupRoutes(router *gin.Engine, apiKey string, tripService services.TripSer
 		protected := v1.Group("")
 		protected.Use(middleware.APIKeyMiddleware(apiKeyValidator))
 		{
-			protected.POST("/scooters/:id/trip/start", scooterHandler.StartTrip)
-			protected.POST("/scooters/:id/trip/end", scooterHandler.EndTrip)
-			protected.POST("/scooters/:id/location", scooterHandler.UpdateLocation)
 			protected.GET("/scooters", scooterHandler.GetScooters)
 			protected.GET("/scooters/:id", scooterHandler.GetScooter)
 			protected.GET("/scooters/closest", scooterHandler.GetClosestScooters)

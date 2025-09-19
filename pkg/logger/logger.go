@@ -25,6 +25,7 @@ const (
 	LogFieldTypeDuration
 	LogFieldTypeTime
 	LogFieldTypeError
+	LogFieldTypeStrings
 )
 
 // LogField constructors
@@ -56,6 +57,18 @@ func ErrorField(err error) LogField {
 	return LogField{Key: "error", Value: err, Type: LogFieldTypeError}
 }
 
+func Int32(key string, value int32) LogField {
+	return LogField{Key: key, Value: value, Type: LogFieldTypeInt}
+}
+
+func Int64(key string, value int64) LogField {
+	return LogField{Key: key, Value: value, Type: LogFieldTypeInt}
+}
+
+func Strings(key string, values []string) LogField {
+	return LogField{Key: key, Value: values, Type: LogFieldTypeStrings}
+}
+
 // convertFields converts our custom LogField type to zap.Field
 func convertFields(fields ...LogField) []zap.Field {
 	zapFields := make([]zap.Field, len(fields))
@@ -75,6 +88,8 @@ func convertFields(fields ...LogField) []zap.Field {
 			zapFields[i] = zap.Time(field.Key, field.Value.(time.Time))
 		case LogFieldTypeError:
 			zapFields[i] = zap.Error(field.Value.(error))
+		case LogFieldTypeStrings:
+			zapFields[i] = zap.Strings(field.Key, field.Value.([]string))
 		}
 	}
 	return zapFields

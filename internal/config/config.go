@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -29,9 +30,25 @@ type Config struct {
 	SimulatorTripDurationMax int
 	SimulatorRestMin         int
 	SimulatorRestMax         int
+	SimulatorMode            string // "rest" or "kafka"
+
+	KafkaConfig KafkaConfig
 
 	LogLevel  string
 	LogFormat string
+}
+
+type KafkaConfig struct {
+	Brokers          []string
+	ClientID         string
+	SecurityProtocol string
+	Topics           KafkaTopics
+}
+
+type KafkaTopics struct {
+	TripStarted     string
+	TripEnded       string
+	LocationUpdated string
 }
 
 // City configuration constants
@@ -68,6 +85,18 @@ func Load() (*Config, error) {
 		SimulatorTripDurationMax: getEnvAsInt("SIMULATOR_TRIP_DURATION_MAX", 10),
 		SimulatorRestMin:         getEnvAsInt("SIMULATOR_REST_MIN", 2),
 		SimulatorRestMax:         getEnvAsInt("SIMULATOR_REST_MAX", 5),
+		SimulatorMode:            getEnv("SIMULATOR_MODE", "kafka"),
+
+		KafkaConfig: KafkaConfig{
+			Brokers:          getEnvAsStringSlice("KAFKA_BROKERS", []string{"localhost:9092"}),
+			ClientID:         getEnv("KAFKA_CLIENT_ID", "scooter-simulator"),
+			SecurityProtocol: getEnv("KAFKA_SECURITY_PROTOCOL", "PLAINTEXT"),
+			Topics: KafkaTopics{
+				TripStarted:     getEnv("KAFKA_TOPIC_TRIP_STARTED", "scooter.trip.started"),
+				TripEnded:       getEnv("KAFKA_TOPIC_TRIP_ENDED", "scooter.trip.ended"),
+				LocationUpdated: getEnv("KAFKA_TOPIC_LOCATION_UPDATED", "scooter.location.updated"),
+			},
+		},
 
 		LogLevel:  getEnv("LOG_LEVEL", "info"),
 		LogFormat: getEnv("LOG_FORMAT", "json"),
@@ -87,6 +116,23 @@ func getEnvAsInt(key string, fallback int) int {
 	if value := os.Getenv(key); value != "" {
 		if intValue, err := strconv.Atoi(value); err == nil {
 			return intValue
+		}
+	}
+	return fallback
+}
+
+func getEnvAsStringSlice(key string, fallback []string) []string {
+	if value := os.Getenv(key); value != "" {
+		// Split by comma and trim whitespace
+		parts := strings.Split(value, ",")
+		result := make([]string, 0, len(parts))
+		for _, part := range parts {
+			if trimmed := strings.TrimSpace(part); trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+		if len(result) > 0 {
+			return result
 		}
 	}
 	return fallback

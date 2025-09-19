@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"scootin-aboot/internal/config"
+	"scootin-aboot/pkg/kafka"
 	"scootin-aboot/pkg/logger"
 )
 
@@ -14,6 +15,7 @@ import (
 type Simulator struct {
 	config        *config.Config
 	client        *APIClient
+	publisher     EventPublisher
 	users         []*User
 	scooters      []*Scooter
 	ctx           context.Context
@@ -37,19 +39,41 @@ type Statistics struct {
 }
 
 // NewSimulator creates a new simulator instance
-func NewSimulator(cfg *config.Config) *Simulator {
+func NewSimulator(cfg *config.Config) (*Simulator, error) {
 	ctx, cancel := context.WithCancel(context.Background())
+
+	// Create API client
+	client := NewAPIClient(cfg.SimulatorServerURL, cfg.APIKey)
+
+	// Create appropriate publisher based on configuration
+	var publisher EventPublisher
+
+	if cfg.SimulatorMode == "kafka" {
+		// Create Kafka producer
+		kafkaProducer, err := kafka.NewKafkaProducer(&cfg.KafkaConfig)
+		if err != nil {
+			cancel() // Clean up context on error
+			return nil, fmt.Errorf("failed to create Kafka producer: %w", err)
+		}
+		publisher = NewKafkaEventPublisher(kafkaProducer)
+		logger.Info("Using Kafka event publisher")
+	} else {
+		// Use REST publisher
+		publisher = NewRESTEventPublisher(client)
+		logger.Info("Using REST event publisher")
+	}
 
 	return &Simulator{
 		config:      cfg,
-		client:      NewAPIClient(cfg.SimulatorServerURL, cfg.APIKey),
+		client:      client,
+		publisher:   publisher,
 		ctx:         ctx,
 		cancel:      cancel,
 		activeUsers: make(map[string]bool),
 		stats: &Statistics{
 			StartTime: time.Now(),
 		},
-	}
+	}, nil
 }
 
 // Start begins the simulation
@@ -124,6 +148,11 @@ func (s *Simulator) Stop() {
 	logger.Info("Waiting for all goroutines to complete...")
 	s.wg.Wait()
 
+	// Close the publisher
+	if err := s.publisher.Close(); err != nil {
+		logger.Error("Error closing publisher", logger.ErrorField(err))
+	}
+
 	logger.Info("Simulation stopped gracefully - all trips completed")
 }
 
@@ -184,7 +213,7 @@ func (s *Simulator) initializeScooters() error {
 
 	for i := 0; i < maxScooters; i++ {
 		apiScooter := apiScooters[i]
-		scooter, err := NewScooterFromAPI(s.ctx, s.client, apiScooter, s.config, s, s)
+		scooter, err := NewScooterFromAPI(s.ctx, s.publisher, apiScooter, s.config, s, s)
 		if err != nil {
 			return fmt.Errorf("failed to create scooter %s: %w", apiScooter.ID, err)
 		}

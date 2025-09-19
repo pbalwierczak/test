@@ -2,7 +2,34 @@
 
 app:
 	@echo "Building and starting app with database..."
-	@docker-compose up --build
+	@echo "Cleaning up any existing containers..."
+	@docker-compose down -v 2>/dev/null || true
+	@echo "Starting services..."
+	@docker-compose up --build -d
+	@echo "Waiting for services to be ready..."
+	@echo "Checking service status..."
+	@for i in $$(seq 1 60); do \
+		if docker-compose ps | grep -q "scootin-app.*Up"; then \
+			break; \
+		fi; \
+		echo "Waiting for services... ($$i/60)"; \
+		sleep 2; \
+	done
+	@if ! docker-compose ps | grep -q "scootin-app.*Up"; then \
+		echo "❌ Services failed to start properly"; \
+		docker-compose logs --tail=50; \
+		exit 1; \
+	fi
+	@echo "✅ All services are running!"
+	@echo "📊 Service status:"
+	@docker-compose ps
+	@echo ""
+	@echo "🌐 Application available at: http://localhost:8080"
+	@echo "📚 API docs available at: http://localhost:8080/docs"
+	@echo "💚 Health check: http://localhost:8080/api/v1/health"
+	@echo ""
+	@echo "To view logs: docker-compose logs -f"
+	@echo "To stop: docker-compose down"
 
 help:
 	@echo "Scootin' Aboot - Available targets:"
@@ -10,24 +37,18 @@ help:
 	@echo "  simulator    - Build and run simulator (Docker)"
 	@echo "  simulator-tail-logs - Follow simulator logs"
 	@echo "  simulator-clean-logs - Clean log files"
-	@echo "  dev          - Run both server and simulator locally"
-	@echo "  dev-stop     - Stop development environment"
 	@echo "  build        - Build all Docker images"
 	@echo "  clean        - Clean up Docker containers and images"
 	@echo "  test         - Run tests in Docker container"
+	@echo "  logs         - Follow application logs"
+	@echo "  status       - Show service status and health"
+	@echo "  stop         - Stop all services"
+	@echo "  restart      - Restart all services"
 	@echo ""
 	@echo "Local development targets (prefixed with _):"
 	@echo "  _build      - Build both server and simulator locally"
-	@echo "  _server     - Run the main API server locally"
-	@echo "  _simulator  - Run the simulation program locally"
-	@echo "  _simulator-log - Run simulator with logging to file"
-	@echo "  _stop-simulator - Stop running simulator"
-	@echo "  _tail-logs   - Follow simulator logs in real-time"
-	@echo "  _dev         - Run both server and simulator for development"
-	@echo "  _stop-dev    - Stop development environment"
 	@echo "  _test       - Run all tests locally"
 	@echo "  _clean      - Clean build artifacts"
-	@echo "  _clean-logs - Clean log files"
 	@echo "  _deps       - Download dependencies"
 	@echo "  seed        - Truncate and reload seed data into database"
 	@echo ""
@@ -48,14 +69,6 @@ _build: _deps
 	@go build -o bin/simulator ./cmd/simulator
 	@echo "Build complete!"
 
-_server: _deps
-	@echo "Starting server..."
-	@go run ./cmd/server
-
-_simulator: _deps
-	@echo "Starting simulator..."
-	@go run ./cmd/simulator
-
 _test:
 	@echo "Running tests..."
 	@go test -v ./...
@@ -75,25 +88,6 @@ simulator-clean-logs:
 simulator-tail-logs:
 	@echo "Following simulator logs (Ctrl+C to stop)..."
 	@tail -f simulator.log
-
-dev:
-	@echo "Starting development environment..."
-	@echo "Starting server in background..."
-	@go run ./cmd/server > server.log 2>&1 &
-	@sleep 3
-	@echo "Starting simulator in background..."
-	@go run ./cmd/simulator > simulator.log 2>&1 &
-	@echo "Development environment started!"
-	@echo "Server logs: server.log"
-	@echo "Simulator logs: simulator.log"
-	@echo "Use 'make dev-stop' to stop both services"
-	@echo "Use 'make simulator-tail-logs' to follow simulator logs"
-
-dev-stop:
-	@echo "Stopping development environment..."
-	@pkill -f "go run ./cmd/server" || pkill -f "./bin/server" || echo "No server process found"
-	@pkill -f "go run ./cmd/simulator" || pkill -f "./bin/simulator" || echo "No simulator process found"
-	@echo "Development environment stopped"
 
 _deps:
 	@echo "Downloading dependencies..."
@@ -126,6 +120,25 @@ clean:
 	@docker-compose -f docker-compose.simulator.yml down
 	@docker rmi scootin-app scootin-simulator 2>/dev/null || true
 	@docker system prune -f
+
+logs:
+	@echo "Following application logs (Ctrl+C to stop)..."
+	@docker-compose logs -f
+
+status:
+	@echo "Service status:"
+	@docker-compose ps
+	@echo ""
+	@echo "Health checks:"
+	@docker-compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+
+stop:
+	@echo "Stopping all services..."
+	@docker-compose down
+
+restart:
+	@echo "Restarting services..."
+	@docker-compose restart
 
 test:
 	@echo "Running tests in Docker container..."

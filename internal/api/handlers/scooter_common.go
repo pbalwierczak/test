@@ -20,55 +20,6 @@ func NewScooterHandler(tripService services.TripService, scooterService services
 	}
 }
 
-type StartTripRequest struct {
-	UserID         uuid.UUID `json:"user_id" binding:"required"`
-	StartLatitude  float64   `json:"start_latitude" binding:"required"`
-	StartLongitude float64   `json:"start_longitude" binding:"required"`
-}
-
-type StartTripResponse struct {
-	TripID         uuid.UUID `json:"trip_id"`
-	ScooterID      uuid.UUID `json:"scooter_id"`
-	UserID         uuid.UUID `json:"user_id"`
-	StartTime      time.Time `json:"start_time"`
-	StartLatitude  float64   `json:"start_latitude"`
-	StartLongitude float64   `json:"start_longitude"`
-	Status         string    `json:"status"`
-}
-
-type EndTripRequest struct {
-	EndLatitude  float64 `json:"end_latitude" binding:"required"`
-	EndLongitude float64 `json:"end_longitude" binding:"required"`
-}
-
-type EndTripResponse struct {
-	TripID         uuid.UUID `json:"trip_id"`
-	ScooterID      uuid.UUID `json:"scooter_id"`
-	UserID         uuid.UUID `json:"user_id"`
-	StartTime      time.Time `json:"start_time"`
-	EndTime        time.Time `json:"end_time"`
-	StartLatitude  float64   `json:"start_latitude"`
-	StartLongitude float64   `json:"start_longitude"`
-	EndLatitude    float64   `json:"end_latitude"`
-	EndLongitude   float64   `json:"end_longitude"`
-	Status         string    `json:"status"`
-	Duration       int64     `json:"duration_seconds"`
-}
-
-type LocationUpdateRequest struct {
-	Latitude  float64   `json:"latitude" binding:"required"`
-	Longitude float64   `json:"longitude" binding:"required"`
-	Timestamp time.Time `json:"timestamp" binding:"required"`
-}
-
-type LocationUpdateResponse struct {
-	UpdateID  uuid.UUID `json:"update_id"`
-	ScooterID uuid.UUID `json:"scooter_id"`
-	Latitude  float64   `json:"latitude"`
-	Longitude float64   `json:"longitude"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
 type ScooterQueryParams struct {
 	Status string  `form:"status"`
 	MinLat float64 `form:"min_lat"`

@@ -192,29 +192,6 @@ func createValidTrip() *models.Trip {
 	}
 }
 
-func createValidStartTripRequest() StartTripRequest {
-	return StartTripRequest{
-		UserID:         TestData.ValidUserID,
-		StartLatitude:  TestData.ValidLatitude,
-		StartLongitude: TestData.ValidLongitude,
-	}
-}
-
-func createValidEndTripRequest() EndTripRequest {
-	return EndTripRequest{
-		EndLatitude:  TestData.ValidLatitude,
-		EndLongitude: TestData.ValidLongitude,
-	}
-}
-
-func createValidLocationUpdateRequest() LocationUpdateRequest {
-	return LocationUpdateRequest{
-		Latitude:  TestData.ValidLatitude,
-		Longitude: TestData.ValidLongitude,
-		Timestamp: time.Now(),
-	}
-}
-
 func toJSON(obj interface{}) *bytes.Buffer {
 	jsonData, _ := json.Marshal(obj)
 	return bytes.NewBuffer(jsonData)

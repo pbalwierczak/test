@@ -8,10 +8,7 @@ services:
       - .env
     environment:
       - SIMULATOR_SERVER_URL=${SIMULATOR_SERVER_URL:-http://scootin-app:8080}
-      - KAFKA_BROKERS=kafka:9092
-    depends_on:
-      kafka:
-        condition: service_healthy
+      - KAFKA_BROKERS=kafka:29092
     networks:
       - scootin-network
     restart: unless-stopped

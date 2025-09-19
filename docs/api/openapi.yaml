@@ -20,12 +20,6 @@ paths:
     $ref: './paths/scooter-by-id.yaml'
   /scooters/closest:
     $ref: './paths/scooters-closest.yaml'
-  /scooters/{id}/trip/start:
-    $ref: './paths/trip-start.yaml'
-  /scooters/{id}/trip/end:
-    $ref: './paths/trip-end.yaml'
-  /scooters/{id}/location:
-    $ref: './paths/location-update.yaml'
 
 components:
   securitySchemes:
@@ -38,5 +32,3 @@ tags:
     description: System health and status endpoints
   - name: Scooters
     description: Scooter management and discovery endpoints
-  - name: Trips
-    description: Trip lifecycle management endpoints

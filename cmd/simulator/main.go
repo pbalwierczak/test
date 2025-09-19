@@ -37,7 +37,10 @@ func main() {
 
 	logger.Info("Starting Scootin' Aboot simulator")
 
-	sim := simulator.NewSimulator(cfg)
+	sim, err := simulator.NewSimulator(cfg)
+	if err != nil {
+		logger.Fatal("Failed to create simulator", logger.ErrorField(err))
+	}
 
 	if err := sim.Start(); err != nil {
 		logger.Fatal("Failed to start simulator", logger.ErrorField(err))

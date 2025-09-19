@@ -13,6 +13,7 @@ import (
 	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/api/routes"
 	"scootin-aboot/internal/config"
+	"scootin-aboot/internal/kafka"
 	"scootin-aboot/internal/repository"
 	"scootin-aboot/internal/services"
 	"scootin-aboot/pkg/database"
@@ -99,6 +100,17 @@ func main() {
 
 	routes.SetupRoutes(router, cfg.APIKey, tripService, scooterService)
 
+	// Start Kafka consumer
+	kafkaConsumer, err := kafka.NewEventConsumer(&cfg.KafkaConfig, tripService, scooterService)
+	if err != nil {
+		logger.Fatal("Failed to create Kafka consumer", logger.ErrorField(err))
+	}
+
+	if err := kafkaConsumer.Start(); err != nil {
+		logger.Fatal("Failed to start Kafka consumer", logger.ErrorField(err))
+	}
+	logger.Info("Kafka consumer started")
+
 	address := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)
 	logger.Info("Server starting", logger.String("address", address))
 
@@ -126,6 +138,10 @@ func main() {
 	}
 
 	stopHealthCheck()
+
+	// Stop Kafka consumer
+	kafkaConsumer.Stop()
+	logger.Info("Kafka consumer stopped")
 
 	mainSqlDB, err := gormDB.DB()
 	if err != nil {

@@ -61,6 +61,9 @@ COPY --from=builder /app/seeds ./seeds
 # Copy documentation files
 COPY --from=builder /app/docs ./docs
 
+# Copy .env file
+COPY --from=builder /app/.env ./.env
+
 # Change ownership to appuser
 RUN chown -R appuser:appuser /app
 
