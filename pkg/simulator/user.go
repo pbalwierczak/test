@@ -15,6 +15,7 @@ import (
 // User simulates a mobile client user
 type User struct {
 	ID       int
+	UserID   string // Store the actual user ID from database
 	ctx      context.Context
 	client   *APIClient
 	config   *config.Config
@@ -25,6 +26,18 @@ type User struct {
 func NewUser(ctx context.Context, client *APIClient, id int, cfg *config.Config) (*User, error) {
 	return &User{
 		ID:       id,
+		ctx:      ctx,
+		client:   client,
+		config:   cfg,
+		movement: NewMovement(cfg),
+	}, nil
+}
+
+// NewUserWithID creates a new user simulator with a specific user ID
+func NewUserWithID(ctx context.Context, client *APIClient, id int, userID string, cfg *config.Config) (*User, error) {
+	return &User{
+		ID:       id,
+		UserID:   userID,
 		ctx:      ctx,
 		client:   client,
 		config:   cfg,
@@ -82,7 +95,7 @@ func (u *User) simulateTrip() {
 	u.simulateDriving(scooter.ID, tripID)
 
 	// End trip
-	if err := u.endTrip(scooter.ID); err != nil {
+	if err := u.endTrip(scooter.ID, scooter.Latitude, scooter.Longitude); err != nil {
 		utils.Error("Failed to end trip",
 			zap.Int("user_id", u.ID),
 			zap.String("scooter_id", scooter.ID),
@@ -117,9 +130,12 @@ func (u *User) findAvailableScooter() (*APIScooter, error) {
 
 // startTrip starts a trip with the given scooter
 func (u *User) startTrip(scooterID string, startLat, startLng float64) (string, error) {
-	// Use seeded user IDs from the database
-	// Users: 550e8400-e29b-41d4-a716-446655440001 to 010
-	userID := fmt.Sprintf("550e8400-e29b-41d4-a716-446655440%03d", u.ID)
+	// Use the actual user ID from the database
+	userID := u.UserID
+	if userID == "" {
+		// Fallback to old logic for backward compatibility
+		userID = fmt.Sprintf("550e8400-e29b-41d4-a716-446655440%03d", u.ID)
+	}
 
 	response, err := u.client.StartTrip(u.ctx, scooterID, userID, startLat, startLng)
 	if err != nil {
@@ -130,12 +146,15 @@ func (u *User) startTrip(scooterID string, startLat, startLng float64) (string, 
 }
 
 // endTrip ends the trip with the given scooter
-func (u *User) endTrip(scooterID string) error {
-	// Use seeded user IDs from the database
-	// Users: 550e8400-e29b-41d4-a716-446655440001 to 010
-	userID := fmt.Sprintf("550e8400-e29b-41d4-a716-446655440%03d", u.ID)
+func (u *User) endTrip(scooterID string, endLat, endLng float64) error {
+	// Use the actual user ID from the database
+	userID := u.UserID
+	if userID == "" {
+		// Fallback to old logic for backward compatibility
+		userID = fmt.Sprintf("550e8400-e29b-41d4-a716-446655440%03d", u.ID)
+	}
 
-	return u.client.EndTrip(u.ctx, scooterID, userID)
+	return u.client.EndTrip(u.ctx, scooterID, userID, endLat, endLng)
 }
 
 // simulateDriving simulates the driving portion of the trip

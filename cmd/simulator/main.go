@@ -26,11 +26,21 @@ func main() {
 	}
 	defer utils.Sync()
 
-	utils.Info("Starting Scootin' Aboot simulator",
+	// Log comprehensive configuration
+	utils.Info("Simulator Configuration",
 		zap.Int("scooters", cfg.SimulatorScooters),
 		zap.Int("users", cfg.SimulatorUsers),
 		zap.String("server_url", cfg.SimulatorServerURL),
+		zap.Int("speed", cfg.SimulatorSpeed),
+		zap.Int("trip_duration_min", cfg.SimulatorTripDurationMin),
+		zap.Int("trip_duration_max", cfg.SimulatorTripDurationMax),
+		zap.Int("rest_min", cfg.SimulatorRestMin),
+		zap.Int("rest_max", cfg.SimulatorRestMax),
+		zap.String("log_level", cfg.LogLevel),
+		zap.String("log_format", cfg.LogFormat),
 	)
+
+	utils.Info("Starting Scootin' Aboot simulator")
 
 	// Create simulator
 	sim := simulator.NewSimulator(cfg)

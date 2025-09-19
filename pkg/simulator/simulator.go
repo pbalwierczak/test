@@ -90,14 +90,35 @@ func (s *Simulator) Stop() {
 	utils.Info("Simulation stopped")
 }
 
-// initializeScooters creates and initializes scooter instances
+// initializeScooters fetches existing scooters from the API and creates scooter instances
 func (s *Simulator) initializeScooters() error {
-	s.scooters = make([]*Scooter, s.config.SimulatorScooters)
+	// Fetch all scooters from the API
+	apiScooters, err := s.client.GetAllScooters(s.ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch scooters from API: %w", err)
+	}
 
-	for i := 0; i < s.config.SimulatorScooters; i++ {
-		scooter, err := NewScooter(s.ctx, s.client, i+1, s.config)
+	if len(apiScooters) == 0 {
+		return fmt.Errorf("no scooters found in database")
+	}
+
+	// Limit to configured number of scooters
+	maxScooters := s.config.SimulatorScooters
+	if len(apiScooters) < maxScooters {
+		maxScooters = len(apiScooters)
+		utils.Info("Limited scooters to available count",
+			zap.Int("requested", s.config.SimulatorScooters),
+			zap.Int("available", len(apiScooters)),
+			zap.Int("using", maxScooters))
+	}
+
+	s.scooters = make([]*Scooter, maxScooters)
+
+	for i := 0; i < maxScooters; i++ {
+		apiScooter := apiScooters[i]
+		scooter, err := NewScooterFromAPI(s.ctx, s.client, apiScooter, s.config)
 		if err != nil {
-			return fmt.Errorf("failed to create scooter %d: %w", i+1, err)
+			return fmt.Errorf("failed to create scooter %s: %w", apiScooter.ID, err)
 		}
 		s.scooters[i] = scooter
 	}
@@ -111,14 +132,38 @@ func (s *Simulator) initializeScooters() error {
 	return nil
 }
 
-// initializeUsers creates and initializes user instances
+// initializeUsers creates and initializes user instances using seeded user IDs
 func (s *Simulator) initializeUsers() error {
-	s.users = make([]*User, s.config.SimulatorUsers)
+	// Seeded user IDs from seeds/users.sql
+	seededUserIDs := []string{
+		"550e8400-e29b-41d4-a716-446655440001",
+		"550e8400-e29b-41d4-a716-446655440002",
+		"550e8400-e29b-41d4-a716-446655440003",
+		"550e8400-e29b-41d4-a716-446655440004",
+		"550e8400-e29b-41d4-a716-446655440005",
+		"550e8400-e29b-41d4-a716-446655440006",
+		"550e8400-e29b-41d4-a716-446655440007",
+		"550e8400-e29b-41d4-a716-446655440008",
+		"550e8400-e29b-41d4-a716-446655440009",
+		"550e8400-e29b-41d4-a716-446655440010",
+	}
 
-	for i := 0; i < s.config.SimulatorUsers; i++ {
-		user, err := NewUser(s.ctx, s.client, i+1, s.config)
+	// Limit to configured number of users
+	maxUsers := s.config.SimulatorUsers
+	if len(seededUserIDs) < maxUsers {
+		maxUsers = len(seededUserIDs)
+		utils.Info("Limited users to available seeded count",
+			zap.Int("requested", s.config.SimulatorUsers),
+			zap.Int("available", len(seededUserIDs)),
+			zap.Int("using", maxUsers))
+	}
+
+	s.users = make([]*User, maxUsers)
+
+	for i := 0; i < maxUsers; i++ {
+		user, err := NewUserWithID(s.ctx, s.client, i+1, seededUserIDs[i], s.config)
 		if err != nil {
-			return fmt.Errorf("failed to create user %d: %w", i+1, err)
+			return fmt.Errorf("failed to create user %s: %w", seededUserIDs[i], err)
 		}
 		s.users[i] = user
 	}

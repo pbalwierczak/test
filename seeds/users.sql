@@ -1,6 +1,9 @@
 -- Seed data for users table
 -- This creates test users for simulation and testing
 
+-- Clean existing data
+TRUNCATE TABLE users CASCADE;
+
 INSERT INTO users (id, created_at, updated_at) VALUES
 ('550e8400-e29b-41d4-a716-446655440001', NOW() - INTERVAL '30 days', NOW() - INTERVAL '30 days'),
 ('550e8400-e29b-41d4-a716-446655440002', NOW() - INTERVAL '25 days', NOW() - INTERVAL '25 days'),

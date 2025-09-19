@@ -13,15 +13,16 @@ import (
 
 // Scooter simulates a scooter's behavior
 type Scooter struct {
-	ID          int
-	Ctx         context.Context
-	Client      *APIClient
-	Config      *config.Config
-	Movement    *Movement
-	CurrentTrip *Trip
-	Location    Location
-	Status      string
-	LastSeen    time.Time
+	ID           int
+	APIScooterID string // Store the actual API scooter ID
+	Ctx          context.Context
+	Client       *APIClient
+	Config       *config.Config
+	Movement     *Movement
+	CurrentTrip  *Trip
+	Location     Location
+	Status       string
+	LastSeen     time.Time
 }
 
 // Trip represents an active trip
@@ -48,6 +49,29 @@ func NewScooter(ctx context.Context, client *APIClient, id int, cfg *config.Conf
 		Location: location,
 		Status:   "available",
 		LastSeen: time.Now(),
+	}, nil
+}
+
+// NewScooterFromAPI creates a new scooter simulator from API data
+func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APIScooter, cfg *config.Config) (*Scooter, error) {
+	movement := NewMovement(cfg)
+
+	// Use the scooter's current location from the API
+	location := Location{
+		Latitude:  apiScooter.Latitude,
+		Longitude: apiScooter.Longitude,
+	}
+
+	return &Scooter{
+		ID:           0, // Internal ID for simulation
+		APIScooterID: apiScooter.ID,
+		Ctx:          ctx,
+		Client:       client,
+		Config:       cfg,
+		Movement:     movement,
+		Location:     location,
+		Status:       apiScooter.Status,
+		LastSeen:     time.Now(),
 	}, nil
 }
 
@@ -109,7 +133,12 @@ func (s *Scooter) updateLocation() {
 
 // getScooterID returns the scooter ID as a string
 func (s *Scooter) getScooterID() string {
-	// Use seeded scooter IDs from the database
+	// Use the actual API scooter ID from the database
+	if s.APIScooterID != "" {
+		return s.APIScooterID
+	}
+
+	// Fallback to old logic for backward compatibility
 	// Ottawa scooters: 650e8400-e29b-41d4-a716-446655440001 to 010
 	// Montreal scooters: 750e8400-e29b-41d4-a716-446655440001 to 010
 	if s.ID <= 10 {

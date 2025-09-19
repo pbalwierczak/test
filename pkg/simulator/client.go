@@ -55,7 +55,9 @@ type TripStartResponse struct {
 
 // TripEndRequest represents the request to end a trip
 type TripEndRequest struct {
-	UserID string `json:"user_id"`
+	UserID       string  `json:"user_id"`
+	EndLatitude  float64 `json:"end_latitude"`
+	EndLongitude float64 `json:"end_longitude"`
 }
 
 // LocationUpdateRequest represents the request to update location
@@ -73,6 +75,37 @@ type ErrorResponse struct {
 // GetAvailableScooters fetches available scooters from the server
 func (c *APIClient) GetAvailableScooters(ctx context.Context) ([]APIScooter, error) {
 	url := fmt.Sprintf("%s/api/v1/scooters?status=available", c.baseURL)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("API error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var response ScootersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return response.Scooters, nil
+}
+
+// GetAllScooters fetches all scooters from the server
+func (c *APIClient) GetAllScooters(ctx context.Context) ([]APIScooter, error) {
+	url := fmt.Sprintf("%s/api/v1/scooters", c.baseURL)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -129,7 +162,7 @@ func (c *APIClient) StartTrip(ctx context.Context, scooterID, userID string, sta
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("API error: %d - %s", resp.StatusCode, string(body))
 	}
@@ -143,10 +176,14 @@ func (c *APIClient) StartTrip(ctx context.Context, scooterID, userID string, sta
 }
 
 // EndTrip ends a trip for a scooter
-func (c *APIClient) EndTrip(ctx context.Context, scooterID, userID string) error {
+func (c *APIClient) EndTrip(ctx context.Context, scooterID, userID string, endLat, endLng float64) error {
 	url := fmt.Sprintf("%s/api/v1/scooters/%s/trip/end", c.baseURL, scooterID)
 
-	requestBody := TripEndRequest{UserID: userID}
+	requestBody := TripEndRequest{
+		UserID:       userID,
+		EndLatitude:  endLat,
+		EndLongitude: endLng,
+	}
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)

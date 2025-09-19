@@ -20,7 +20,6 @@ help:
 	@echo "  simulator-clean-logs - Clean log files"
 	@echo "  dev          - Run both server and simulator locally"
 	@echo "  dev-stop     - Stop development environment"
-	@echo "  db           - Run database only"
 	@echo "  build        - Build all Docker images"
 	@echo "  clean        - Clean up Docker containers and images"
 	@echo "  test         - Run tests in Docker container"
@@ -38,8 +37,7 @@ help:
 	@echo "  _clean      - Clean build artifacts"
 	@echo "  _clean-logs - Clean log files"
 	@echo "  _deps       - Download dependencies"
-	@echo "  seed        - Load seed data into database"
-	@echo "  seed-reset  - Reset database and reload seeds"
+	@echo "  seed        - Truncate and reload seed data into database"
 	@echo ""
 	@echo "Documentation targets:"
 	@echo "  docs          - Show documentation help"
@@ -126,29 +124,18 @@ _deps:
 # Docker targets (primary workflow)
 simulator:
 	@echo "Building and starting simulator..."
-	@echo "Note: Make sure the main app is running first with 'make app'"
-	@docker-compose -f docker-compose.simulator.yml up --build
-
-simulator-test:
-	@echo "Testing simulator connectivity..."
+	@if ! docker network ls | grep -q "scootin-aboot-app_scootin-network"; then \
+		echo "❌ Error: scootin-network does not exist!"; \
+		echo "Please start the main application first with: make app"; \
+		exit 1; \
+	fi
 	@if ! docker ps | grep -q "scootin-app"; then \
 		echo "❌ Error: scootin-app container is not running!"; \
 		echo "Please start the main application first with: make app"; \
 		exit 1; \
 	fi
-	@echo "✅ scootin-app container is running"
-	@if curl -s -f "http://localhost:8080/health" > /dev/null; then \
-		echo "✅ API is accessible from host"; \
-	else \
-		echo "❌ API is not accessible from host"; \
-		echo "Make sure the main application is running and accessible on port 8080"; \
-		exit 1; \
-	fi
-	@echo "🎉 Simulator connectivity test passed!"
-
-db:
-	@echo "Starting database only..."
-	@docker-compose up postgres -d
+	@echo "✅ Main app is running, starting simulator..."
+	@docker-compose -f docker-compose.simulator.yml up --build
 
 build:
 	@echo "Building all Docker images..."
@@ -169,17 +156,13 @@ test:
 
 # Database seed commands
 seed:
+	@echo "⚠️  WARNING: This will TRUNCATE all tables and reload seed data!"
+	@echo "Tables that will be cleared: users, scooters, trips, location_updates"
+	@echo ""
+	@read -p "Are you sure you want to continue? (y/N): " confirm && [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ] || (echo "Operation cancelled." && exit 1)
 	@echo "Loading seed data into database..."
 	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/users.sql
 	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/scooters.sql
 	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/sample_trips.sql
 	@echo "Seed data loaded successfully!"
 
-seed-reset:
-	@echo "Resetting database and loading seeds..."
-	@docker-compose down -v
-	@docker-compose up postgres -d
-	@echo "Waiting for database to be ready..."
-	@sleep 10
-	@$(MAKE) seed
-	@echo "Database reset and seeded successfully!"

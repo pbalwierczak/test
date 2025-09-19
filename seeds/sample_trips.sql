@@ -1,6 +1,10 @@
 -- Seed data for trips and location_updates tables
 -- This creates sample trips with location history for testing
 
+-- Clean existing data (in reverse dependency order)
+TRUNCATE TABLE location_updates CASCADE;
+TRUNCATE TABLE trips CASCADE;
+
 -- Sample completed trips
 INSERT INTO trips (id, scooter_id, user_id, start_time, end_time, start_latitude, start_longitude, end_latitude, end_longitude, status, created_at, updated_at) VALUES
 -- Ottawa trip 1 (completed)

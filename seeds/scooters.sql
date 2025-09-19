@@ -1,6 +1,9 @@
 -- Seed data for scooters table
 -- This creates scooters distributed across Ottawa and Montreal areas
 
+-- Clean existing data
+TRUNCATE TABLE scooters CASCADE;
+
 -- Ottawa area scooters (10 scooters)
 INSERT INTO scooters (id, status, current_latitude, current_longitude, created_at, updated_at, last_seen) VALUES
 -- Parliament Hill area
