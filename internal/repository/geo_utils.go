@@ -30,17 +30,6 @@ func HaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	return earthRadius * c
 }
 
-// IsPointInBounds checks if a point is within the given rectangular bounds
-func IsPointInBounds(lat, lng, minLat, maxLat, minLng, maxLng float64) bool {
-	return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng
-}
-
-// IsPointInRadius checks if a point is within the given radius of a center point
-func IsPointInRadius(centerLat, centerLng, pointLat, pointLng, radiusKm float64) bool {
-	distance := HaversineDistance(centerLat, centerLng, pointLat, pointLng)
-	return distance <= radiusKm
-}
-
 // BoundingBox represents a rectangular geographic area
 type BoundingBox struct {
 	MinLat float64
@@ -62,11 +51,6 @@ func NewBoundingBox(centerLat, centerLng, radiusKm float64) BoundingBox {
 		MinLng: centerLng - lngDelta,
 		MaxLng: centerLng + lngDelta,
 	}
-}
-
-// Contains checks if a point is within the bounding box
-func (bb BoundingBox) Contains(lat, lng float64) bool {
-	return IsPointInBounds(lat, lng, bb.MinLat, bb.MaxLat, bb.MinLng, bb.MaxLng)
 }
 
 // ValidateGeographicBounds validates geographic bounding box parameters
@@ -111,19 +95,6 @@ func validateCoordinates(lat, lng float64) error {
 		return errors.New("longitude must be between -180 and 180")
 	}
 	return nil
-}
-
-// Expand expands the bounding box by the given radius
-func (bb BoundingBox) Expand(radiusKm float64) BoundingBox {
-	latDelta := radiusKm / 111.0
-	lngDelta := radiusKm / 111.0 // Use average for simplicity
-
-	return BoundingBox{
-		MinLat: bb.MinLat - latDelta,
-		MaxLat: bb.MaxLat + latDelta,
-		MinLng: bb.MinLng - lngDelta,
-		MaxLng: bb.MaxLng + lngDelta,
-	}
 }
 
 // LocationProvider interface for types that have latitude and longitude

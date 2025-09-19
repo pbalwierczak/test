@@ -6,14 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ValidationError represents a validation error with field details
 type ValidationError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 	Value   string `json:"value,omitempty"`
 }
 
-// ValidationErrorResponse represents a validation error response
 type ValidationErrorResponse struct {
 	Error   string            `json:"error"`
 	Message string            `json:"message"`
@@ -21,12 +19,9 @@ type ValidationErrorResponse struct {
 	Details []ValidationError `json:"details"`
 }
 
-// ValidateJSON validates that the request body is valid JSON
 func ValidateJSON() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Only validate for POST, PUT, PATCH requests
 		if c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "PATCH" {
-			// Check if content type is JSON
 			contentType := c.GetHeader("Content-Type")
 			if contentType != "" && contentType != "application/json" && contentType != "application/json; charset=utf-8" {
 				c.JSON(http.StatusBadRequest, ValidationErrorResponse{
@@ -49,7 +44,6 @@ func ValidateJSON() gin.HandlerFunc {
 	}
 }
 
-// ValidateRequiredHeaders validates that required headers are present
 func ValidateRequiredHeaders(requiredHeaders []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var missingHeaders []ValidationError
@@ -78,7 +72,6 @@ func ValidateRequiredHeaders(requiredHeaders []string) gin.HandlerFunc {
 	}
 }
 
-// ValidateContentLength validates that the request body doesn't exceed the specified limit
 func ValidateContentLength(maxSize int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.ContentLength > maxSize {
