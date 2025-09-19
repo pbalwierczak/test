@@ -1,6 +1,7 @@
 .env
 bin/server
 bin/simulator
+server
+simulator
 simulator.log
 .env
-.env.local

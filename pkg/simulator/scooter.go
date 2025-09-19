@@ -3,26 +3,44 @@ package simulator
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"scootin-aboot/internal/config"
 	"scootin-aboot/pkg/utils"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
+// UserTracker interface for tracking active users
+type UserTracker interface {
+	IsUserActive(userID string) bool
+	MarkUserActive(userID string)
+	MarkUserInactive(userID string)
+	GetAvailableUsers() []string
+}
+
+// StatisticsUpdater interface for updating simulation statistics
+type StatisticsUpdater interface {
+	OnTripStarted()
+	OnTripEnded()
+}
+
 // Scooter simulates a scooter's behavior
 type Scooter struct {
-	ID           int
-	APIScooterID string // Store the actual API scooter ID
-	Ctx          context.Context
-	Client       *APIClient
-	Config       *config.Config
-	Movement     *Movement
-	CurrentTrip  *Trip
-	Location     Location
-	Status       string
-	LastSeen     time.Time
+	ID                int
+	APIScooterID      string // Store the actual API scooter ID
+	Ctx               context.Context
+	Client            *APIClient
+	Config            *config.Config
+	Movement          *Movement
+	CurrentTrip       *Trip
+	Location          Location
+	Status            string
+	LastSeen          time.Time
+	UserTracker       UserTracker       // Interface for tracking active users
+	StatisticsUpdater StatisticsUpdater // Interface for updating statistics
 }
 
 // Trip represents an active trip
@@ -34,26 +52,28 @@ type Trip struct {
 }
 
 // NewScooter creates a new scooter simulator
-func NewScooter(ctx context.Context, client *APIClient, id int, cfg *config.Config) (*Scooter, error) {
+func NewScooter(ctx context.Context, client *APIClient, id int, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
 	movement := NewMovement(cfg)
 
 	// Start with random location
 	location := movement.GetRandomLocation()
 
 	return &Scooter{
-		ID:       id,
-		Ctx:      ctx,
-		Client:   client,
-		Config:   cfg,
-		Movement: movement,
-		Location: location,
-		Status:   "available",
-		LastSeen: time.Now(),
+		ID:                id,
+		Ctx:               ctx,
+		Client:            client,
+		Config:            cfg,
+		Movement:          movement,
+		Location:          location,
+		Status:            "available",
+		LastSeen:          time.Now(),
+		UserTracker:       userTracker,
+		StatisticsUpdater: statsUpdater,
 	}, nil
 }
 
 // NewScooterFromAPI creates a new scooter simulator from API data
-func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APIScooter, cfg *config.Config) (*Scooter, error) {
+func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APIScooter, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
 	movement := NewMovement(cfg)
 
 	// Use the scooter's current location from the API
@@ -63,15 +83,17 @@ func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APISco
 	}
 
 	return &Scooter{
-		ID:           0, // Internal ID for simulation
-		APIScooterID: apiScooter.ID,
-		Ctx:          ctx,
-		Client:       client,
-		Config:       cfg,
-		Movement:     movement,
-		Location:     location,
-		Status:       apiScooter.Status,
-		LastSeen:     time.Now(),
+		ID:                0, // Internal ID for simulation
+		APIScooterID:      apiScooter.ID,
+		Ctx:               ctx,
+		Client:            client,
+		Config:            cfg,
+		Movement:          movement,
+		Location:          location,
+		Status:            apiScooter.Status,
+		LastSeen:          time.Now(),
+		UserTracker:       userTracker,
+		StatisticsUpdater: statsUpdater,
 	}, nil
 }
 
@@ -96,7 +118,20 @@ func (s *Scooter) Simulate() {
 			)
 			return
 		case <-ticker.C:
-			s.updateLocation()
+			if s.Status == "available" {
+				// Randomly decide to start a trip
+				if s.shouldStartTrip() {
+					s.startRandomTrip()
+				}
+			} else if s.Status == "occupied" {
+				// Update location during trip
+				s.updateLocation()
+
+				// Randomly decide to end trip
+				if s.shouldEndTrip() {
+					s.EndCurrentTrip()
+				}
+			}
 		}
 	}
 }
@@ -203,4 +238,113 @@ func (s *Scooter) IsAvailable() bool {
 // GetLastSeen returns the last time the scooter was seen
 func (s *Scooter) GetLastSeen() time.Time {
 	return s.LastSeen
+}
+
+// shouldStartTrip determines if the scooter should start a trip
+func (s *Scooter) shouldStartTrip() bool {
+	// 60% chance every 3 seconds to start a trip when available
+	return rand.Float64() < 0.6
+}
+
+// shouldEndTrip determines if the scooter should end the current trip
+func (s *Scooter) shouldEndTrip() bool {
+	if s.CurrentTrip == nil {
+		return false
+	}
+
+	// End trip after 5-15 seconds (simulating trip duration)
+	tripDuration := time.Since(s.CurrentTrip.StartTime)
+	minDuration := 5 * time.Second
+	maxDuration := 15 * time.Second
+
+	// 20% chance every 3 seconds after minimum duration
+	if tripDuration > minDuration {
+		return rand.Float64() < 0.2 || tripDuration > maxDuration
+	}
+
+	return false
+}
+
+// startRandomTrip starts a trip with a random available user
+func (s *Scooter) startRandomTrip() {
+	// Get available users (not currently in trips)
+	availableUsers := s.UserTracker.GetAvailableUsers()
+	if len(availableUsers) == 0 {
+		utils.Debug("No available users for trip",
+			zap.Int("scooter_id", s.ID),
+		)
+		return
+	}
+
+	// Pick a random available user
+	userID := availableUsers[rand.Intn(len(availableUsers))]
+	tripID := uuid.New().String()
+
+	// Mark user as active before starting trip
+	s.UserTracker.MarkUserActive(userID)
+
+	// Start trip locally
+	s.StartTrip(tripID, userID)
+
+	// Send trip start request to server
+	response, err := s.Client.StartTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude)
+	if err != nil {
+		utils.Error("Failed to start trip on server",
+			zap.Int("scooter_id", s.ID),
+			zap.String("trip_id", tripID),
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+		// Revert local state and user tracking if server call failed
+		s.EndTrip()
+		s.UserTracker.MarkUserInactive(userID)
+	} else {
+		// Update local trip ID with server response
+		if response != nil && response.TripID != "" {
+			s.CurrentTrip.ID = response.TripID
+		}
+		utils.Info("Trip started successfully",
+			zap.Int("scooter_id", s.ID),
+			zap.String("trip_id", s.CurrentTrip.ID),
+			zap.String("user_id", userID),
+		)
+
+		// Update statistics - trip started
+		s.StatisticsUpdater.OnTripStarted()
+	}
+}
+
+// EndCurrentTrip ends the current trip
+func (s *Scooter) EndCurrentTrip() {
+	if s.CurrentTrip == nil {
+		return
+	}
+
+	tripID := s.CurrentTrip.ID
+	userID := s.CurrentTrip.UserID
+
+	// Send trip end request to server
+	if err := s.Client.EndTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude); err != nil {
+		utils.Error("Failed to end trip on server",
+			zap.Int("scooter_id", s.ID),
+			zap.String("trip_id", tripID),
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+	} else {
+		utils.Info("Trip ended successfully",
+			zap.Int("scooter_id", s.ID),
+			zap.String("trip_id", tripID),
+			zap.String("user_id", userID),
+		)
+	}
+
+	// Mark user as inactive
+	s.UserTracker.MarkUserInactive(userID)
+
+	// Update statistics - trip ended
+	s.StatisticsUpdater.OnTripEnded()
+
+	// End trip locally
+	s.EndTrip()
 }

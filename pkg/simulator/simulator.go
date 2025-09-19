@@ -14,14 +14,16 @@ import (
 
 // Simulator orchestrates the entire simulation
 type Simulator struct {
-	config   *config.Config
-	client   *APIClient
-	users    []*User
-	scooters []*Scooter
-	ctx      context.Context
-	cancel   context.CancelFunc
-	wg       sync.WaitGroup
-	stats    *Statistics
+	config        *config.Config
+	client        *APIClient
+	users         []*User
+	scooters      []*Scooter
+	ctx           context.Context
+	cancel        context.CancelFunc
+	wg            sync.WaitGroup
+	stats         *Statistics
+	activeUsers   map[string]bool // Track which users are currently in trips
+	activeUsersMu sync.RWMutex    // Mutex for activeUsers map
 }
 
 // Statistics tracks simulation metrics
@@ -41,10 +43,11 @@ func NewSimulator(cfg *config.Config) *Simulator {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &Simulator{
-		config: cfg,
-		client: NewAPIClient(cfg.SimulatorServerURL, cfg.APIKey),
-		ctx:    ctx,
-		cancel: cancel,
+		config:      cfg,
+		client:      NewAPIClient(cfg.SimulatorServerURL, cfg.APIKey),
+		ctx:         ctx,
+		cancel:      cancel,
+		activeUsers: make(map[string]bool),
 		stats: &Statistics{
 			StartTime: time.Now(),
 		},
@@ -89,7 +92,32 @@ func (s *Simulator) Stop() {
 	// Check for active trips before shutdown
 	activeTrips := s.getActiveTripsCount()
 	if activeTrips > 0 {
-		utils.Info("Active trips detected, waiting for completion", zap.Int("active_trips", activeTrips))
+		utils.Info("Active trips detected, ending them gracefully", zap.Int("active_trips", activeTrips))
+
+		// End all active trips before shutting down
+		s.endAllActiveTrips()
+
+		// Wait for trips to complete with timeout
+		timeout := 10 * time.Second
+		start := time.Now()
+
+		for {
+			remainingTrips := s.getActiveTripsCount()
+			if remainingTrips == 0 {
+				utils.Info("All trips ended successfully")
+				break
+			}
+
+			if time.Since(start) > timeout {
+				utils.Info("Timeout reached, forcing shutdown",
+					zap.Int("remaining_trips", remainingTrips),
+					zap.Duration("timeout", timeout))
+				break
+			}
+
+			// Wait a bit before checking again
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
 
 	utils.Info("Cancelling context to signal shutdown to all goroutines...")
@@ -101,15 +129,35 @@ func (s *Simulator) Stop() {
 	utils.Info("Simulation stopped gracefully - all trips completed")
 }
 
-// getActiveTripsCount returns the number of users currently in trips
+// getActiveTripsCount returns the number of scooters currently in trips
 func (s *Simulator) getActiveTripsCount() int {
 	count := 0
-	for _, user := range s.users {
-		if user.getInTrip() {
+	for _, scooter := range s.scooters {
+		if scooter.Status == "occupied" {
 			count++
 		}
 	}
 	return count
+}
+
+// endAllActiveTrips ends all currently active trips
+func (s *Simulator) endAllActiveTrips() {
+	utils.Info("Ending all active trips...")
+
+	for _, scooter := range s.scooters {
+		if scooter.Status == "occupied" && scooter.CurrentTrip != nil {
+			utils.Info("Ending trip for scooter",
+				zap.Int("scooter_id", scooter.ID),
+				zap.String("trip_id", scooter.CurrentTrip.ID),
+				zap.String("user_id", scooter.CurrentTrip.UserID),
+			)
+
+			// End the trip by calling the scooter's EndCurrentTrip method
+			scooter.EndCurrentTrip()
+		}
+	}
+
+	utils.Info("All active trips ended")
 }
 
 // initializeScooters fetches existing scooters from the API and creates scooter instances
@@ -138,7 +186,7 @@ func (s *Simulator) initializeScooters() error {
 
 	for i := 0; i < maxScooters; i++ {
 		apiScooter := apiScooters[i]
-		scooter, err := NewScooterFromAPI(s.ctx, s.client, apiScooter, s.config)
+		scooter, err := NewScooterFromAPI(s.ctx, s.client, apiScooter, s.config, s, s)
 		if err != nil {
 			return fmt.Errorf("failed to create scooter %s: %w", apiScooter.ID, err)
 		}
@@ -268,5 +316,74 @@ func (s *Simulator) reportStatistics() {
 func (s *Simulator) UpdateStats(update func(*Statistics)) {
 	s.stats.mu.Lock()
 	update(s.stats)
+	s.stats.mu.Unlock()
+}
+
+// IsUserActive checks if a user is currently in a trip
+func (s *Simulator) IsUserActive(userID string) bool {
+	s.activeUsersMu.RLock()
+	defer s.activeUsersMu.RUnlock()
+	return s.activeUsers[userID]
+}
+
+// MarkUserActive marks a user as active (in a trip)
+func (s *Simulator) MarkUserActive(userID string) {
+	s.activeUsersMu.Lock()
+	defer s.activeUsersMu.Unlock()
+	s.activeUsers[userID] = true
+}
+
+// MarkUserInactive marks a user as inactive (not in a trip)
+func (s *Simulator) MarkUserInactive(userID string) {
+	s.activeUsersMu.Lock()
+	defer s.activeUsersMu.Unlock()
+	delete(s.activeUsers, userID)
+}
+
+// GetAvailableUsers returns a list of user IDs that are not currently in trips
+func (s *Simulator) GetAvailableUsers() []string {
+	// Seeded user IDs from seeds/users.sql
+	allUserIDs := []string{
+		"550e8400-e29b-41d4-a716-446655440001",
+		"550e8400-e29b-41d4-a716-446655440002",
+		"550e8400-e29b-41d4-a716-446655440003",
+		"550e8400-e29b-41d4-a716-446655440004",
+		"550e8400-e29b-41d4-a716-446655440005",
+		"550e8400-e29b-41d4-a716-446655440006",
+		"550e8400-e29b-41d4-a716-446655440007",
+		"550e8400-e29b-41d4-a716-446655440008",
+		"550e8400-e29b-41d4-a716-446655440009",
+		"550e8400-e29b-41d4-a716-446655440010",
+	}
+
+	s.activeUsersMu.RLock()
+	defer s.activeUsersMu.RUnlock()
+
+	var availableUsers []string
+	for _, userID := range allUserIDs {
+		if !s.activeUsers[userID] {
+			availableUsers = append(availableUsers, userID)
+		}
+	}
+
+	return availableUsers
+}
+
+// OnTripStarted is called when a scooter starts a trip
+func (s *Simulator) OnTripStarted() {
+	s.stats.mu.Lock()
+	s.stats.ActiveTrips++
+	s.stats.AvailableScooters--
+	s.stats.OccupiedScooters++
+	s.stats.mu.Unlock()
+}
+
+// OnTripEnded is called when a scooter ends a trip
+func (s *Simulator) OnTripEnded() {
+	s.stats.mu.Lock()
+	s.stats.ActiveTrips--
+	s.stats.CompletedTrips++
+	s.stats.AvailableScooters++
+	s.stats.OccupiedScooters--
 	s.stats.mu.Unlock()
 }
