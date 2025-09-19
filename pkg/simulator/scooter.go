@@ -10,7 +10,6 @@ import (
 	"scootin-aboot/pkg/utils"
 
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 // UserTracker interface for tracking active users
@@ -100,10 +99,10 @@ func NewScooterFromAPI(ctx context.Context, client *APIClient, apiScooter APISco
 // Simulate runs the scooter simulation loop
 func (s *Scooter) Simulate() {
 	utils.Info("Scooter simulation started",
-		zap.Int("scooter_id", s.ID),
-		zap.String("status", s.Status),
-		zap.Float64("lat", s.Location.Latitude),
-		zap.Float64("lng", s.Location.Longitude),
+		utils.Int("scooter_id", s.ID),
+		utils.String("status", s.Status),
+		utils.Float64("lat", s.Location.Latitude),
+		utils.Float64("lng", s.Location.Longitude),
 	)
 
 	// Update location every 3 seconds
@@ -114,7 +113,7 @@ func (s *Scooter) Simulate() {
 		select {
 		case <-s.Ctx.Done():
 			utils.Info("Scooter simulation stopped",
-				zap.Int("scooter_id", s.ID),
+				utils.Int("scooter_id", s.ID),
 			)
 			return
 		case <-ticker.C:
@@ -153,15 +152,15 @@ func (s *Scooter) updateLocation() {
 	// Send location update to server
 	if err := s.Client.UpdateLocation(s.Ctx, s.getScooterID(), s.Location.Latitude, s.Location.Longitude); err != nil {
 		utils.Error("Failed to update scooter location",
-			zap.Int("scooter_id", s.ID),
-			zap.Error(err),
+			utils.Int("scooter_id", s.ID),
+			utils.ErrorField(err),
 		)
 	} else {
 		utils.Debug("Scooter location updated",
-			zap.Int("scooter_id", s.ID),
-			zap.String("trip_id", s.CurrentTrip.ID),
-			zap.Float64("lat", s.Location.Latitude),
-			zap.Float64("lng", s.Location.Longitude),
+			utils.Int("scooter_id", s.ID),
+			utils.String("trip_id", s.CurrentTrip.ID),
+			utils.Float64("lat", s.Location.Latitude),
+			utils.Float64("lng", s.Location.Longitude),
 		)
 	}
 }
@@ -196,10 +195,10 @@ func (s *Scooter) StartTrip(tripID, userID string) {
 	s.Status = "occupied"
 
 	utils.Info("Scooter trip started",
-		zap.Int("scooter_id", s.ID),
-		zap.String("trip_id", tripID),
-		zap.String("user_id", userID),
-		zap.Float64("direction", s.CurrentTrip.Direction),
+		utils.Int("scooter_id", s.ID),
+		utils.String("trip_id", tripID),
+		utils.String("user_id", userID),
+		utils.Float64("direction", s.CurrentTrip.Direction),
 	)
 }
 
@@ -209,10 +208,10 @@ func (s *Scooter) EndTrip() {
 		duration := time.Since(s.CurrentTrip.StartTime)
 
 		utils.Info("Scooter trip ended",
-			zap.Int("scooter_id", s.ID),
-			zap.String("trip_id", s.CurrentTrip.ID),
-			zap.String("user_id", s.CurrentTrip.UserID),
-			zap.Duration("duration", duration),
+			utils.Int("scooter_id", s.ID),
+			utils.String("trip_id", s.CurrentTrip.ID),
+			utils.String("user_id", s.CurrentTrip.UserID),
+			utils.Duration("duration", duration),
 		)
 	}
 
@@ -271,7 +270,7 @@ func (s *Scooter) startRandomTrip() {
 	availableUsers := s.UserTracker.GetAvailableUsers()
 	if len(availableUsers) == 0 {
 		utils.Debug("No available users for trip",
-			zap.Int("scooter_id", s.ID),
+			utils.Int("scooter_id", s.ID),
 		)
 		return
 	}
@@ -290,10 +289,10 @@ func (s *Scooter) startRandomTrip() {
 	response, err := s.Client.StartTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude)
 	if err != nil {
 		utils.Error("Failed to start trip on server",
-			zap.Int("scooter_id", s.ID),
-			zap.String("trip_id", tripID),
-			zap.String("user_id", userID),
-			zap.Error(err),
+			utils.Int("scooter_id", s.ID),
+			utils.String("trip_id", tripID),
+			utils.String("user_id", userID),
+			utils.ErrorField(err),
 		)
 		// Revert local state and user tracking if server call failed
 		s.EndTrip()
@@ -304,9 +303,9 @@ func (s *Scooter) startRandomTrip() {
 			s.CurrentTrip.ID = response.TripID
 		}
 		utils.Info("Trip started successfully",
-			zap.Int("scooter_id", s.ID),
-			zap.String("trip_id", s.CurrentTrip.ID),
-			zap.String("user_id", userID),
+			utils.Int("scooter_id", s.ID),
+			utils.String("trip_id", s.CurrentTrip.ID),
+			utils.String("user_id", userID),
 		)
 
 		// Update statistics - trip started
@@ -326,16 +325,16 @@ func (s *Scooter) EndCurrentTrip() {
 	// Send trip end request to server
 	if err := s.Client.EndTrip(s.Ctx, s.getScooterID(), userID, s.Location.Latitude, s.Location.Longitude); err != nil {
 		utils.Error("Failed to end trip on server",
-			zap.Int("scooter_id", s.ID),
-			zap.String("trip_id", tripID),
-			zap.String("user_id", userID),
-			zap.Error(err),
+			utils.Int("scooter_id", s.ID),
+			utils.String("trip_id", tripID),
+			utils.String("user_id", userID),
+			utils.ErrorField(err),
 		)
 	} else {
 		utils.Info("Trip ended successfully",
-			zap.Int("scooter_id", s.ID),
-			zap.String("trip_id", tripID),
-			zap.String("user_id", userID),
+			utils.Int("scooter_id", s.ID),
+			utils.String("trip_id", tripID),
+			utils.String("user_id", userID),
 		)
 	}
 
