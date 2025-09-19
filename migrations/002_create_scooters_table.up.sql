@@ -6,15 +6,13 @@ CREATE TABLE scooters (
     current_longitude DECIMAL(11, 8) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE NULL
+    last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for performance
 CREATE INDEX idx_scooters_status ON scooters(status);
 CREATE INDEX idx_scooters_last_seen ON scooters(last_seen);
 CREATE INDEX idx_scooters_location ON scooters(current_latitude, current_longitude);
-CREATE INDEX idx_scooters_deleted_at ON scooters(deleted_at);
 
 -- Add trigger to automatically update updated_at
 CREATE TRIGGER update_scooters_updated_at 

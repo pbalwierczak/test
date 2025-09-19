@@ -13,6 +13,7 @@ help:
 	@echo "Scootin' Aboot - Available targets:"
 	@echo "  app          - Build and run app with database (default)"
 	@echo "  simulator    - Build and run simulator (Docker)"
+	@echo "  simulator-test - Test simulator connectivity to external app"
 	@echo "  simulator-run - Run simulator locally with logging"
 	@echo "  simulator-stop - Stop running simulator"
 	@echo "  simulator-tail-logs - Follow simulator logs"
@@ -125,7 +126,25 @@ _deps:
 # Docker targets (primary workflow)
 simulator:
 	@echo "Building and starting simulator..."
+	@echo "Note: Make sure the main app is running first with 'make app'"
 	@docker-compose -f docker-compose.simulator.yml up --build
+
+simulator-test:
+	@echo "Testing simulator connectivity..."
+	@if ! docker ps | grep -q "scootin-app"; then \
+		echo "❌ Error: scootin-app container is not running!"; \
+		echo "Please start the main application first with: make app"; \
+		exit 1; \
+	fi
+	@echo "✅ scootin-app container is running"
+	@if curl -s -f "http://localhost:8080/health" > /dev/null; then \
+		echo "✅ API is accessible from host"; \
+	else \
+		echo "❌ API is not accessible from host"; \
+		echo "Make sure the main application is running and accessible on port 8080"; \
+		exit 1; \
+	fi
+	@echo "🎉 Simulator connectivity test passed!"
 
 db:
 	@echo "Starting database only..."

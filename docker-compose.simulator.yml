@@ -1,42 +1,4 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: scootin-postgres
-    environment:
-      POSTGRES_DB: ${DB_NAME:-scootin_aboot}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-scootin_aboot}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - scootin-network
-
-  scootin-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: scootin-app
-    env_file:
-      - .env
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-    ports:
-      - "${SERVER_PORT:-8080}:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - scootin-network
-    restart: unless-stopped
-
   scootin-simulator:
     build:
       context: .
@@ -45,16 +7,5 @@ services:
     env_file:
       - .env
     environment:
-      - SIMULATOR_SERVER_URL=http://scootin-app:8080
-    depends_on:
-      - scootin-app
-    networks:
-      - scootin-network
+      - SIMULATOR_SERVER_URL=${SIMULATOR_SERVER_URL:-http://host.docker.internal:8080}
     restart: unless-stopped
-
-volumes:
-  postgres_data:
-
-networks:
-  scootin-network:
-    driver: bridge
