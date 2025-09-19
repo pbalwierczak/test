@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"sort"
+
+	"scootin-aboot/pkg/validation"
 )
 
 // HaversineDistance calculates the distance between two points on Earth using the Haversine formula
@@ -53,16 +55,15 @@ func NewBoundingBox(centerLat, centerLng, radiusKm float64) BoundingBox {
 	}
 }
 
-// ValidateGeographicBounds validates geographic bounding box parameters
 func ValidateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
 	if minLat == 0 && maxLat == 0 && minLng == 0 && maxLng == 0 {
 		return nil
 	}
 
-	if err := validateCoordinates(minLat, minLng); err != nil {
+	if err := validation.ValidateCoordinates(minLat, minLng); err != nil {
 		return fmt.Errorf("invalid min bounds: %w", err)
 	}
-	if err := validateCoordinates(maxLat, maxLng); err != nil {
+	if err := validation.ValidateCoordinates(maxLat, maxLng); err != nil {
 		return fmt.Errorf("invalid max bounds: %w", err)
 	}
 
@@ -82,16 +83,6 @@ func ValidateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
 	return nil
 }
 
-// validateCoordinates validates latitude and longitude values
-func validateCoordinates(lat, lng float64) error {
-	if lat < -90 || lat > 90 {
-		return errors.New("latitude must be between -90 and 90")
-	}
-	if lng < -180 || lng > 180 {
-		return errors.New("longitude must be between -180 and 180")
-	}
-	return nil
-}
 
 type LocationProvider interface {
 	GetLatitude() float64

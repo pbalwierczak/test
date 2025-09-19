@@ -4,11 +4,12 @@ import (
 	"errors"
 	"time"
 
+	"scootin-aboot/pkg/validation"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-// TripStatus represents the possible statuses of a trip
 type TripStatus string
 
 const (
@@ -17,7 +18,6 @@ const (
 	TripStatusCancelled TripStatus = "cancelled"
 )
 
-// Trip represents a trip in the system
 type Trip struct {
 	ID             uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	ScooterID      uuid.UUID      `json:"scooter_id" gorm:"type:uuid;not null"`
@@ -33,28 +33,23 @@ type Trip struct {
 	UpdatedAt      time.Time      `json:"updated_at"`
 	DeletedAt      gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
 
-	// Relationships
 	Scooter Scooter `json:"scooter,omitempty" gorm:"foreignKey:ScooterID"`
 	User    User    `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
-// TableName returns the table name for the Trip model
 func (Trip) TableName() string {
 	return "trips"
 }
 
-// BeforeCreate hook to set the ID if not already set and validate data
 func (t *Trip) BeforeCreate(tx *gorm.DB) error {
 	if t.ID == uuid.Nil {
 		t.ID = uuid.New()
 	}
 
-	// Validate coordinates
 	if err := t.ValidateStartCoordinates(); err != nil {
 		return err
 	}
 
-	// Set timestamps
 	now := time.Now()
 	if t.CreatedAt.IsZero() {
 		t.CreatedAt = now
@@ -69,42 +64,34 @@ func (t *Trip) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// BeforeUpdate hook to validate data before update
 func (t *Trip) BeforeUpdate(tx *gorm.DB) error {
-	// Validate coordinates
 	if err := t.ValidateStartCoordinates(); err != nil {
 		return err
 	}
 
-	// If ending the trip, validate end coordinates
 	if t.EndTime != nil && t.EndLatitude != nil && t.EndLongitude != nil {
 		if err := t.ValidateEndCoordinates(); err != nil {
 			return err
 		}
 	}
 
-	// Update timestamp
 	t.UpdatedAt = time.Now()
 
 	return nil
 }
 
-// IsActive checks if the trip is currently active
 func (t *Trip) IsActive() bool {
 	return t.Status == TripStatusActive
 }
 
-// IsCompleted checks if the trip has been completed
 func (t *Trip) IsCompleted() bool {
 	return t.Status == TripStatusCompleted
 }
 
-// IsCancelled checks if the trip has been cancelled
 func (t *Trip) IsCancelled() bool {
 	return t.Status == TripStatusCancelled
 }
 
-// Duration returns the duration of the trip if it has ended
 func (t *Trip) Duration() *time.Duration {
 	if t.EndTime == nil {
 		return nil
@@ -113,37 +100,21 @@ func (t *Trip) Duration() *time.Duration {
 	return &duration
 }
 
-// ValidateStartCoordinates validates the trip's start coordinates
 func (t *Trip) ValidateStartCoordinates() error {
-	// Validate latitude (-90 to 90)
-	if t.StartLatitude < -90 || t.StartLatitude > 90 {
-		return errors.New("invalid start latitude: must be between -90 and 90")
+	if err := validation.ValidateCoordinates(t.StartLatitude, t.StartLongitude); err != nil {
+		return err
 	}
-
-	// Validate longitude (-180 to 180)
-	if t.StartLongitude < -180 || t.StartLongitude > 180 {
-		return errors.New("invalid start longitude: must be between -180 and 180")
-	}
-
 	return nil
 }
 
-// ValidateEndCoordinates validates the trip's end coordinates
 func (t *Trip) ValidateEndCoordinates() error {
 	if t.EndLatitude == nil || t.EndLongitude == nil {
 		return errors.New("end coordinates cannot be nil")
 	}
 
-	// Validate latitude (-90 to 90)
-	if *t.EndLatitude < -90 || *t.EndLatitude > 90 {
-		return errors.New("invalid end latitude: must be between -90 and 90")
+	if err := validation.ValidateCoordinates(*t.EndLatitude, *t.EndLongitude); err != nil {
+		return err
 	}
-
-	// Validate longitude (-180 to 180)
-	if *t.EndLongitude < -180 || *t.EndLongitude > 180 {
-		return errors.New("invalid end longitude: must be between -180 and 180")
-	}
-
 	return nil
 }
 

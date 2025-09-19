@@ -66,14 +66,14 @@ func TestTripModel(t *testing.T) {
 
 		err := trip.ValidateStartCoordinates()
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid start latitude")
+		assert.Contains(t, err.Error(), "invalid latitude")
 
 		trip.StartLatitude = 45.4215
 		trip.StartLongitude = 181.0 // Invalid longitude
 
 		err = trip.ValidateStartCoordinates()
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid start longitude")
+		assert.Contains(t, err.Error(), "invalid longitude")
 	})
 
 	t.Run("InvalidEndCoordinates", func(t *testing.T) {
@@ -87,7 +87,7 @@ func TestTripModel(t *testing.T) {
 
 		err := trip.ValidateEndCoordinates()
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid end latitude")
+		assert.Contains(t, err.Error(), "invalid latitude")
 
 		latitude = 45.4215
 		longitude = 181.0
@@ -96,7 +96,7 @@ func TestTripModel(t *testing.T) {
 
 		err = trip.ValidateEndCoordinates()
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid end longitude")
+		assert.Contains(t, err.Error(), "invalid longitude")
 	})
 
 	t.Run("EndTripWithoutEndCoordinates", func(t *testing.T) {
