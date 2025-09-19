@@ -28,6 +28,10 @@ type KafkaProducer struct {
 
 // NewKafkaProducer creates a new Kafka producer
 func NewKafkaProducer(cfg *config.KafkaConfig) (*KafkaProducer, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("failed to create Kafka producer: config cannot be nil")
+	}
+
 	saramaConfig := sarama.NewConfig()
 	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll
 	saramaConfig.Producer.Retry.Max = 3
