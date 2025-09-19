@@ -39,7 +39,6 @@ func TestScooterHandler_UpdateLocation(t *testing.T) {
 		assert.Equal(t, TestData.ValidScooterID, response.ScooterID)
 		assert.Equal(t, TestData.ValidLatitude, response.Latitude)
 		assert.Equal(t, TestData.ValidLongitude, response.Longitude)
-		// Compare timestamps with a small tolerance for time zone differences
 		assert.WithinDuration(t, request.Timestamp, response.Timestamp, time.Second)
 
 		mockScooterService.AssertExpectations(t)
@@ -125,7 +124,6 @@ func TestScooterHandler_UpdateLocation(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		// Create a custom error that matches the expected error message
 		customError := &mockError{message: "scooter not found"}
 
 		mockScooterService.On("UpdateLocation", mock.Anything, TestData.ValidScooterID, TestData.ValidLatitude, TestData.ValidLongitude).
@@ -149,7 +147,6 @@ func TestScooterHandler_UpdateLocation(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		// Create a custom error that matches the expected error message
 		customError := &mockError{message: "invalid coordinates: invalid latitude: must be between -90 and 90"}
 
 		mockScooterService.On("UpdateLocation", mock.Anything, TestData.ValidScooterID, TestData.InvalidLatitude, TestData.ValidLongitude).
@@ -177,7 +174,6 @@ func TestScooterHandler_UpdateLocation(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		// Create a custom error that matches the expected error message
 		customError := &mockError{message: "invalid coordinates: invalid longitude: must be between -180 and 180"}
 
 		mockScooterService.On("UpdateLocation", mock.Anything, TestData.ValidScooterID, TestData.ValidLatitude, TestData.InvalidLongitude).
@@ -205,7 +201,6 @@ func TestScooterHandler_UpdateLocation(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		// Test boundary values
 		boundaryLat := 90.0
 		boundaryLng := 180.0
 
@@ -233,7 +228,6 @@ func TestScooterHandler_UpdateLocation(t *testing.T) {
 		mockScooterService, mockTripService := createMockServices()
 		handler := createScooterHandler(mockScooterService, mockTripService)
 
-		// Test negative boundary values
 		boundaryLat := -90.0
 		boundaryLng := -180.0
 

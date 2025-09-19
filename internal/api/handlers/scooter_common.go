@@ -8,13 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// ScooterHandler handles scooter-related HTTP requests
 type ScooterHandler struct {
 	tripService    services.TripService
 	scooterService services.ScooterService
 }
 
-// NewScooterHandler creates a new scooter handler
 func NewScooterHandler(tripService services.TripService, scooterService services.ScooterService) *ScooterHandler {
 	return &ScooterHandler{
 		tripService:    tripService,
@@ -22,16 +20,12 @@ func NewScooterHandler(tripService services.TripService, scooterService services
 	}
 }
 
-// Trip-related request/response types
-
-// StartTripRequest represents the request body for starting a trip
 type StartTripRequest struct {
 	UserID         uuid.UUID `json:"user_id" binding:"required"`
 	StartLatitude  float64   `json:"start_latitude" binding:"required"`
 	StartLongitude float64   `json:"start_longitude" binding:"required"`
 }
 
-// StartTripResponse represents the response for starting a trip
 type StartTripResponse struct {
 	TripID         uuid.UUID `json:"trip_id"`
 	ScooterID      uuid.UUID `json:"scooter_id"`
@@ -42,13 +36,11 @@ type StartTripResponse struct {
 	Status         string    `json:"status"`
 }
 
-// EndTripRequest represents the request body for ending a trip
 type EndTripRequest struct {
 	EndLatitude  float64 `json:"end_latitude" binding:"required"`
 	EndLongitude float64 `json:"end_longitude" binding:"required"`
 }
 
-// EndTripResponse represents the response for ending a trip
 type EndTripResponse struct {
 	TripID         uuid.UUID `json:"trip_id"`
 	ScooterID      uuid.UUID `json:"scooter_id"`
@@ -63,16 +55,12 @@ type EndTripResponse struct {
 	Duration       int64     `json:"duration_seconds"`
 }
 
-// Location-related request/response types
-
-// LocationUpdateRequest represents the request body for updating location
 type LocationUpdateRequest struct {
 	Latitude  float64   `json:"latitude" binding:"required"`
 	Longitude float64   `json:"longitude" binding:"required"`
 	Timestamp time.Time `json:"timestamp" binding:"required"`
 }
 
-// LocationUpdateResponse represents the response for location update
 type LocationUpdateResponse struct {
 	UpdateID  uuid.UUID `json:"update_id"`
 	ScooterID uuid.UUID `json:"scooter_id"`
@@ -81,9 +69,6 @@ type LocationUpdateResponse struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// Search and query types
-
-// ScooterQueryParams represents query parameters for scooter queries
 type ScooterQueryParams struct {
 	Status string  `form:"status"`
 	MinLat float64 `form:"min_lat"`
@@ -94,7 +79,6 @@ type ScooterQueryParams struct {
 	Offset int     `form:"offset,default=0"`
 }
 
-// ScooterListResponse represents the response for scooter list queries
 type ScooterListResponse struct {
 	Scooters []ScooterInfo `json:"scooters"`
 	Total    int64         `json:"total"`
@@ -102,7 +86,6 @@ type ScooterListResponse struct {
 	Offset   int           `json:"offset"`
 }
 
-// ScooterInfo represents scooter information in list responses
 type ScooterInfo struct {
 	ID               uuid.UUID `json:"id"`
 	Status           string    `json:"status"`
@@ -112,7 +95,6 @@ type ScooterInfo struct {
 	CreatedAt        time.Time `json:"created_at"`
 }
 
-// ScooterDetailsResponse represents the response for scooter details
 type ScooterDetailsResponse struct {
 	ID               uuid.UUID `json:"id"`
 	Status           string    `json:"status"`
@@ -121,11 +103,9 @@ type ScooterDetailsResponse struct {
 	LastSeen         time.Time `json:"last_seen"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
-	// TODO: Add active trip information if scooter is occupied
-	ActiveTrip *TripInfo `json:"active_trip,omitempty"`
+	ActiveTrip       *TripInfo `json:"active_trip,omitempty"`
 }
 
-// TripInfo represents trip information in scooter details
 type TripInfo struct {
 	TripID         uuid.UUID `json:"trip_id"`
 	UserID         uuid.UUID `json:"user_id"`
@@ -134,9 +114,6 @@ type TripInfo struct {
 	StartLongitude float64   `json:"start_longitude"`
 }
 
-// Closest scooters types
-
-// ClosestScootersParams represents query parameters for closest scooters
 type ClosestScootersParams struct {
 	Latitude  float64 `form:"lat" binding:"required"`
 	Longitude float64 `form:"lng" binding:"required"`
@@ -145,20 +122,17 @@ type ClosestScootersParams struct {
 	Status    string  `form:"status"`
 }
 
-// ClosestScootersResponse represents the response for closest scooters
 type ClosestScootersResponse struct {
 	Scooters []ScooterWithDistance `json:"scooters"`
 	Center   Location              `json:"center"`
 	Radius   float64               `json:"radius_meters"`
 }
 
-// ScooterWithDistance represents a scooter with distance information
 type ScooterWithDistance struct {
 	ScooterInfo
 	Distance float64 `json:"distance_meters"`
 }
 
-// Location represents a geographic location
 type Location struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
