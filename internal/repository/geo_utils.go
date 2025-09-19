@@ -55,12 +55,10 @@ func NewBoundingBox(centerLat, centerLng, radiusKm float64) BoundingBox {
 
 // ValidateGeographicBounds validates geographic bounding box parameters
 func ValidateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
-	// Check if any bounds are provided
 	if minLat == 0 && maxLat == 0 && minLng == 0 && maxLng == 0 {
-		return nil // No bounds provided, that's okay
+		return nil
 	}
 
-	// Validate individual coordinates
 	if err := validateCoordinates(minLat, minLng); err != nil {
 		return fmt.Errorf("invalid min bounds: %w", err)
 	}
@@ -68,7 +66,6 @@ func ValidateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
 		return fmt.Errorf("invalid max bounds: %w", err)
 	}
 
-	// Validate bounds consistency
 	if minLat >= maxLat {
 		return errors.New("min_lat must be less than max_lat")
 	}
@@ -76,7 +73,6 @@ func ValidateGeographicBounds(minLat, maxLat, minLng, maxLng float64) error {
 		return errors.New("min_lng must be less than max_lng")
 	}
 
-	// Check for reasonable bounds (not too large)
 	latDiff := maxLat - minLat
 	lngDiff := maxLng - minLng
 	if latDiff > 10 || lngDiff > 10 {
@@ -97,28 +93,21 @@ func validateCoordinates(lat, lng float64) error {
 	return nil
 }
 
-// LocationProvider interface for types that have latitude and longitude
 type LocationProvider interface {
 	GetLatitude() float64
 	GetLongitude() float64
 }
 
-// ItemWithDistance represents an item with its pre-calculated distance
 type ItemWithDistance[T LocationProvider] struct {
 	Item     T
 	Distance float64
 }
 
-// FilterAndSortByDistance filters items by radius and sorts them by distance from a center point
-// If radius <= 0, no radius filtering is applied (all items are included)
-// If limit > 0, only the first 'limit' items are returned after sorting
-// This function calculates HaversineDistance only once per item for optimal performance
 func FilterAndSortByDistance[T LocationProvider](items []T, centerLat, centerLng, radius float64, limit int) []T {
 	if len(items) == 0 {
 		return items
 	}
 
-	// Calculate distance once per item and filter by radius
 	var itemsWithDistance []ItemWithDistance[T]
 	for _, item := range items {
 		distance := HaversineDistance(centerLat, centerLng, item.GetLatitude(), item.GetLongitude())
@@ -130,17 +119,14 @@ func FilterAndSortByDistance[T LocationProvider](items []T, centerLat, centerLng
 		}
 	}
 
-	// Sort by pre-calculated distance
 	sort.Slice(itemsWithDistance, func(i, j int) bool {
 		return itemsWithDistance[i].Distance < itemsWithDistance[j].Distance
 	})
 
-	// Apply limit
 	if limit > 0 && len(itemsWithDistance) > limit {
 		itemsWithDistance = itemsWithDistance[:limit]
 	}
 
-	// Extract items from the sorted slice
 	result := make([]T, len(itemsWithDistance))
 	for i, itemWithDistance := range itemsWithDistance {
 		result[i] = itemWithDistance.Item
