@@ -34,32 +34,19 @@ func main() {
 	defer logger.Sync()
 
 	dsn := cfg.GetDatabaseDSN()
-	gormDB, err := database.ConnectDatabase(dsn)
-	if err != nil {
-		logger.Fatal("Failed to connect to database", logger.ErrorField(err))
-	}
-
-	migrationDB, err := database.ConnectDatabase(dsn)
-	if err != nil {
-		logger.Fatal("Failed to connect to database for migrations", logger.ErrorField(err))
-	}
-
-	sqlDB, err := migrationDB.DB()
-	if err != nil {
-		logger.Fatal("Failed to get underlying sql.DB for migrations", logger.ErrorField(err))
-	}
 
 	migrationsPath, err := database.GetMigrationsPath()
 	if err != nil {
 		logger.Fatal("Failed to get migrations path", logger.ErrorField(err))
 	}
 
-	if err := database.MigrateUp(sqlDB, migrationsPath); err != nil {
+	if err := database.MigrateUp(dsn, migrationsPath); err != nil {
 		logger.Fatal("Failed to run database migrations", logger.ErrorField(err))
 	}
 
-	if err := sqlDB.Close(); err != nil {
-		logger.Error("Failed to close migration database connection", logger.ErrorField(err))
+	gormDB, err := database.ConnectDatabase(dsn)
+	if err != nil {
+		logger.Fatal("Failed to connect to database", logger.ErrorField(err))
 	}
 
 	stopHealthCheck := database.StartHealthCheck(gormDB, 30*time.Second)
@@ -102,7 +89,6 @@ func main() {
 
 	routes.SetupRoutes(router, cfg.APIKey, tripService, scooterService)
 
-	// Start Kafka consumer
 	kafkaConsumer, err := kafka.NewEventConsumer(&cfg.KafkaConfig, tripService, scooterService)
 	if err != nil {
 		logger.Fatal("Failed to create Kafka consumer", logger.ErrorField(err))
@@ -141,13 +127,12 @@ func main() {
 
 	stopHealthCheck()
 
-	// Stop Kafka consumer
 	kafkaConsumer.Stop()
 	logger.Info("Kafka consumer stopped")
 
 	mainSqlDB, err := gormDB.DB()
 	if err != nil {
-		logger.Error("Failed to get main database connection for closing", logger.ErrorField(err))
+		logger.Error("Failed to get database connection for closing", logger.ErrorField(err))
 	} else {
 		if err := mainSqlDB.Close(); err != nil {
 			logger.Error("Failed to close database connection", logger.ErrorField(err))

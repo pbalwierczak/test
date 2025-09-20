@@ -7,6 +7,7 @@ import (
 	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/repository"
 	"scootin-aboot/internal/services"
+	"scootin-aboot/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -31,6 +32,7 @@ func (h *ScooterHandler) GetScooters(c *gin.Context) {
 
 	result, err := h.scooterService.GetScooters(c.Request.Context(), serviceParams)
 	if err != nil {
+		logger.Error("Failed to get scooters", logger.ErrorField(err))
 		c.Error(middleware.ErrInternalServer)
 		return
 	}
@@ -70,6 +72,7 @@ func (h *ScooterHandler) GetScooter(c *gin.Context) {
 			c.Error(middleware.ErrNotFound)
 			return
 		}
+		logger.Error("Failed to get scooter", logger.ErrorField(err))
 		c.Error(middleware.ErrInternalServer)
 		return
 	}
@@ -114,6 +117,7 @@ func (h *ScooterHandler) GetClosestScooters(c *gin.Context) {
 
 	result, err := h.scooterService.GetClosestScooters(c.Request.Context(), serviceParams)
 	if err != nil {
+		logger.Error("Failed to get closest scooters", logger.ErrorField(err))
 		c.Error(middleware.ErrInternalServer)
 		return
 	}

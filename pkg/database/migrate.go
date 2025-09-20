@@ -1,29 +1,21 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/lib/pq"
 )
 
-// MigrateUp runs all pending migrations
-func MigrateUp(db *sql.DB, migrationsPath string) error {
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil {
-		return fmt.Errorf("failed to create postgres driver: %w", err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
+// MigrateUp runs all pending migrations using a DSN string
+func MigrateUp(dsn, migrationsPath string) error {
+	m, err := migrate.New(
 		fmt.Sprintf("file://%s", migrationsPath),
-		"postgres",
-		driver,
+		dsn,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
@@ -38,17 +30,11 @@ func MigrateUp(db *sql.DB, migrationsPath string) error {
 	return nil
 }
 
-// MigrateDown rolls back the last migration
-func MigrateDown(db *sql.DB, migrationsPath string) error {
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil {
-		return fmt.Errorf("failed to create postgres driver: %w", err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
+// MigrateDown rolls back the last migration using a DSN string
+func MigrateDown(dsn, migrationsPath string) error {
+	m, err := migrate.New(
 		fmt.Sprintf("file://%s", migrationsPath),
-		"postgres",
-		driver,
+		dsn,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
@@ -63,17 +49,11 @@ func MigrateDown(db *sql.DB, migrationsPath string) error {
 	return nil
 }
 
-// MigrateReset drops all tables and runs all migrations
-func MigrateReset(db *sql.DB, migrationsPath string) error {
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err != nil {
-		return fmt.Errorf("failed to create postgres driver: %w", err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
+// MigrateReset drops all tables and runs all migrations using a DSN string
+func MigrateReset(dsn, migrationsPath string) error {
+	m, err := migrate.New(
 		fmt.Sprintf("file://%s", migrationsPath),
-		"postgres",
-		driver,
+		dsn,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
