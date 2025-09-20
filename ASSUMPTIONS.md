@@ -4,10 +4,6 @@ This document outlines the assumptions and improvements that would be implemente
 
 ## Event Handling
 
-- **Event Streaming**: For production systems, I would use **Kafka** instead of sending events directly via API calls
-  - Provides better reliability and scalability
-  - Enables event replay and audit capabilities
-  - Supports multiple consumers and decoupled architecture
 - **Kafka Security**: For demonstration purposes, Kafka is unsecured, but in production it would be properly secured
   - Only scooters would be authorized to post events (location updates, trip events)
   - Only the backend service would be authorized to consume events
