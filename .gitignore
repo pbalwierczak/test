@@ -1,8 +1,8 @@
 .env
 bin/server
 bin/simulator
-server
-simulator
+/server
+/simulator
 simulator.log
 coverage.out
 coverage.html
