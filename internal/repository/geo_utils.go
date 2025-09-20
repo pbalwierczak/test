@@ -32,7 +32,6 @@ func HaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	return earthRadius * c
 }
 
-// BoundingBox represents a rectangular geographic area
 type BoundingBox struct {
 	MinLat float64
 	MaxLat float64
@@ -40,7 +39,6 @@ type BoundingBox struct {
 	MaxLng float64
 }
 
-// NewBoundingBox creates a new bounding box from center point and radius
 func NewBoundingBox(centerLat, centerLng, radiusKm float64) BoundingBox {
 	// Approximate conversion: 1 degree latitude ≈ 111 km
 	// 1 degree longitude ≈ 111 km * cos(latitude)
