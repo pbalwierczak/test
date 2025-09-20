@@ -11,7 +11,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-// MigrateUp runs all pending migrations using a DSN string
 func MigrateUp(dsn, migrationsPath string) error {
 	m, err := migrate.New(
 		fmt.Sprintf("file://%s", migrationsPath),
@@ -30,7 +29,6 @@ func MigrateUp(dsn, migrationsPath string) error {
 	return nil
 }
 
-// MigrateDown rolls back the last migration using a DSN string
 func MigrateDown(dsn, migrationsPath string) error {
 	m, err := migrate.New(
 		fmt.Sprintf("file://%s", migrationsPath),
@@ -49,7 +47,6 @@ func MigrateDown(dsn, migrationsPath string) error {
 	return nil
 }
 
-// MigrateReset drops all tables and runs all migrations using a DSN string
 func MigrateReset(dsn, migrationsPath string) error {
 	m, err := migrate.New(
 		fmt.Sprintf("file://%s", migrationsPath),
@@ -72,7 +69,6 @@ func MigrateReset(dsn, migrationsPath string) error {
 	return nil
 }
 
-// GetMigrationsPath returns the absolute path to the migrations directory
 func GetMigrationsPath() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
