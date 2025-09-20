@@ -7,3 +7,4 @@ simulator.log
 coverage.out
 coverage.html
 work-docs/
+.DS_Store
