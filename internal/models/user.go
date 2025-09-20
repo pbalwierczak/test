@@ -4,18 +4,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 // User represents a user in the system
 type User struct {
-	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
+	ID        uuid.UUID  `json:"id" db:"id"`
+	CreatedAt time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 
 	// Relationships
-	Trips []Trip `json:"trips,omitempty" gorm:"foreignKey:UserID"`
+	Trips []Trip `json:"trips,omitempty"`
 }
 
 // TableName returns the table name for the User model
@@ -23,28 +22,20 @@ func (User) TableName() string {
 	return "users"
 }
 
-// BeforeCreate hook to set the ID if not already set
-func (u *User) BeforeCreate(tx *gorm.DB) error {
-	if u.ID == uuid.Nil {
-		u.ID = uuid.New()
-	}
-
-	// Set timestamps
+// SetTimestamps sets the created_at and updated_at timestamps
+func (u *User) SetTimestamps() {
 	now := time.Now()
 	if u.CreatedAt.IsZero() {
 		u.CreatedAt = now
 	}
-	if u.UpdatedAt.IsZero() {
-		u.UpdatedAt = now
-	}
-
-	return nil
+	u.UpdatedAt = now
 }
 
-// BeforeUpdate hook to update timestamp
-func (u *User) BeforeUpdate(tx *gorm.DB) error {
-	u.UpdatedAt = time.Now()
-	return nil
+// SetID sets the ID if not already set
+func (u *User) SetID() {
+	if u.ID == uuid.Nil {
+		u.ID = uuid.New()
+	}
 }
 
 // CreateUser creates a new user

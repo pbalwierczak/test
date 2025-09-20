@@ -12,9 +12,9 @@ func TestUserModel(t *testing.T) {
 		user := CreateUser()
 
 		assert.NotEqual(t, uuid.Nil, user.ID)
-		// Note: CreatedAt and UpdatedAt are set by GORM hooks, not in CreateUser
-		assert.Zero(t, user.CreatedAt) // Will be set by BeforeCreate hook
-		assert.Zero(t, user.UpdatedAt) // Will be set by BeforeCreate hook
+		// Note: CreatedAt and UpdatedAt are set by SetTimestamps method
+		assert.Zero(t, user.CreatedAt) // Will be set by SetTimestamps
+		assert.Zero(t, user.UpdatedAt) // Will be set by SetTimestamps
 	})
 
 	t.Run("UserIDGeneration", func(t *testing.T) {
@@ -40,7 +40,22 @@ func TestUserModel(t *testing.T) {
 		assert.NotEqual(t, uuid.Nil, user.ID)
 		assert.Zero(t, user.CreatedAt)
 		assert.Zero(t, user.UpdatedAt)
-		assert.Zero(t, user.DeletedAt.Valid)
-		assert.Nil(t, user.Trips) // Should be nil initially
+		assert.Nil(t, user.DeletedAt) // Should be nil initially
+		assert.Nil(t, user.Trips)     // Should be nil initially
+	})
+
+	t.Run("SetTimestamps", func(t *testing.T) {
+		user := &User{}
+		user.SetTimestamps()
+
+		assert.False(t, user.CreatedAt.IsZero())
+		assert.False(t, user.UpdatedAt.IsZero())
+	})
+
+	t.Run("SetID", func(t *testing.T) {
+		user := &User{}
+		user.SetID()
+
+		assert.NotEqual(t, uuid.Nil, user.ID)
 	})
 }

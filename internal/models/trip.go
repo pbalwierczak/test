@@ -7,7 +7,6 @@ import (
 	"scootin-aboot/pkg/validation"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type TripStatus string
@@ -19,52 +18,46 @@ const (
 )
 
 type Trip struct {
-	ID             uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	ScooterID      uuid.UUID      `json:"scooter_id" gorm:"type:uuid;not null"`
-	UserID         uuid.UUID      `json:"user_id" gorm:"type:uuid;not null"`
-	StartTime      time.Time      `json:"start_time" gorm:"not null"`
-	EndTime        *time.Time     `json:"end_time,omitempty"`
-	StartLatitude  float64        `json:"start_latitude" gorm:"type:decimal(10,8);not null"`
-	StartLongitude float64        `json:"start_longitude" gorm:"type:decimal(11,8);not null"`
-	EndLatitude    *float64       `json:"end_latitude,omitempty" gorm:"type:decimal(10,8)"`
-	EndLongitude   *float64       `json:"end_longitude,omitempty" gorm:"type:decimal(11,8)"`
-	Status         TripStatus     `json:"status" gorm:"type:varchar(20);not null;default:'active';check:status IN ('active','completed','cancelled')"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
+	ID             uuid.UUID  `json:"id" db:"id"`
+	ScooterID      uuid.UUID  `json:"scooter_id" db:"scooter_id"`
+	UserID         uuid.UUID  `json:"user_id" db:"user_id"`
+	StartTime      time.Time  `json:"start_time" db:"start_time"`
+	EndTime        *time.Time `json:"end_time,omitempty" db:"end_time"`
+	StartLatitude  float64    `json:"start_latitude" db:"start_latitude"`
+	StartLongitude float64    `json:"start_longitude" db:"start_longitude"`
+	EndLatitude    *float64   `json:"end_latitude,omitempty" db:"end_latitude"`
+	EndLongitude   *float64   `json:"end_longitude,omitempty" db:"end_longitude"`
+	Status         TripStatus `json:"status" db:"status"`
+	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at" db:"updated_at"`
+	DeletedAt      *time.Time `json:"deleted_at,omitempty" db:"deleted_at"`
 
-	Scooter Scooter `json:"scooter,omitempty" gorm:"foreignKey:ScooterID"`
-	User    User    `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Scooter Scooter `json:"scooter,omitempty"`
+	User    User    `json:"user,omitempty"`
 }
 
 func (Trip) TableName() string {
 	return "trips"
 }
 
-func (t *Trip) BeforeCreate(tx *gorm.DB) error {
-	if t.ID == uuid.Nil {
-		t.ID = uuid.New()
-	}
-
-	if err := t.ValidateStartCoordinates(); err != nil {
-		return err
-	}
-
+// SetTimestamps sets the created_at and updated_at timestamps
+func (t *Trip) SetTimestamps() {
 	now := time.Now()
 	if t.CreatedAt.IsZero() {
 		t.CreatedAt = now
 	}
-	if t.UpdatedAt.IsZero() {
-		t.UpdatedAt = now
-	}
-	if t.StartTime.IsZero() {
-		t.StartTime = now
-	}
-
-	return nil
+	t.UpdatedAt = now
 }
 
-func (t *Trip) BeforeUpdate(tx *gorm.DB) error {
+// SetID sets the ID if not already set
+func (t *Trip) SetID() {
+	if t.ID == uuid.Nil {
+		t.ID = uuid.New()
+	}
+}
+
+// ValidateAndSetTimestamps validates coordinates and sets timestamps
+func (t *Trip) ValidateAndSetTimestamps() error {
 	if err := t.ValidateStartCoordinates(); err != nil {
 		return err
 	}
@@ -75,8 +68,7 @@ func (t *Trip) BeforeUpdate(tx *gorm.DB) error {
 		}
 	}
 
-	t.UpdatedAt = time.Now()
-
+	t.SetTimestamps()
 	return nil
 }
 

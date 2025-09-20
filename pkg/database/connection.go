@@ -2,57 +2,35 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
 
-	"scootin-aboot/internal/models"
-
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	_ "github.com/lib/pq"
 )
 
-func ConnectDatabase(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func ConnectDatabase(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
 	// Test the connection
-	sqlDB, err := db.DB()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get underlying sql.DB: %w", err)
-	}
-
-	if err := sqlDB.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	sqlDB.SetMaxOpenConns(10)
-	sqlDB.SetMaxIdleConns(5)
-	sqlDB.SetConnMaxLifetime(0)
-	sqlDB.SetConnMaxIdleTime(0)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(0)
+	db.SetConnMaxIdleTime(0)
 
 	log.Println("Successfully connected to database")
 	return db, nil
 }
 
-func AutoMigrate(db *gorm.DB) error {
-	err := db.AutoMigrate(
-		&models.User{},
-		&models.Scooter{},
-		&models.Trip{},
-		&models.LocationUpdate{},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to auto-migrate models: %w", err)
-	}
-
-	log.Println("Database auto-migration completed successfully")
-	return nil
-}
-
-func StartHealthCheck(db *gorm.DB, interval time.Duration) func() {
+func StartHealthCheck(db *sql.DB, interval time.Duration) func() {
 	stopChan := make(chan struct{})
 
 	go func() {
@@ -77,16 +55,11 @@ func StartHealthCheck(db *gorm.DB, interval time.Duration) func() {
 	}
 }
 
-func checkConnection(db *gorm.DB) error {
-	sqlDB, err := db.DB()
-	if err != nil {
-		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
-	}
-
+func checkConnection(db *sql.DB) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := sqlDB.PingContext(ctx); err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		return fmt.Errorf("database ping failed: %w", err)
 	}
 

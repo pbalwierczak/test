@@ -29,3 +29,18 @@ func TestDatabaseDSN(t *testing.T) {
 	actual := config.GetDatabaseDSN()
 	assert.Equal(t, expected, actual)
 }
+
+func TestDatabaseURL(t *testing.T) {
+	config := &Config{
+		DBHost:     "localhost",
+		DBPort:     "5432",
+		DBName:     "test_db",
+		DBUser:     "test_user",
+		DBPassword: "test_password",
+		DBSSLMode:  "disable",
+	}
+
+	expected := "postgres://test_user:test_password@localhost:5432/test_db?sslmode=disable"
+	actual := config.GetDatabaseURL()
+	assert.Equal(t, expected, actual)
+}

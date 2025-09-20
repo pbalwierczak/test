@@ -34,22 +34,23 @@ func main() {
 	defer logger.Sync()
 
 	dsn := cfg.GetDatabaseDSN()
+	dbURL := cfg.GetDatabaseURL()
 
 	migrationsPath, err := database.GetMigrationsPath()
 	if err != nil {
 		logger.Fatal("Failed to get migrations path", logger.ErrorField(err))
 	}
 
-	if err := database.MigrateUp(dsn, migrationsPath); err != nil {
+	if err := database.MigrateUp(dbURL, migrationsPath); err != nil {
 		logger.Fatal("Failed to run database migrations", logger.ErrorField(err))
 	}
 
-	gormDB, err := database.ConnectDatabase(dsn)
+	sqlDB, err := database.ConnectDatabase(dsn)
 	if err != nil {
 		logger.Fatal("Failed to connect to database", logger.ErrorField(err))
 	}
 
-	stopHealthCheck := database.StartHealthCheck(gormDB, 30*time.Second)
+	stopHealthCheck := database.StartHealthCheck(sqlDB, 30*time.Second)
 
 	logger.Info("Starting Scootin' Aboot server",
 		logger.String("host", cfg.ServerHost),
@@ -63,7 +64,7 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	repo := repository.NewRepository(gormDB)
+	repo := repository.NewRepository(sqlDB)
 
 	tripService := services.NewTripService(
 		repo.Trip(),
@@ -130,13 +131,8 @@ func main() {
 	kafkaConsumer.Stop()
 	logger.Info("Kafka consumer stopped")
 
-	mainSqlDB, err := gormDB.DB()
-	if err != nil {
-		logger.Error("Failed to get database connection for closing", logger.ErrorField(err))
-	} else {
-		if err := mainSqlDB.Close(); err != nil {
-			logger.Error("Failed to close database connection", logger.ErrorField(err))
-		}
+	if err := sqlDB.Close(); err != nil {
+		logger.Error("Failed to close database connection", logger.ErrorField(err))
 	}
 
 	logger.Info("Server exited")

@@ -7,7 +7,6 @@ import (
 	"scootin-aboot/pkg/validation"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type ScooterStatus string
@@ -18,55 +17,48 @@ const (
 )
 
 type Scooter struct {
-	ID               uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Status           ScooterStatus  `json:"status" gorm:"type:varchar(20);not null;default:'available';check:status IN ('available','occupied')"`
-	CurrentLatitude  float64        `json:"current_latitude" gorm:"type:decimal(10,8);not null"`
-	CurrentLongitude float64        `json:"current_longitude" gorm:"type:decimal(11,8);not null"`
-	CreatedAt        time.Time      `json:"created_at"`
-	UpdatedAt        time.Time      `json:"updated_at"`
-	LastSeen         time.Time      `json:"last_seen" gorm:"default:CURRENT_TIMESTAMP"`
-	DeletedAt        gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
+	ID               uuid.UUID     `json:"id" db:"id"`
+	Status           ScooterStatus `json:"status" db:"status"`
+	CurrentLatitude  float64       `json:"current_latitude" db:"current_latitude"`
+	CurrentLongitude float64       `json:"current_longitude" db:"current_longitude"`
+	CreatedAt        time.Time     `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time     `json:"updated_at" db:"updated_at"`
+	LastSeen         time.Time     `json:"last_seen" db:"last_seen"`
+	DeletedAt        *time.Time    `json:"deleted_at,omitempty" db:"deleted_at"`
 
 	// Relationships
-	Trips []Trip `json:"trips,omitempty" gorm:"foreignKey:ScooterID"`
+	Trips []Trip `json:"trips,omitempty"`
 }
 
 func (Scooter) TableName() string {
 	return "scooters"
 }
 
-func (s *Scooter) BeforeCreate(tx *gorm.DB) error {
-	if s.ID == uuid.Nil {
-		s.ID = uuid.New()
-	}
-
-	// Validate coordinates
-	if err := validation.ValidateCoordinates(s.CurrentLatitude, s.CurrentLongitude); err != nil {
-		return err
-	}
-
-	// Set timestamps
+// SetTimestamps sets the created_at, updated_at, and last_seen timestamps
+func (s *Scooter) SetTimestamps() {
 	now := time.Now()
 	if s.CreatedAt.IsZero() {
 		s.CreatedAt = now
 	}
-	if s.UpdatedAt.IsZero() {
-		s.UpdatedAt = now
-	}
+	s.UpdatedAt = now
 	if s.LastSeen.IsZero() {
 		s.LastSeen = now
 	}
-
-	return nil
 }
 
-func (s *Scooter) BeforeUpdate(tx *gorm.DB) error {
+// SetID sets the ID if not already set
+func (s *Scooter) SetID() {
+	if s.ID == uuid.Nil {
+		s.ID = uuid.New()
+	}
+}
+
+// ValidateAndSetTimestamps validates coordinates and sets timestamps
+func (s *Scooter) ValidateAndSetTimestamps() error {
 	if err := validation.ValidateCoordinates(s.CurrentLatitude, s.CurrentLongitude); err != nil {
 		return err
 	}
-
-	s.UpdatedAt = time.Now()
-
+	s.SetTimestamps()
 	return nil
 }
 

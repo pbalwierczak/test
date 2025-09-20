@@ -1,9 +1,13 @@
 package repository
 
 import (
-	"gorm.io/gorm"
+	"database/sql"
 )
 
-func NewRepository(db *gorm.DB) Repository {
-	return NewGormRepository(db)
+// NewRepository creates a new repository using native SQL
+func NewRepository(db *sql.DB) Repository {
+	return &sqlRepository{
+		db:         db,
+		unitOfWork: NewSQLUnitOfWork(db),
+	}
 }
