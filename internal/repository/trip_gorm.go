@@ -10,17 +10,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// gormTripRepository implements TripRepository using GORM
 type gormTripRepository struct {
 	db *gorm.DB
 }
 
-// Create creates a new trip
 func (r *gormTripRepository) Create(ctx context.Context, trip *models.Trip) error {
 	return r.db.WithContext(ctx).Create(trip).Error
 }
 
-// GetByID retrieves a trip by ID
 func (r *gormTripRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Trip, error) {
 	var trip models.Trip
 	err := r.db.WithContext(ctx).First(&trip, "id = ?", id).Error
@@ -33,17 +30,14 @@ func (r *gormTripRepository) GetByID(ctx context.Context, id uuid.UUID) (*models
 	return &trip, nil
 }
 
-// Update updates a trip
 func (r *gormTripRepository) Update(ctx context.Context, trip *models.Trip) error {
 	return r.db.WithContext(ctx).Save(trip).Error
 }
 
-// Delete deletes a trip by ID
 func (r *gormTripRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&models.Trip{}, "id = ?", id).Error
 }
 
-// List retrieves trips with pagination
 func (r *gormTripRepository) List(ctx context.Context, limit, offset int) ([]*models.Trip, error) {
 	var trips []*models.Trip
 	query := r.db.WithContext(ctx)
@@ -59,14 +53,12 @@ func (r *gormTripRepository) List(ctx context.Context, limit, offset int) ([]*mo
 	return trips, err
 }
 
-// UpdateStatus updates a trip's status
 func (r *gormTripRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status models.TripStatus) error {
 	return r.db.WithContext(ctx).Model(&models.Trip{}).
 		Where("id = ?", id).
 		Update("status", status).Error
 }
 
-// EndTrip ends a trip with end coordinates
 func (r *gormTripRepository) EndTrip(ctx context.Context, id uuid.UUID, endLat, endLng float64) error {
 	now := time.Now()
 	return r.db.WithContext(ctx).Model(&models.Trip{}).
@@ -79,14 +71,12 @@ func (r *gormTripRepository) EndTrip(ctx context.Context, id uuid.UUID, endLat, 
 		}).Error
 }
 
-// CancelTrip cancels a trip
 func (r *gormTripRepository) CancelTrip(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Model(&models.Trip{}).
 		Where("id = ?", id).
 		Update("status", models.TripStatusCancelled).Error
 }
 
-// GetActiveByUserID retrieves the active trip for a user
 func (r *gormTripRepository) GetActiveByUserID(ctx context.Context, userID uuid.UUID) (*models.Trip, error) {
 	var trip models.Trip
 	err := r.db.WithContext(ctx).
@@ -101,7 +91,6 @@ func (r *gormTripRepository) GetActiveByUserID(ctx context.Context, userID uuid.
 	return &trip, nil
 }
 
-// GetActiveByScooterID retrieves the active trip for a scooter
 func (r *gormTripRepository) GetActiveByScooterID(ctx context.Context, scooterID uuid.UUID) (*models.Trip, error) {
 	var trip models.Trip
 	err := r.db.WithContext(ctx).
