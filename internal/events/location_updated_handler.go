@@ -1,12 +1,11 @@
-package kafka
+package events
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 
-	"scootin-aboot/pkg/kafka"
-	"scootin-aboot/pkg/logger"
+	"scootin-aboot/internal/logger"
 
 	"github.com/google/uuid"
 )
@@ -22,7 +21,7 @@ func NewLocationUpdatedHandler(deps HandlerDependencies) *LocationUpdatedHandler
 }
 
 func (h *LocationUpdatedHandler) Handle(ctx context.Context, data []byte) error {
-	var event kafka.LocationUpdatedEvent
+	var event LocationUpdatedEvent
 	if err := json.Unmarshal(data, &event); err != nil {
 		return fmt.Errorf("failed to unmarshal location updated event: %w", err)
 	}

@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"scootin-aboot/internal/api/middleware"
+	"scootin-aboot/internal/logger"
 	"scootin-aboot/internal/repository"
 	"scootin-aboot/internal/services"
-	"scootin-aboot/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

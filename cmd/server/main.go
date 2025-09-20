@@ -13,11 +13,11 @@ import (
 	"scootin-aboot/internal/api/middleware"
 	"scootin-aboot/internal/api/routes"
 	"scootin-aboot/internal/config"
-	"scootin-aboot/internal/kafka"
+	"scootin-aboot/internal/database"
+	"scootin-aboot/internal/events"
+	"scootin-aboot/internal/logger"
 	"scootin-aboot/internal/repository"
 	"scootin-aboot/internal/services"
-	"scootin-aboot/pkg/database"
-	"scootin-aboot/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -90,15 +90,15 @@ func main() {
 
 	routes.SetupRoutes(router, cfg.APIKey, scooterService)
 
-	kafkaConsumer, err := kafka.NewEventConsumer(&cfg.KafkaConfig, tripService, scooterService)
+	kafkaConsumer, err := events.NewEventConsumer(&cfg.KafkaConfig, tripService, scooterService)
 	if err != nil {
-		logger.Fatal("Failed to create Kafka consumer", logger.ErrorField(err))
+		logger.Fatal("Failed to create events consumer", logger.ErrorField(err))
 	}
 
 	if err := kafkaConsumer.Start(); err != nil {
-		logger.Fatal("Failed to start Kafka consumer", logger.ErrorField(err))
+		logger.Fatal("Failed to start events consumer", logger.ErrorField(err))
 	}
-	logger.Info("Kafka consumer started")
+	logger.Info("Events consumer started")
 
 	address := fmt.Sprintf("%s:%s", cfg.ServerHost, cfg.ServerPort)
 	logger.Info("Server starting", logger.String("address", address))
@@ -129,7 +129,7 @@ func main() {
 	stopHealthCheck()
 
 	kafkaConsumer.Stop()
-	logger.Info("Kafka consumer stopped")
+	logger.Info("Events consumer stopped")
 
 	if err := sqlDB.Close(); err != nil {
 		logger.Error("Failed to close database connection", logger.ErrorField(err))

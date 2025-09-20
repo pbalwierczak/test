@@ -192,21 +192,19 @@ scootin-aboot-app/
 ├── cmd/                    # Application entry points
 │   ├── server/            # Main API server
 │   └── simulator/         # Simulation program
-├── internal/              # Private application code
+├── internal/              # Application code
 │   ├── api/              # HTTP handlers, middleware, and routes
 │   │   ├── handlers/     # Request handlers
 │   │   ├── middleware/   # Auth, validation, logging
 │   │   └── routes/       # Route definitions
+│   ├── auth/             # API key authentication
 │   ├── config/           # Configuration management
-│   ├── kafka/            # Kafka consumer implementation
+│   ├── database/         # Database connection and migrations
+│   ├── events/           # Event producer, consumer, and event definitions
+│   ├── logger/           # Structured logging
 │   ├── models/           # Domain models and business logic
 │   ├── repository/       # Data access layer (GORM)
-│   └── services/         # Business logic services
-├── pkg/                   # Public packages
-│   ├── auth/             # API key authentication
-│   ├── database/         # Database connection and migrations
-│   ├── kafka/            # Kafka producer and events
-│   ├── logger/           # Structured logging
+│   ├── services/         # Business logic services
 │   ├── simulator/        # Simulation logic and movement
 │   └── validation/       # Input validation utilities
 ├── migrations/            # Database schema migrations

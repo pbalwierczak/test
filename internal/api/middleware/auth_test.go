@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"scootin-aboot/pkg/auth/apikey"
+	"scootin-aboot/internal/auth/apikey"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

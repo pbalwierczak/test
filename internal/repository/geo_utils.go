@@ -6,7 +6,7 @@ import (
 	"math"
 	"sort"
 
-	"scootin-aboot/pkg/validation"
+	"scootin-aboot/internal/validation"
 )
 
 // HaversineDistance calculates the distance between two points on Earth using the Haversine formula

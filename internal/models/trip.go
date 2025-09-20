@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"scootin-aboot/pkg/validation"
+	"scootin-aboot/internal/validation"
 
 	"github.com/google/uuid"
 )

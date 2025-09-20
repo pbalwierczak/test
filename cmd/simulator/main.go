@@ -7,8 +7,8 @@ import (
 	"syscall"
 
 	"scootin-aboot/internal/config"
-	"scootin-aboot/pkg/logger"
-	"scootin-aboot/pkg/simulator"
+	"scootin-aboot/internal/logger"
+	"scootin-aboot/internal/simulator"
 )
 
 func main() {

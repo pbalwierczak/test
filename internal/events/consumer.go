@@ -1,4 +1,4 @@
-package kafka
+package events
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"scootin-aboot/internal/config"
+	"scootin-aboot/internal/logger"
 	"scootin-aboot/internal/services"
-	"scootin-aboot/pkg/logger"
 
 	"github.com/Shopify/sarama"
 )

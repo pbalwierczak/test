@@ -8,7 +8,7 @@ import (
 
 	"scootin-aboot/internal/models"
 	"scootin-aboot/internal/repository"
-	"scootin-aboot/pkg/validation"
+	"scootin-aboot/internal/validation"
 
 	"github.com/google/uuid"
 )

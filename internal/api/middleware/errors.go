@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"scootin-aboot/pkg/logger"
+	"scootin-aboot/internal/logger"
 
 	"github.com/gin-gonic/gin"
 )

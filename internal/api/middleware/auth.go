@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"scootin-aboot/pkg/auth/apikey"
+	"scootin-aboot/internal/auth/apikey"
 
 	"github.com/gin-gonic/gin"
 )

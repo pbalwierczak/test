@@ -1,12 +1,11 @@
-package kafka
+package events
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 
-	"scootin-aboot/pkg/kafka"
-	"scootin-aboot/pkg/logger"
+	"scootin-aboot/internal/logger"
 
 	"github.com/google/uuid"
 )
@@ -22,7 +21,7 @@ func NewTripEndedHandler(deps HandlerDependencies) *TripEndedHandler {
 }
 
 func (h *TripEndedHandler) Handle(ctx context.Context, data []byte) error {
-	var event kafka.TripEndedEvent
+	var event TripEndedEvent
 	if err := json.Unmarshal(data, &event); err != nil {
 		return fmt.Errorf("failed to unmarshal trip ended event: %w", err)
 	}

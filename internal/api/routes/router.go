@@ -7,8 +7,8 @@ import (
 
 	"scootin-aboot/internal/api/handlers"
 	"scootin-aboot/internal/api/middleware"
+	"scootin-aboot/internal/auth/apikey"
 	"scootin-aboot/internal/services"
-	"scootin-aboot/pkg/auth/apikey"
 
 	"github.com/gin-gonic/gin"
 )
