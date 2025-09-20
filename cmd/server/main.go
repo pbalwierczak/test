@@ -88,7 +88,7 @@ func main() {
 	router.Use(middleware.ValidateJSON())
 	router.Use(middleware.ValidateContentLength(1024 * 1024))
 
-	routes.SetupRoutes(router, cfg.APIKey, tripService, scooterService)
+	routes.SetupRoutes(router, cfg.APIKey, scooterService)
 
 	kafkaConsumer, err := kafka.NewEventConsumer(&cfg.KafkaConfig, tripService, scooterService)
 	if err != nil {

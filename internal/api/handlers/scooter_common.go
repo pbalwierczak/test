@@ -9,13 +9,11 @@ import (
 )
 
 type ScooterHandler struct {
-	tripService    services.TripService
 	scooterService services.ScooterService
 }
 
-func NewScooterHandler(tripService services.TripService, scooterService services.ScooterService) *ScooterHandler {
+func NewScooterHandler(scooterService services.ScooterService) *ScooterHandler {
 	return &ScooterHandler{
-		tripService:    tripService,
 		scooterService: scooterService,
 	}
 }

@@ -20,8 +20,8 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 
 	t.Run("successful request with valid parameters", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := createValidScooterListResult()
 		mockScooterService.On("GetScooters", mock.Anything, mock.AnythingOfType("services.ScooterQueryParams")).
@@ -53,8 +53,8 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 
 	t.Run("successful request with empty results", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := &services.ScooterListResult{
 			Scooters: []*services.ScooterInfo{},
@@ -84,8 +84,8 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 
 	t.Run("service returns error", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		mockScooterService.On("GetScooters", mock.Anything, mock.AnythingOfType("services.ScooterQueryParams")).
 			Return(nil, assert.AnError)
@@ -107,8 +107,8 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 
 	t.Run("invalid query parameters", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		router := createTestRouter(handler.GetScooters)
 		w := httptest.NewRecorder()
@@ -124,8 +124,8 @@ func TestScooterHandler_GetScooters(t *testing.T) {
 
 	t.Run("validates service parameters mapping", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := createValidScooterListResult()
 		mockScooterService.On("GetScooters", mock.Anything, mock.MatchedBy(func(params services.ScooterQueryParams) bool {
@@ -154,8 +154,8 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 
 	t.Run("successful request with valid scooter ID", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := createValidScooterDetailsResult()
 		mockScooterService.On("GetScooter", mock.Anything, TestData.ValidScooterID).
@@ -182,8 +182,8 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 
 	t.Run("successful request with scooter having active trip", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := createValidScooterDetailsResultWithTrip()
 		mockScooterService.On("GetScooter", mock.Anything, TestData.ValidScooterID).
@@ -210,8 +210,8 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 
 	t.Run("invalid scooter ID format", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		router := createTestRouterWithParam(handler.GetScooter)
 		w := httptest.NewRecorder()
@@ -227,8 +227,8 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 
 	t.Run("scooter not found", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		mockScooterService.On("GetScooter", mock.Anything, TestData.ValidScooterID).
 			Return(nil, assert.AnError)
@@ -247,8 +247,8 @@ func TestScooterHandler_GetScooter(t *testing.T) {
 
 	t.Run("scooter not found with specific error message", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		// Simulate repository.ErrScooterNotFound error
 		mockScooterService.On("GetScooter", mock.Anything, TestData.ValidScooterID).
@@ -272,8 +272,8 @@ func TestScooterHandler_GetClosestScooters(t *testing.T) {
 
 	t.Run("successful request with valid parameters", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := createValidClosestScootersResult()
 		mockScooterService.On("GetClosestScooters", mock.Anything, mock.AnythingOfType("services.ClosestScootersQueryParams")).
@@ -303,8 +303,8 @@ func TestScooterHandler_GetClosestScooters(t *testing.T) {
 
 	t.Run("missing required parameters", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		router := createTestRouter(handler.GetClosestScooters)
 		w := httptest.NewRecorder()
@@ -321,8 +321,8 @@ func TestScooterHandler_GetClosestScooters(t *testing.T) {
 
 	t.Run("service returns error", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		mockScooterService.On("GetClosestScooters", mock.Anything, mock.AnythingOfType("services.ClosestScootersQueryParams")).
 			Return(nil, assert.AnError)
@@ -341,8 +341,8 @@ func TestScooterHandler_GetClosestScooters(t *testing.T) {
 
 	t.Run("validates service parameters mapping", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := createValidClosestScootersResult()
 		mockScooterService.On("GetClosestScooters", mock.Anything, mock.MatchedBy(func(params services.ClosestScootersQueryParams) bool {
@@ -365,8 +365,8 @@ func TestScooterHandler_GetClosestScooters(t *testing.T) {
 
 	t.Run("empty results", func(t *testing.T) {
 		// Arrange
-		mockScooterService, mockTripService := createMockServices()
-		handler := createScooterHandler(mockScooterService, mockTripService)
+		mockScooterService := createMockServices()
+		handler := createScooterHandler(mockScooterService)
 
 		expectedResult := &services.ClosestScootersResult{
 			Scooters: []*services.ScooterWithDistance{},

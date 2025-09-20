@@ -120,12 +120,12 @@ func extractIDFromURL(url string) string {
 	return ""
 }
 
-func createMockServices() (*mocks.MockScooterService, *mocks.MockTripService) {
-	return &mocks.MockScooterService{}, &mocks.MockTripService{}
+func createMockServices() *mocks.MockScooterService {
+	return &mocks.MockScooterService{}
 }
 
-func createScooterHandler(mockScooterService *mocks.MockScooterService, mockTripService *mocks.MockTripService) *ScooterHandler {
-	return NewScooterHandler(mockTripService, mockScooterService)
+func createScooterHandler(mockScooterService *mocks.MockScooterService) *ScooterHandler {
+	return NewScooterHandler(mockScooterService)
 }
 
 func assertJSONResponse(t *testing.T, expected interface{}, actual string) {

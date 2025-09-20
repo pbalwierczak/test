@@ -13,9 +13,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(router *gin.Engine, apiKey string, tripService services.TripService, scooterService services.ScooterService) {
+func SetupRoutes(router *gin.Engine, apiKey string, scooterService services.ScooterService) {
 	healthHandler := handlers.NewHealthHandler()
-	scooterHandler := handlers.NewScooterHandler(tripService, scooterService)
+	scooterHandler := handlers.NewScooterHandler(scooterService)
 
 	apiKeyValidator := apikey.NewValidator(apiKey)
 
