@@ -11,7 +11,6 @@ import (
 	"scootin-aboot/internal/logger"
 )
 
-// Simulator orchestrates the entire simulation
 type Simulator struct {
 	config        *config.Config
 	client        *APIClient
@@ -26,7 +25,6 @@ type Simulator struct {
 	activeUsersMu sync.RWMutex    // Mutex for activeUsers map
 }
 
-// Statistics tracks simulation metrics
 type Statistics struct {
 	mu                sync.RWMutex
 	ActiveTrips       int
@@ -38,17 +36,14 @@ type Statistics struct {
 	StartTime         time.Time
 }
 
-// NewSimulator creates a new simulator instance
 func NewSimulator(cfg *config.Config) (*Simulator, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Create API client
 	client := NewAPIClient(cfg.SimulatorServerURL, cfg.APIKey)
 
-	// Create Kafka producer
 	kafkaProducer, err := events.NewKafkaProducer(&cfg.KafkaConfig)
 	if err != nil {
-		cancel() // Clean up context on error
+		cancel()
 		return nil, fmt.Errorf("failed to create Kafka producer: %w", err)
 	}
 	publisher := NewKafkaEventPublisher(kafkaProducer)
@@ -67,7 +62,6 @@ func NewSimulator(cfg *config.Config) (*Simulator, error) {
 	}, nil
 }
 
-// Start begins the simulation
 func (s *Simulator) Start() error {
 	logger.Info("Starting simulation",
 		logger.Int("scooters", s.config.SimulatorScooters),
@@ -75,42 +69,31 @@ func (s *Simulator) Start() error {
 		logger.String("server_url", s.config.SimulatorServerURL),
 	)
 
-	// Initialize scooters
 	if err := s.initializeScooters(); err != nil {
 		return fmt.Errorf("failed to initialize scooters: %w", err)
 	}
 
-	// Initialize users
 	if err := s.initializeUsers(); err != nil {
 		return fmt.Errorf("failed to initialize users: %w", err)
 	}
 
-	// Start scooter simulations
 	s.startScooterSimulations()
-
-	// Start user simulations
 	s.startUserSimulations()
-
-	// Start statistics reporting
 	s.startStatisticsReporting()
 
 	logger.Info("Simulation started successfully")
 	return nil
 }
 
-// Stop gracefully stops the simulation
 func (s *Simulator) Stop() {
 	logger.Info("Stopping simulation gracefully...")
 
-	// Check for active trips before shutdown
 	activeTrips := s.getActiveTripsCount()
 	if activeTrips > 0 {
 		logger.Info("Active trips detected, ending them gracefully", logger.Int("active_trips", activeTrips))
 
-		// End all active trips before shutting down
 		s.endAllActiveTrips()
 
-		// Wait for trips to complete with timeout
 		timeout := 10 * time.Second
 		start := time.Now()
 
@@ -128,7 +111,6 @@ func (s *Simulator) Stop() {
 				break
 			}
 
-			// Wait a bit before checking again
 			time.Sleep(500 * time.Millisecond)
 		}
 	}
@@ -139,7 +121,6 @@ func (s *Simulator) Stop() {
 	logger.Info("Waiting for all goroutines to complete...")
 	s.wg.Wait()
 
-	// Close the publisher
 	if err := s.publisher.Close(); err != nil {
 		logger.Error("Error closing publisher", logger.ErrorField(err))
 	}
@@ -147,7 +128,6 @@ func (s *Simulator) Stop() {
 	logger.Info("Simulation stopped gracefully - all trips completed")
 }
 
-// getActiveTripsCount returns the number of scooters currently in trips
 func (s *Simulator) getActiveTripsCount() int {
 	count := 0
 	for _, scooter := range s.scooters {
@@ -158,7 +138,6 @@ func (s *Simulator) getActiveTripsCount() int {
 	return count
 }
 
-// endAllActiveTrips ends all currently active trips
 func (s *Simulator) endAllActiveTrips() {
 	logger.Info("Ending all active trips...")
 
@@ -170,7 +149,6 @@ func (s *Simulator) endAllActiveTrips() {
 				logger.String("user_id", scooter.CurrentTrip.UserID),
 			)
 
-			// End the trip by calling the scooter's EndCurrentTrip method
 			scooter.EndCurrentTrip()
 		}
 	}
@@ -178,9 +156,7 @@ func (s *Simulator) endAllActiveTrips() {
 	logger.Info("All active trips ended")
 }
 
-// initializeScooters fetches existing scooters from the API and creates scooter instances
 func (s *Simulator) initializeScooters() error {
-	// Fetch all scooters from the API
 	apiScooters, err := s.client.GetAllScooters(s.ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch scooters from API: %w", err)
@@ -190,7 +166,6 @@ func (s *Simulator) initializeScooters() error {
 		return fmt.Errorf("no scooters found in database")
 	}
 
-	// Limit to configured number of scooters
 	maxScooters := s.config.SimulatorScooters
 	if len(apiScooters) < maxScooters {
 		maxScooters = len(apiScooters)
@@ -220,7 +195,6 @@ func (s *Simulator) initializeScooters() error {
 	return nil
 }
 
-// initializeUsers creates and initializes user instances using seeded user IDs
 func (s *Simulator) initializeUsers() error {
 	// Seeded user IDs from seeds/users.sql
 	seededUserIDs := []string{
@@ -236,7 +210,6 @@ func (s *Simulator) initializeUsers() error {
 		"550e8400-e29b-41d4-a716-446655440010",
 	}
 
-	// Limit to configured number of users
 	maxUsers := s.config.SimulatorUsers
 	if len(seededUserIDs) < maxUsers {
 		maxUsers = len(seededUserIDs)
@@ -264,7 +237,6 @@ func (s *Simulator) initializeUsers() error {
 	return nil
 }
 
-// startScooterSimulations starts all scooter simulation goroutines
 func (s *Simulator) startScooterSimulations() {
 	for _, scooter := range s.scooters {
 		s.wg.Add(1)
@@ -275,7 +247,6 @@ func (s *Simulator) startScooterSimulations() {
 	}
 }
 
-// startUserSimulations starts all user simulation goroutines
 func (s *Simulator) startUserSimulations() {
 	for _, user := range s.users {
 		s.wg.Add(1)
@@ -286,7 +257,6 @@ func (s *Simulator) startUserSimulations() {
 	}
 }
 
-// startStatisticsReporting starts the statistics reporting goroutine
 func (s *Simulator) startStatisticsReporting() {
 	s.wg.Add(1)
 	go func() {
@@ -305,7 +275,6 @@ func (s *Simulator) startStatisticsReporting() {
 	}()
 }
 
-// reportStatistics logs current simulation statistics
 func (s *Simulator) reportStatistics() {
 	s.stats.mu.RLock()
 	activeTrips := s.stats.ActiveTrips
@@ -330,35 +299,30 @@ func (s *Simulator) reportStatistics() {
 	)
 }
 
-// UpdateStats updates simulation statistics
 func (s *Simulator) UpdateStats(update func(*Statistics)) {
 	s.stats.mu.Lock()
 	update(s.stats)
 	s.stats.mu.Unlock()
 }
 
-// IsUserActive checks if a user is currently in a trip
 func (s *Simulator) IsUserActive(userID string) bool {
 	s.activeUsersMu.RLock()
 	defer s.activeUsersMu.RUnlock()
 	return s.activeUsers[userID]
 }
 
-// MarkUserActive marks a user as active (in a trip)
 func (s *Simulator) MarkUserActive(userID string) {
 	s.activeUsersMu.Lock()
 	defer s.activeUsersMu.Unlock()
 	s.activeUsers[userID] = true
 }
 
-// MarkUserInactive marks a user as inactive (not in a trip)
 func (s *Simulator) MarkUserInactive(userID string) {
 	s.activeUsersMu.Lock()
 	defer s.activeUsersMu.Unlock()
 	delete(s.activeUsers, userID)
 }
 
-// GetAvailableUsers returns a list of user IDs that are not currently in trips
 func (s *Simulator) GetAvailableUsers() []string {
 	// Seeded user IDs from seeds/users.sql
 	allUserIDs := []string{
@@ -387,7 +351,6 @@ func (s *Simulator) GetAvailableUsers() []string {
 	return availableUsers
 }
 
-// OnTripStarted is called when a scooter starts a trip
 func (s *Simulator) OnTripStarted() {
 	s.stats.mu.Lock()
 	s.stats.ActiveTrips++
@@ -396,7 +359,6 @@ func (s *Simulator) OnTripStarted() {
 	s.stats.mu.Unlock()
 }
 
-// OnTripEnded is called when a scooter ends a trip
 func (s *Simulator) OnTripEnded() {
 	s.stats.mu.Lock()
 	s.stats.ActiveTrips--
