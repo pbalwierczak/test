@@ -38,8 +38,8 @@ func (h *LocationUpdatedHandler) Handle(ctx context.Context, data []byte) error 
 		return fmt.Errorf("invalid scooter ID: %w", err)
 	}
 
-	if err := h.deps.TripService.UpdateLocation(ctx, scooterID, event.Data.Latitude, event.Data.Longitude); err != nil {
-		return fmt.Errorf("failed to update location: %w", err)
+	if err := h.deps.ScooterService.UpdateLocation(ctx, scooterID, event.Data.Latitude, event.Data.Longitude); err != nil {
+		return fmt.Errorf("failed to update scooter location: %w", err)
 	}
 
 	logger.Debug("Location updated event processed successfully",

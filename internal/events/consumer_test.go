@@ -72,7 +72,7 @@ func TestEventConsumer_processMessage(t *testing.T) {
 				Value: []byte(`{"eventType":"location.updated","eventId":"test-id","timestamp":"2023-01-01T00:00:00Z","version":"1.0","data":{"scooterId":"550e8400-e29b-41d4-a716-446655440001","tripId":"trip-123","latitude":45.4216,"longitude":-75.6973,"heading":90.0,"speed":15.5}}`),
 			},
 			setupMocks: func(tripService *MockTripService, scooterService *MockScooterService) {
-				tripService.On("UpdateLocation", mock.Anything, mock.Anything, 45.4216, -75.6973).Return(nil)
+				scooterService.On("UpdateLocation", mock.Anything, mock.Anything, 45.4216, -75.6973).Return(nil)
 			},
 			expectError: false,
 		},
