@@ -34,10 +34,10 @@ services:
       - scootin-network
     healthcheck:
       test: ["CMD", "bash", "-c", "timeout 5 bash -c 'exec 3<>/dev/tcp/localhost/2181'"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     restart: unless-stopped
 
   kafka:
@@ -70,10 +70,10 @@ services:
       - scootin-network
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      interval: 20s
+      timeout: 15s
+      retries: 8
+      start_period: 90s
     restart: unless-stopped
 
   scootin-app:

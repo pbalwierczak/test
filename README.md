@@ -37,6 +37,8 @@ A comprehensive backend service for managing electric scooters in Ottawa and Mon
    ```bash
    make start-app
    ```
+   
+   > ⚠️ **Kafka Startup Note**: If Kafka fails to start on the first attempt, it may hang and die. Simply try running `make start-app` again - Kafka often starts successfully on the second attempt.
 
 3. **Load sample data** (required for simulator):
    ```bash
