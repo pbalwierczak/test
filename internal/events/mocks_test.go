@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockTripService is a mock implementation of services.TripService
 type MockTripService struct {
 	mock.Mock
 }
@@ -51,7 +50,6 @@ func (m *MockTripService) GetTrip(ctx context.Context, tripID uuid.UUID) (*model
 	return args.Get(0).(*models.Trip), args.Error(1)
 }
 
-// MockScooterService is a mock implementation of services.ScooterService
 type MockScooterService struct {
 	mock.Mock
 }
@@ -76,7 +74,6 @@ func (m *MockScooterService) UpdateLocation(ctx context.Context, scooterID uuid.
 	return args.Error(0)
 }
 
-// MockConsumerGroupSession is a mock implementation of sarama.ConsumerGroupSession
 type MockConsumerGroupSession struct {
 	mock.Mock
 }
@@ -117,7 +114,6 @@ func (m *MockConsumerGroupSession) Commit() {
 	m.Called()
 }
 
-// MockConsumerGroupClaim is a mock implementation of sarama.ConsumerGroupClaim
 type MockConsumerGroupClaim struct {
 	mock.Mock
 	messages chan *sarama.ConsumerMessage
@@ -165,7 +161,6 @@ func (m *MockConsumerGroupClaim) Close() {
 	close(m.messages)
 }
 
-// MockConsumerGroup is a mock implementation of sarama.ConsumerGroup
 type MockConsumerGroup struct {
 	mock.Mock
 }

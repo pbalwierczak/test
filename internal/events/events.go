@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// BaseEvent represents the common structure for all events
 type BaseEvent struct {
 	EventType string    `json:"eventType"`
 	EventID   string    `json:"eventId"`
@@ -14,13 +13,11 @@ type BaseEvent struct {
 	Version   string    `json:"version"`
 }
 
-// TripStartedEvent represents a trip start event
 type TripStartedEvent struct {
 	BaseEvent
 	Data TripStartedData `json:"data"`
 }
 
-// TripStartedData contains the data for a trip start event
 type TripStartedData struct {
 	TripID         string  `json:"tripId"`
 	ScooterID      string  `json:"scooterId"`
@@ -30,13 +27,11 @@ type TripStartedData struct {
 	StartTime      string  `json:"startTime"`
 }
 
-// TripEndedEvent represents a trip end event
 type TripEndedEvent struct {
 	BaseEvent
 	Data TripEndedData `json:"data"`
 }
 
-// TripEndedData contains the data for a trip end event
 type TripEndedData struct {
 	TripID          string  `json:"tripId"`
 	ScooterID       string  `json:"scooterId"`
@@ -47,13 +42,11 @@ type TripEndedData struct {
 	DurationSeconds int     `json:"durationSeconds"`
 }
 
-// LocationUpdatedEvent represents a location update event
 type LocationUpdatedEvent struct {
 	BaseEvent
 	Data LocationUpdatedData `json:"data"`
 }
 
-// LocationUpdatedData contains the data for a location update event
 type LocationUpdatedData struct {
 	ScooterID string  `json:"scooterId"`
 	TripID    string  `json:"tripId"`
@@ -63,7 +56,6 @@ type LocationUpdatedData struct {
 	Speed     float64 `json:"speed"`
 }
 
-// NewTripStartedEvent creates a new trip started event
 func NewTripStartedEvent(tripID, scooterID, userID string, startLat, startLng float64) *TripStartedEvent {
 	now := time.Now()
 	return &TripStartedEvent{
@@ -84,7 +76,6 @@ func NewTripStartedEvent(tripID, scooterID, userID string, startLat, startLng fl
 	}
 }
 
-// NewTripEndedEvent creates a new trip ended event
 func NewTripEndedEvent(tripID, scooterID, userID string, endLat, endLng float64, startTime time.Time) *TripEndedEvent {
 	now := time.Now()
 	duration := int(now.Sub(startTime).Seconds())
@@ -108,7 +99,6 @@ func NewTripEndedEvent(tripID, scooterID, userID string, endLat, endLng float64,
 	}
 }
 
-// NewLocationUpdatedEvent creates a new location updated event
 func NewLocationUpdatedEvent(scooterID, tripID string, lat, lng, heading, speed float64) *LocationUpdatedEvent {
 	return &LocationUpdatedEvent{
 		BaseEvent: BaseEvent{
