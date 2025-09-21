@@ -29,16 +29,9 @@ get:
             invalid_uuid_format:
               summary: Invalid UUID format
               value:
-                error: "validation_error"
-                message: "Request validation failed"
+                error: "Bad Request"
+                message: "Invalid scooter ID"
                 code: 400
-                timestamp: "2024-01-15T14:30:00Z"
-                request_id: "req_1234567890abcdef"
-                details:
-                  field_errors:
-                    - field: "id"
-                      message: "must be a valid UUID format"
-                      value: "invalid-uuid-123"
     '401':
       description: Unauthorized - invalid or missing API key
       content:
@@ -49,14 +42,11 @@ get:
             missing_api_key:
               summary: Missing API key
               value:
-                error: "unauthorized"
-                message: "Invalid or missing API key"
+                error: "Unauthorized"
+                message: "Authentication failed"
                 code: 401
-                timestamp: "2024-01-15T14:30:00Z"
-                request_id: "req_1234567890abcdef"
                 details:
-                  reason: "missing_api_key"
-                  hint: "Include 'Authorization: Bearer YOUR_API_KEY' header"
+                  reason: "invalid_api_key"
     '404':
       description: Scooter not found
       content:
@@ -67,26 +57,9 @@ get:
             scooter_not_found:
               summary: Scooter not found
               value:
-                error: "not_found"
-                message: "Scooter not found"
+                error: "Not Found"
+                message: "Resource not found"
                 code: 404
-                timestamp: "2024-01-15T14:30:00Z"
-                request_id: "req_1234567890abcdef"
-                details:
-                  resource: "scooter"
-                  id: "550e8400-e29b-41d4-a716-446655440000"
-            scooter_deleted:
-              summary: Scooter has been deleted
-              value:
-                error: "not_found"
-                message: "Scooter not found"
-                code: 404
-                timestamp: "2024-01-15T14:30:00Z"
-                request_id: "req_1234567890abcdef"
-                details:
-                  resource: "scooter"
-                  id: "550e8400-e29b-41d4-a716-446655440000"
-                  reason: "deleted"
     '500':
       description: Internal server error
       content:
@@ -97,11 +70,6 @@ get:
             database_error:
               summary: Database query error
               value:
-                error: "internal_error"
-                message: "An unexpected error occurred"
+                error: "Internal Server Error"
+                message: "Internal server error"
                 code: 500
-                timestamp: "2024-01-15T14:30:00Z"
-                request_id: "req_1234567890abcdef"
-                details:
-                  error_id: "err_db_query_failed_def456"
-                  suggestion: "Please try again later or contact support if the problem persists"

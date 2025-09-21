@@ -4,8 +4,6 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
     description: Development server
-  - url: https://api.scootinaboot.com/api/v1
-    description: Production server
 
 security:
   - ApiKeyAuth: []
@@ -38,7 +36,7 @@ components:
         error:
           type: string
           description: Error type or category
-          example: "validation_error"
+          example: "Bad Request"
         message:
           type: string
           description: Human-readable error message
@@ -49,137 +47,128 @@ components:
           example: 400
         details:
           type: object
-          description: Additional error information
+          description: Additional error information (optional)
+          additionalProperties:
+            type: string
           example:
-            field: "id"
-            value: "invalid-uuid"
-            constraint: "must be valid UUID format"
-        timestamp:
-          type: string
-          format: date-time
-          description: Timestamp when the error occurred
-          example: "2024-01-15T14:30:00Z"
-        request_id:
-          type: string
-          description: Unique identifier for the request
-          example: "req_1234567890abcdef"
+            reason: "invalid_format"
       required:
         - error
         - message
         - code
-        - timestamp
 
     # Validation Error Response
     ValidationErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
-        - type: object
-          properties:
-            error:
-              example: "validation_error"
-            message:
-              example: "Request validation failed"
-            code:
-              example: 400
-            details:
-              type: object
-              properties:
-                field_errors:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      field:
-                        type: string
-                        example: "lat"
-                      message:
-                        type: string
-                        example: "latitude must be between -90 and 90"
-                      value:
-                        type: string
-                        example: "95.5"
-                  example:
-                    - field: "lat"
-                      message: "latitude must be between -90 and 90"
-                      value: "95.5"
-                    - field: "radius"
-                      message: "radius must be between 1 and 10000 meters"
-                      value: "15000"
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Invalid Content-Type"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Content-Type must be application/json"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 400
+        details:
+          type: array
+          description: List of validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "Content-Type"
+              message:
+                type: string
+                example: "Must be application/json"
+              value:
+                type: string
+                example: "text/plain"
+            required:
+              - field
+              - message
+      required:
+        - error
+        - message
+        - code
+        - details
 
     # Not Found Error Response
     NotFoundErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
-        - type: object
-          properties:
-            error:
-              example: "not_found"
-            message:
-              example: "Scooter not found"
-            code:
-              example: 404
-            details:
-              type: object
-              properties:
-                resource:
-                  type: string
-                  example: "scooter"
-                id:
-                  type: string
-                  example: "550e8400-e29b-41d4-a716-446655440000"
-              example:
-                resource: "scooter"
-                id: "550e8400-e29b-41d4-a716-446655440000"
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Not Found"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Resource not found"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 404
+      required:
+        - error
+        - message
+        - code
 
     # Authentication Error Response
     AuthErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
-        - type: object
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Unauthorized"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Authentication failed"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 401
+        details:
+          type: object
+          description: Additional error information
           properties:
-            error:
-              example: "unauthorized"
-            message:
-              example: "Invalid or missing API key"
-            code:
-              example: 401
-            details:
-              type: object
-              properties:
-                reason:
-                  type: string
-                  example: "missing_api_key"
-                hint:
-                  type: string
-                  example: "Include 'Authorization: Bearer YOUR_API_KEY' header"
-              example:
-                reason: "missing_api_key"
-                hint: "Include 'Authorization: Bearer YOUR_API_KEY' header"
+            reason:
+              type: string
+              example: "invalid_api_key"
+          required:
+            - reason
+      required:
+        - error
+        - message
+        - code
+        - details
 
     # Internal Server Error Response
     InternalErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
-        - type: object
-          properties:
-            error:
-              example: "internal_error"
-            message:
-              example: "An unexpected error occurred"
-            code:
-              example: 500
-            details:
-              type: object
-              properties:
-                error_id:
-                  type: string
-                  example: "err_abc123def456"
-                suggestion:
-                  type: string
-                  example: "Please try again later or contact support if the problem persists"
-              example:
-                error_id: "err_abc123def456"
-                suggestion: "Please try again later or contact support if the problem persists"
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Internal Server Error"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Internal server error"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 500
+      required:
+        - error
+        - message
+        - code
 
     # Health Check Response
     HealthResponse:

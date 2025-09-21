@@ -167,7 +167,10 @@ seed:
 
 # Convenience aliases
 app: start-app
+start: start-app
+app-start: start-app
 simulator: start-simulator
+sim: start-simulator
 logs: logs-app
 stop: kill-all
-
+restart: kill-all start-app
