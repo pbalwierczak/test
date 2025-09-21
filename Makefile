@@ -159,11 +159,15 @@ seed:
 	@echo "Tables that will be cleared: users, scooters, trips, location_updates"
 	@echo ""
 	@read -p "Are you sure you want to continue? (y/N): " confirm && [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ] || (echo "Operation cancelled." && exit 1)
-	@echo "Loading seed data into database..."
-	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/users.sql
-	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/scooters.sql
-	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/sample_trips.sql
-	@echo "Seed data loaded successfully!"
+	@echo ""
+	@echo "🌱 Loading seed data..."
+	@echo "  📊 Clearing and loading users..."
+	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/users.sql > /dev/null
+	@echo "  🛴 Clearing and loading scooters..."
+	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/scooters.sql > /dev/null
+	@echo "  🚗 Clearing and loading trips and location updates..."
+	@docker exec -i scootin-postgres psql -U postgres -d scootin_aboot < seeds/sample_trips.sql > /dev/null
+	@echo "✅ Seed data loaded successfully!"
 
 # Convenience aliases
 app: start-app
