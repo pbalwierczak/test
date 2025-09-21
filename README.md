@@ -203,7 +203,7 @@ scootin-aboot-app/
 │   ├── events/           # Event producer, consumer, and event definitions
 │   ├── logger/           # Structured logging
 │   ├── models/           # Domain models and business logic
-│   ├── repository/       # Data access layer (GORM)
+│   ├── repository/       # Data access layer (Raw SQL)
 │   ├── services/         # Business logic services
 │   ├── simulator/        # Simulation logic and movement
 │   └── validation/       # Input validation utilities
@@ -238,7 +238,7 @@ The application runs in a containerized environment with the following services:
 ### Backend
 - **Go 1.25+**: Modern Go with generics and performance optimizations
 - **Gin**: High-performance HTTP web framework
-- **GORM**: Feature-rich ORM for database operations
+- **Raw SQL**: Direct database operations with `database/sql` package
 - **PostgreSQL 15**: ACID-compliant relational database
 - **Apache Kafka 7.4**: Event streaming platform for real-time data
 
