@@ -11,10 +11,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// TripTestCases contains test cases for trip service
 type TripTestCases struct{}
 
-// StartTripTestCases returns test cases for StartTrip method
 func (tc *TripTestCases) StartTripTestCases() []struct {
 	Name          string
 	ScooterID     uuid.UUID
@@ -141,7 +139,6 @@ func (tc *TripTestCases) StartTripTestCases() []struct {
 	}
 }
 
-// EndTripTestCases returns test cases for EndTrip method
 func (tc *TripTestCases) EndTripTestCases() []struct {
 	Name          string
 	ScooterID     uuid.UUID
@@ -206,7 +203,6 @@ func (tc *TripTestCases) EndTripTestCases() []struct {
 	}
 }
 
-// UpdateLocationTestCases returns test cases for UpdateLocation method
 func (tc *TripTestCases) UpdateLocationTestCases() []struct {
 	Name          string
 	ScooterID     uuid.UUID
@@ -268,7 +264,6 @@ func (tc *TripTestCases) UpdateLocationTestCases() []struct {
 	}
 }
 
-// CancelTripTestCases returns test cases for CancelTrip method
 func (tc *TripTestCases) CancelTripTestCases() []struct {
 	Name          string
 	ScooterID     uuid.UUID
@@ -357,7 +352,6 @@ func (tc *TripTestCases) CancelTripTestCases() []struct {
 	}
 }
 
-// GetActiveTripTestCases returns test cases for GetActiveTrip method
 func (tc *TripTestCases) GetActiveTripTestCases() []struct {
 	Name          string
 	ScooterID     uuid.UUID
@@ -409,7 +403,6 @@ func (tc *TripTestCases) GetActiveTripTestCases() []struct {
 	}
 }
 
-// GetActiveTripByUserTestCases returns test cases for GetActiveTripByUser method
 func (tc *TripTestCases) GetActiveTripByUserTestCases() []struct {
 	Name          string
 	UserID        uuid.UUID
@@ -460,7 +453,6 @@ func (tc *TripTestCases) GetActiveTripByUserTestCases() []struct {
 	}
 }
 
-// GetTripTestCases returns test cases for GetTrip method
 func (tc *TripTestCases) GetTripTestCases() []struct {
 	Name          string
 	TripID        uuid.UUID

@@ -67,35 +67,26 @@ func TestValidateRequiredHeaders(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a new Gin router
 			router := gin.New()
 
-			// Add the validation middleware
 			router.Use(ValidateRequiredHeaders(tt.requiredHeaders))
 
-			// Add a test endpoint
 			router.GET("/test", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"message": "success"})
 			})
 
-			// Create a test request
 			req := httptest.NewRequest("GET", "/test", nil)
 
-			// Add headers to the request
 			for key, value := range tt.headers {
 				req.Header.Set(key, value)
 			}
 
-			// Create a response recorder
 			w := httptest.NewRecorder()
 
-			// Perform the request
 			router.ServeHTTP(w, req)
 
-			// Assert the status code
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
-			// If we expect an error, check the response body
 			if tt.expectedError != "" {
 				assert.Contains(t, w.Body.String(), tt.expectedError)
 				assert.Contains(t, w.Body.String(), "One or more required headers are missing")
@@ -158,31 +149,23 @@ func TestValidateContentLength(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a new Gin router
 			router := gin.New()
 
-			// Add the validation middleware
 			router.Use(ValidateContentLength(tt.maxSize))
 
-			// Add a test endpoint
 			router.POST("/test", func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"message": "success"})
 			})
 
-			// Create a test request
 			req := httptest.NewRequest("POST", "/test", nil)
 			req.ContentLength = tt.contentLength
 
-			// Create a response recorder
 			w := httptest.NewRecorder()
 
-			// Perform the request
 			router.ServeHTTP(w, req)
 
-			// Assert the status code
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
-			// If we expect an error, check the response body
 			if tt.expectedError != "" {
 				assert.Contains(t, w.Body.String(), tt.expectedError)
 				assert.Contains(t, w.Body.String(), "Request body exceeds maximum allowed size")
@@ -196,7 +179,6 @@ func TestValidateContentLength(t *testing.T) {
 func TestValidateContentLength_GETRequest(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	// Test that GET requests are also affected by content length validation
 	router := gin.New()
 	router.Use(ValidateContentLength(10)) // Very small limit
 
@@ -205,7 +187,7 @@ func TestValidateContentLength_GETRequest(t *testing.T) {
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
-	req.ContentLength = 1000 // This should trigger the validation
+	req.ContentLength = 1000
 
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
