@@ -2,6 +2,9 @@
 
 This document outlines the assumptions and improvements that would be implemented in a production environment.
 
+## Test Coverage
+- On production app I would strive to achieve 80% code coverage, if realistic
+
 ## Event Handling
 
 - **Kafka Security**: For demonstration purposes, Kafka is unsecured, but in production it would be properly secured
