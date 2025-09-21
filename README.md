@@ -93,7 +93,7 @@ All endpoints require API key authentication via the `Authorization` header, exc
 
 ### API Documentation
 - Interactive API docs: http://localhost:8080/docs
-- OpenAPI specification: http://localhost:8080/api/v1/openapi.json
+- OpenAPI specification: http://localhost:8080/api-docs.yaml
 
 ## Event-Driven Architecture
 
