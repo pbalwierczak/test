@@ -87,13 +87,14 @@ func (s *Scooter) Simulate() {
 			)
 			return
 		case <-ticker.C:
+			// Always send location updates every 3 seconds regardless of status
+			s.updateLocation()
+
 			if s.Status == "available" {
 				if s.shouldStartTrip() {
 					s.startRandomTrip()
 				}
 			} else if s.Status == "occupied" {
-				s.updateLocation()
-
 				if s.shouldEndTrip() {
 					s.EndCurrentTrip()
 				}
@@ -103,36 +104,50 @@ func (s *Scooter) Simulate() {
 }
 
 func (s *Scooter) updateLocation() {
-	if s.Status != "occupied" || s.CurrentTrip == nil {
-		return
-	}
+	var newLocation Location
+	var heading float64
+	var speed float64
+	var tripID string
 
-	newLocation := s.Movement.CalculateMovement(s.Location, s.CurrentTrip.Direction, 3*time.Second)
+	if s.Status == "occupied" && s.CurrentTrip != nil {
+		// Scooter is on a trip - move according to trip direction
+		newLocation = s.Movement.CalculateMovement(s.Location, s.CurrentTrip.Direction, 3*time.Second)
+		heading = s.CurrentTrip.Direction
+		speed = 15.0 // Mock speed for occupied scooters
+		tripID = s.CurrentTrip.ID
+	} else {
+		// Scooter is available - keep stationary
+		newLocation = s.Location // No movement for available scooters
+		heading = 0.0            // No heading for stationary scooters
+		speed = 0.0              // Available scooters are stationary
+		tripID = ""              // No trip ID for available scooters
+	}
 
 	s.Location = newLocation
 	s.LastSeen = time.Now()
-	heading := s.CurrentTrip.Direction
-	speed := 15.0 // Mock speed for now
 
 	logger.Debug("Publishing location update event",
 		logger.Int("scooter_id", s.ID),
-		logger.String("trip_id", s.CurrentTrip.ID),
+		logger.String("trip_id", tripID),
+		logger.String("status", s.Status),
 		logger.Float64("lat", s.Location.Latitude),
 		logger.Float64("lng", s.Location.Longitude),
 		logger.Float64("heading", heading),
 		logger.Float64("speed", speed),
 	)
 
-	if err := s.Publisher.PublishLocationUpdated(s.Ctx, s.getScooterID(), s.CurrentTrip.ID, s.Location.Latitude, s.Location.Longitude, heading, speed); err != nil {
+	if err := s.Publisher.PublishLocationUpdated(s.Ctx, s.getScooterID(), tripID, s.Location.Latitude, s.Location.Longitude, heading, speed); err != nil {
 		logger.Error("Failed to publish location update event",
 			logger.Int("scooter_id", s.ID),
-			logger.String("trip_id", s.CurrentTrip.ID),
+			logger.String("trip_id", tripID),
+			logger.String("status", s.Status),
 			logger.ErrorField(err),
 		)
 	} else {
 		logger.Debug("Location update event published successfully",
 			logger.Int("scooter_id", s.ID),
-			logger.String("trip_id", s.CurrentTrip.ID),
+			logger.String("trip_id", tripID),
+			logger.String("status", s.Status),
 			logger.Float64("lat", s.Location.Latitude),
 			logger.Float64("lng", s.Location.Longitude),
 		)
