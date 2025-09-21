@@ -79,16 +79,84 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas.yaml#/ErrorResponse'
+            $ref: '../components/schemas.yaml#/ValidationErrorResponse'
+          examples:
+            invalid_coordinates:
+              summary: Invalid latitude/longitude values
+              value:
+                error: "validation_error"
+                message: "Request validation failed"
+                code: 400
+                timestamp: "2024-01-15T14:30:00Z"
+                request_id: "req_1234567890abcdef"
+                details:
+                  field_errors:
+                    - field: "min_lat"
+                      message: "latitude must be between -90 and 90"
+                      value: "95.5"
+                    - field: "max_lng"
+                      message: "longitude must be between -180 and 180"
+                      value: "185.0"
+            invalid_pagination:
+              summary: Invalid pagination parameters
+              value:
+                error: "validation_error"
+                message: "Request validation failed"
+                code: 400
+                timestamp: "2024-01-15T14:30:00Z"
+                request_id: "req_1234567890abcdef"
+                details:
+                  field_errors:
+                    - field: "limit"
+                      message: "limit must be between 1 and 100"
+                      value: "150"
+                    - field: "offset"
+                      message: "offset must be a non-negative integer"
+                      value: "-5"
     '401':
       description: Unauthorized - invalid or missing API key
       content:
         application/json:
           schema:
-            $ref: '../components/schemas.yaml#/ErrorResponse'
+            $ref: '../components/schemas.yaml#/AuthErrorResponse'
+          examples:
+            missing_api_key:
+              summary: Missing API key
+              value:
+                error: "unauthorized"
+                message: "Invalid or missing API key"
+                code: 401
+                timestamp: "2024-01-15T14:30:00Z"
+                request_id: "req_1234567890abcdef"
+                details:
+                  reason: "missing_api_key"
+                  hint: "Include 'Authorization: Bearer YOUR_API_KEY' header"
+            invalid_api_key:
+              summary: Invalid API key
+              value:
+                error: "unauthorized"
+                message: "Invalid or missing API key"
+                code: 401
+                timestamp: "2024-01-15T14:30:00Z"
+                request_id: "req_1234567890abcdef"
+                details:
+                  reason: "invalid_api_key"
+                  hint: "Check your API key and try again"
     '500':
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: '../components/schemas.yaml#/ErrorResponse'
+            $ref: '../components/schemas.yaml#/InternalErrorResponse'
+          examples:
+            database_error:
+              summary: Database connection error
+              value:
+                error: "internal_error"
+                message: "An unexpected error occurred"
+                code: 500
+                timestamp: "2024-01-15T14:30:00Z"
+                request_id: "req_1234567890abcdef"
+                details:
+                  error_id: "err_db_conn_failed_abc123"
+                  suggestion: "Please try again later or contact support if the problem persists"
