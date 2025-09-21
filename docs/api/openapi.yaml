@@ -23,9 +23,227 @@ paths:
 
 components:
   securitySchemes:
-    $ref: './components/security.yaml'
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        API key for authentication. Format: "Bearer YOUR_API_KEY"
+        Example: "Bearer sk-1234567890abcdef"
   schemas:
-    $ref: './components/schemas.yaml'
+    # Error Response
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Bad Request"
+        message:
+          type: string
+          description: Additional error details
+          example: "Invalid scooter ID format"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 400
+        details:
+          type: object
+          description: Additional error information
+          example: {}
+      required:
+        - error
+
+    # Health Check Response
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        service:
+          type: string
+          example: "scootin-aboot"
+      required:
+        - status
+        - service
+
+    # Location Schema
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate
+          example: 45.4215
+        longitude:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate
+          example: -75.6972
+      required:
+        - latitude
+        - longitude
+
+    # Scooter Schemas
+    ScooterInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the scooter
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        status:
+          type: string
+          enum: [available, occupied, maintenance, offline]
+          description: Current status of the scooter
+          example: "available"
+        current_latitude:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+          description: Current latitude of the scooter
+          example: 45.4215
+        current_longitude:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+          description: Current longitude of the scooter
+          example: -75.6972
+        last_seen:
+          type: string
+          format: date-time
+          description: Timestamp when the scooter was last seen
+          example: "2024-01-15T14:30:00Z"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the scooter was created
+          example: "2024-01-01T00:00:00Z"
+      required:
+        - id
+        - status
+        - current_latitude
+        - current_longitude
+        - last_seen
+        - created_at
+
+    ScooterDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ScooterInfo'
+        - type: object
+          properties:
+            updated_at:
+              type: string
+              format: date-time
+              description: Timestamp when the scooter was last updated
+              example: "2024-01-15T14:30:00Z"
+            active_trip:
+              type: object
+              properties:
+                trip_id:
+                  type: string
+                  format: uuid
+                  description: Unique identifier of the trip
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                user_id:
+                  type: string
+                  format: uuid
+                  description: Unique identifier of the user
+                  example: "987fcdeb-51a2-43d7-8f9e-123456789abc"
+                start_time:
+                  type: string
+                  format: date-time
+                  description: Timestamp when the trip started
+                  example: "2024-01-15T14:25:00Z"
+                start_latitude:
+                  type: number
+                  format: float
+                  description: Latitude where the trip started
+                  example: 45.4215
+                start_longitude:
+                  type: number
+                  format: float
+                  description: Longitude where the trip started
+                  example: -75.6972
+              required:
+                - trip_id
+                - user_id
+                - start_time
+                - start_latitude
+                - start_longitude
+              description: Active trip information if scooter is occupied
+          required:
+            - updated_at
+
+    ScooterListResponse:
+      type: object
+      properties:
+        scooters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScooterInfo'
+          description: List of scooters
+        total:
+          type: integer
+          format: int64
+          description: Total number of scooters matching the query
+          example: 25
+        limit:
+          type: integer
+          description: Maximum number of scooters returned
+          example: 50
+        offset:
+          type: integer
+          description: Number of scooters skipped
+          example: 0
+      required:
+        - scooters
+        - total
+        - limit
+        - offset
+
+    ScooterWithDistance:
+      allOf:
+        - $ref: '#/components/schemas/ScooterInfo'
+        - type: object
+          properties:
+            distance_meters:
+              type: number
+              format: float
+              description: Distance from the search center in meters
+              example: 245.7
+          required:
+            - distance_meters
+
+    ClosestScootersResponse:
+      type: object
+      properties:
+        scooters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScooterWithDistance'
+          description: List of scooters sorted by distance
+        center:
+          $ref: '#/components/schemas/Location'
+          description: Center point of the search
+        radius_meters:
+          type: number
+          format: float
+          description: Search radius in meters
+          example: 1000.0
+      required:
+        - scooters
+        - center
+        - radius_meters
 
 tags:
   - name: System
