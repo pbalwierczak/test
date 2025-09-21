@@ -1,7 +1,7 @@
 .PHONY: app simulator start-app start-sim start-simulator logs-app logs-sim logs-simulator kill-app kill-sim kill-simulator kill-all status clean test seed help
 
 # Variables
-COMPOSE_PROJECT_NAME := $(shell basename $(PWD))
+COMPOSE_PROJECT_NAME := $(shell basename $(PWD) | tr '[:upper:]' '[:lower:]')
 
 # Default target
 .DEFAULT_GOAL := help
