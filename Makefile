@@ -1,5 +1,8 @@
 .PHONY: app simulator start-app start-sim start-simulator logs-app logs-sim logs-simulator kill-app kill-sim kill-simulator kill-all status clean test seed help
 
+# Variables
+COMPOSE_PROJECT_NAME := $(shell basename $(PWD))
+
 # Default target
 .DEFAULT_GOAL := help
 
@@ -68,7 +71,7 @@ start-simulator:
 		exit 1; \
 	fi
 	@echo "✅ App is running, starting simulator..."
-	@docker-compose -f docker-compose.simulator.yml up --build -d
+	@COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) docker-compose -f docker-compose.simulator.yml up --build -d
 	@echo "✅ Simulator is running in background!"
 	@echo ""
 	@echo "💡 Next steps:"
@@ -83,7 +86,7 @@ logs-app:
 logs-sim: logs-simulator
 logs-simulator:
 	@echo "📋 Following simulator logs (Ctrl+C to exit)..."
-	@docker-compose -f docker-compose.simulator.yml logs -f scootin-simulator
+	@COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) docker-compose -f docker-compose.simulator.yml logs -f scootin-simulator
 
 kill-app:
 	@echo "🛑 Stopping app and database..."
@@ -93,13 +96,13 @@ kill-app:
 kill-sim: kill-simulator
 kill-simulator:
 	@echo "🛑 Stopping simulator..."
-	@docker-compose -f docker-compose.simulator.yml down
+	@COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) docker-compose -f docker-compose.simulator.yml down
 	@echo "✅ Simulator stopped!"
 
 kill-all:
 	@echo "🛑 Stopping everything..."
 	@docker-compose down
-	@docker-compose -f docker-compose.simulator.yml down
+	@COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) docker-compose -f docker-compose.simulator.yml down
 	@echo "✅ All services stopped!"
 
 status:
@@ -113,8 +116,8 @@ status:
 	done || echo "  No main app services running"
 	@echo ""
 	@echo "Simulator Services:"
-	@docker-compose -f docker-compose.simulator.yml ps --services 2>/dev/null | while read service; do \
-		docker-compose -f docker-compose.simulator.yml ps $$service 2>/dev/null | tail -n +2; \
+	@COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) docker-compose -f docker-compose.simulator.yml ps --services 2>/dev/null | while read service; do \
+		COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) docker-compose -f docker-compose.simulator.yml ps $$service 2>/dev/null | tail -n +2; \
 	done || echo "  No simulator services running"
 	@echo ""
 	@if docker ps | grep -q "scootin-app"; then \
@@ -141,7 +144,7 @@ _clean:
 clean:
 	@echo "🧹 Cleaning up everything..."
 	@docker-compose down -v
-	@docker-compose -f docker-compose.simulator.yml down
+	@COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) docker-compose -f docker-compose.simulator.yml down
 	@docker rmi scootin-app scootin-simulator 2>/dev/null || true
 	@docker system prune -f
 	@echo "✅ Cleanup complete!"
