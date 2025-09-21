@@ -11,6 +11,21 @@ import (
 	"scootin-aboot/internal/logger"
 )
 
+// SeededUserIDs contains the hardcoded user IDs from seeds/users.sql
+// These should be kept in sync with the database seed data
+var SeededUserIDs = []string{
+	"550e8400-e29b-41d4-a716-446655440001",
+	"550e8400-e29b-41d4-a716-446655440002",
+	"550e8400-e29b-41d4-a716-446655440003",
+	"550e8400-e29b-41d4-a716-446655440004",
+	"550e8400-e29b-41d4-a716-446655440005",
+	"550e8400-e29b-41d4-a716-446655440006",
+	"550e8400-e29b-41d4-a716-446655440007",
+	"550e8400-e29b-41d4-a716-446655440008",
+	"550e8400-e29b-41d4-a716-446655440009",
+	"550e8400-e29b-41d4-a716-446655440010",
+}
+
 type Simulator struct {
 	config        *config.Config
 	client        *APIClient
@@ -186,52 +201,38 @@ func (s *Simulator) initializeScooters() error {
 		s.scooters[i] = scooter
 	}
 
-	s.stats.mu.Lock()
-	s.stats.TotalScooters = len(s.scooters)
-	s.stats.AvailableScooters = len(s.scooters)
-	s.stats.mu.Unlock()
+	s.withStatsLock(func(stats *Statistics) {
+		stats.TotalScooters = len(s.scooters)
+		stats.AvailableScooters = len(s.scooters)
+	})
 
 	logger.Info("Initialized scooters", logger.Int("count", len(s.scooters)))
 	return nil
 }
 
 func (s *Simulator) initializeUsers() error {
-	// Seeded user IDs from seeds/users.sql
-	seededUserIDs := []string{
-		"550e8400-e29b-41d4-a716-446655440001",
-		"550e8400-e29b-41d4-a716-446655440002",
-		"550e8400-e29b-41d4-a716-446655440003",
-		"550e8400-e29b-41d4-a716-446655440004",
-		"550e8400-e29b-41d4-a716-446655440005",
-		"550e8400-e29b-41d4-a716-446655440006",
-		"550e8400-e29b-41d4-a716-446655440007",
-		"550e8400-e29b-41d4-a716-446655440008",
-		"550e8400-e29b-41d4-a716-446655440009",
-		"550e8400-e29b-41d4-a716-446655440010",
-	}
-
 	maxUsers := s.config.SimulatorUsers
-	if len(seededUserIDs) < maxUsers {
-		maxUsers = len(seededUserIDs)
+	if len(SeededUserIDs) < maxUsers {
+		maxUsers = len(SeededUserIDs)
 		logger.Info("Limited users to available seeded count",
 			logger.Int("requested", s.config.SimulatorUsers),
-			logger.Int("available", len(seededUserIDs)),
+			logger.Int("available", len(SeededUserIDs)),
 			logger.Int("using", maxUsers))
 	}
 
 	s.users = make([]*User, maxUsers)
 
 	for i := 0; i < maxUsers; i++ {
-		user, err := NewUserWithID(s.ctx, s.client, i+1, seededUserIDs[i], s.config)
+		user, err := NewUserWithID(s.ctx, s.client, i+1, SeededUserIDs[i], s.config)
 		if err != nil {
-			return fmt.Errorf("failed to create user %s: %w", seededUserIDs[i], err)
+			return fmt.Errorf("failed to create user %s: %w", SeededUserIDs[i], err)
 		}
 		s.users[i] = user
 	}
 
-	s.stats.mu.Lock()
-	s.stats.TotalUsers = len(s.users)
-	s.stats.mu.Unlock()
+	s.withStatsLock(func(stats *Statistics) {
+		stats.TotalUsers = len(s.users)
+	})
 
 	logger.Info("Initialized users", logger.Int("count", len(s.users)))
 	return nil
@@ -276,15 +277,18 @@ func (s *Simulator) startStatisticsReporting() {
 }
 
 func (s *Simulator) reportStatistics() {
-	s.stats.mu.RLock()
-	activeTrips := s.stats.ActiveTrips
-	completedTrips := s.stats.CompletedTrips
-	availableScooters := s.stats.AvailableScooters
-	occupiedScooters := s.stats.OccupiedScooters
-	totalUsers := s.stats.TotalUsers
-	totalScooters := s.stats.TotalScooters
-	startTime := s.stats.StartTime
-	s.stats.mu.RUnlock()
+	var activeTrips, completedTrips, availableScooters, occupiedScooters, totalUsers, totalScooters int
+	var startTime time.Time
+
+	s.withStatsReadLock(func(stats *Statistics) {
+		activeTrips = stats.ActiveTrips
+		completedTrips = stats.CompletedTrips
+		availableScooters = stats.AvailableScooters
+		occupiedScooters = stats.OccupiedScooters
+		totalUsers = stats.TotalUsers
+		totalScooters = stats.TotalScooters
+		startTime = stats.StartTime
+	})
 
 	uptime := time.Since(startTime)
 
@@ -305,65 +309,84 @@ func (s *Simulator) UpdateStats(update func(*Statistics)) {
 	s.stats.mu.Unlock()
 }
 
-func (s *Simulator) IsUserActive(userID string) bool {
+// withStatsLock executes a function with stats mutex locked for writing
+func (s *Simulator) withStatsLock(fn func(*Statistics)) {
+	s.stats.mu.Lock()
+	fn(s.stats)
+	s.stats.mu.Unlock()
+}
+
+// withStatsReadLock executes a function with stats mutex locked for reading
+func (s *Simulator) withStatsReadLock(fn func(*Statistics)) {
+	s.stats.mu.RLock()
+	fn(s.stats)
+	s.stats.mu.RUnlock()
+}
+
+// withActiveUsersReadLock executes a function with activeUsers mutex locked for reading
+func (s *Simulator) withActiveUsersReadLock(fn func(map[string]bool)) {
 	s.activeUsersMu.RLock()
-	defer s.activeUsersMu.RUnlock()
-	return s.activeUsers[userID]
+	fn(s.activeUsers)
+	s.activeUsersMu.RUnlock()
+}
+
+// withActiveUsersWriteLock executes a function with activeUsers mutex locked for writing
+func (s *Simulator) withActiveUsersWriteLock(fn func(map[string]bool)) {
+	s.activeUsersMu.Lock()
+	fn(s.activeUsers)
+	s.activeUsersMu.Unlock()
+}
+
+func (s *Simulator) IsUserActive(userID string) bool {
+	var isActive bool
+	s.withActiveUsersReadLock(func(activeUsers map[string]bool) {
+		isActive = activeUsers[userID]
+	})
+	return isActive
 }
 
 func (s *Simulator) MarkUserActive(userID string) {
-	s.activeUsersMu.Lock()
-	defer s.activeUsersMu.Unlock()
-	s.activeUsers[userID] = true
+	s.withActiveUsersWriteLock(func(activeUsers map[string]bool) {
+		activeUsers[userID] = true
+	})
 }
 
 func (s *Simulator) MarkUserInactive(userID string) {
-	s.activeUsersMu.Lock()
-	defer s.activeUsersMu.Unlock()
-	delete(s.activeUsers, userID)
+	s.withActiveUsersWriteLock(func(activeUsers map[string]bool) {
+		delete(activeUsers, userID)
+	})
 }
 
 func (s *Simulator) GetAvailableUsers() []string {
-	// Seeded user IDs from seeds/users.sql
-	allUserIDs := []string{
-		"550e8400-e29b-41d4-a716-446655440001",
-		"550e8400-e29b-41d4-a716-446655440002",
-		"550e8400-e29b-41d4-a716-446655440003",
-		"550e8400-e29b-41d4-a716-446655440004",
-		"550e8400-e29b-41d4-a716-446655440005",
-		"550e8400-e29b-41d4-a716-446655440006",
-		"550e8400-e29b-41d4-a716-446655440007",
-		"550e8400-e29b-41d4-a716-446655440008",
-		"550e8400-e29b-41d4-a716-446655440009",
-		"550e8400-e29b-41d4-a716-446655440010",
-	}
+	return s.filterAvailableUsers(SeededUserIDs)
+}
 
-	s.activeUsersMu.RLock()
-	defer s.activeUsersMu.RUnlock()
-
+// filterAvailableUsers returns user IDs that are not currently active
+func (s *Simulator) filterAvailableUsers(userIDs []string) []string {
 	var availableUsers []string
-	for _, userID := range allUserIDs {
-		if !s.activeUsers[userID] {
-			availableUsers = append(availableUsers, userID)
+	s.withActiveUsersReadLock(func(activeUsers map[string]bool) {
+		for _, userID := range userIDs {
+			if !activeUsers[userID] {
+				availableUsers = append(availableUsers, userID)
+			}
 		}
-	}
-
+	})
 	return availableUsers
 }
 
 func (s *Simulator) OnTripStarted() {
-	s.stats.mu.Lock()
-	s.stats.ActiveTrips++
-	s.stats.AvailableScooters--
-	s.stats.OccupiedScooters++
-	s.stats.mu.Unlock()
+	s.withStatsLock(func(stats *Statistics) {
+		stats.ActiveTrips++
+		stats.AvailableScooters--
+		stats.OccupiedScooters++
+	})
 }
 
 func (s *Simulator) OnTripEnded() {
-	s.stats.mu.Lock()
-	s.stats.ActiveTrips--
-	s.stats.CompletedTrips++
-	s.stats.AvailableScooters++
-	s.stats.OccupiedScooters--
-	s.stats.mu.Unlock()
+	s.withStatsLock(func(stats *Statistics) {
+		stats.ActiveTrips--
+		stats.CompletedTrips++
+		stats.AvailableScooters++
+		stats.OccupiedScooters--
+	})
 }
