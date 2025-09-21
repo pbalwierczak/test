@@ -16,4 +16,3 @@ services:
 networks:
   scootin-network:
     external: true
-    name: scootin-aboot-app_scootin-network

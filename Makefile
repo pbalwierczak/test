@@ -58,7 +58,7 @@ start-app:
 start-sim: start-simulator
 start-simulator:
 	@echo "🎮 Starting simulator in background..."
-	@if ! docker network ls | grep -q "scootin-aboot-app_scootin-network"; then \
+	@if ! docker network ls | grep -q "_scootin-network"; then \
 		echo "❌ Error: Network not found! Please start the app first: make start-app"; \
 		exit 1; \
 	fi

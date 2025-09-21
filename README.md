@@ -28,8 +28,8 @@ A comprehensive backend service for managing electric scooters in Ottawa and Mon
 1. **Clone and setup**:
    ```bash
    git clone <repository-url>
-   cd scootin-aboot-app
-   cp .env.example .env
+   cd <your-repo-name>
+   cp env.example .env
    # Edit .env with your configuration
    ```
 
