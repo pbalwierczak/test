@@ -2,7 +2,6 @@ package simulator
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -44,25 +43,6 @@ type Trip struct {
 	UserID    string
 	StartTime time.Time
 	Direction float64
-}
-
-func NewScooter(ctx context.Context, publisher EventPublisher, id int, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
-	movement := NewMovement(cfg)
-
-	location := movement.GetRandomLocation()
-
-	return &Scooter{
-		ID:                id,
-		Ctx:               ctx,
-		Publisher:         publisher,
-		Config:            cfg,
-		Movement:          movement,
-		Location:          location,
-		Status:            "available",
-		LastSeen:          time.Now(),
-		UserTracker:       userTracker,
-		StatisticsUpdater: statsUpdater,
-	}, nil
 }
 
 func NewScooterFromAPI(ctx context.Context, publisher EventPublisher, apiScooter APIScooter, cfg *config.Config, userTracker UserTracker, statsUpdater StatisticsUpdater) (*Scooter, error) {
@@ -160,15 +140,7 @@ func (s *Scooter) updateLocation() {
 }
 
 func (s *Scooter) getScooterID() string {
-	if s.APIScooterID != "" {
-		return s.APIScooterID
-	}
-
-	if s.ID <= 10 {
-		return fmt.Sprintf("650e8400-e29b-41d4-a716-446655440%03d", s.ID)
-	} else {
-		return fmt.Sprintf("750e8400-e29b-41d4-a716-446655440%03d", s.ID-10)
-	}
+	return s.APIScooterID
 }
 
 func (s *Scooter) StartTrip(tripID, userID string) {
