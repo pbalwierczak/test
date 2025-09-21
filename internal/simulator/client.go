@@ -9,14 +9,12 @@ import (
 	"time"
 )
 
-// APIClient handles HTTP communication with the server
 type APIClient struct {
 	baseURL    string
 	apiKey     string
 	httpClient *http.Client
 }
 
-// NewAPIClient creates a new API client
 func NewAPIClient(baseURL, apiKey string) *APIClient {
 	return &APIClient{
 		baseURL: baseURL,
@@ -27,7 +25,6 @@ func NewAPIClient(baseURL, apiKey string) *APIClient {
 	}
 }
 
-// APIScooter represents a scooter from the API
 type APIScooter struct {
 	ID        string  `json:"id"`
 	Status    string  `json:"status"`
@@ -35,23 +32,19 @@ type APIScooter struct {
 	Longitude float64 `json:"current_longitude"`
 }
 
-// ScootersResponse represents the response from GET /api/v1/scooters
 type ScootersResponse struct {
 	Scooters []APIScooter `json:"scooters"`
 }
 
-// ErrorResponse represents an error response from the API
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-// ClosestScootersResponse represents the response from GET /api/v1/scooters/closest
 type ClosestScootersResponse struct {
 	Scooters []APIScooter `json:"scooters"`
 	Count    int          `json:"count"`
 }
 
-// ScooterListResponse represents the response from GET /api/v1/scooters
 type ScooterListResponse struct {
 	Scooters []APIScooter `json:"scooters"`
 	Count    int          `json:"count"`
@@ -59,7 +52,6 @@ type ScooterListResponse struct {
 	Offset   int          `json:"offset"`
 }
 
-// GetAvailableScooters fetches available scooters from the server
 func (c *APIClient) GetAvailableScooters(ctx context.Context) ([]APIScooter, error) {
 	url := fmt.Sprintf("%s/api/v1/scooters?status=available", c.baseURL)
 
@@ -90,7 +82,6 @@ func (c *APIClient) GetAvailableScooters(ctx context.Context) ([]APIScooter, err
 	return response.Scooters, nil
 }
 
-// GetAllScooters fetches all scooters from the server
 func (c *APIClient) GetAllScooters(ctx context.Context) ([]APIScooter, error) {
 	url := fmt.Sprintf("%s/api/v1/scooters", c.baseURL)
 
@@ -121,7 +112,6 @@ func (c *APIClient) GetAllScooters(ctx context.Context) ([]APIScooter, error) {
 	return response.Scooters, nil
 }
 
-// GetClosestScooters finds the closest available scooters to a given location
 func (c *APIClient) GetClosestScooters(ctx context.Context, lat, lng float64, radius int, limit int) ([]APIScooter, error) {
 	url := fmt.Sprintf("%s/api/v1/scooters/closest?lat=%.6f&lng=%.6f&radius=%d&limit=%d&status=available",
 		c.baseURL, lat, lng, radius, limit)
@@ -153,7 +143,6 @@ func (c *APIClient) GetClosestScooters(ctx context.Context, lat, lng float64, ra
 	return response.Scooters, nil
 }
 
-// GetScootersInBounds finds scooters within geographic bounds
 func (c *APIClient) GetScootersInBounds(ctx context.Context, minLat, maxLat, minLng, maxLng float64, limit int) ([]APIScooter, error) {
 	url := fmt.Sprintf("%s/api/v1/scooters?min_lat=%.6f&max_lat=%.6f&min_lng=%.6f&max_lng=%.6f&limit=%d&status=available",
 		c.baseURL, minLat, maxLat, minLng, maxLng, limit)

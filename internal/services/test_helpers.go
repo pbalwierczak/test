@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// TestFixtures contains common test data
 var TestFixtures = struct {
 	ValidCoordinates struct {
 		Latitude  float64
@@ -46,12 +45,10 @@ var TestFixtures = struct {
 	ValidTime: time.Now(),
 }
 
-// TestScooterBuilder provides a fluent interface for building test scooters
 type TestScooterBuilder struct {
 	scooter *models.Scooter
 }
 
-// NewTestScooterBuilder creates a new scooter builder with default values
 func NewTestScooterBuilder() *TestScooterBuilder {
 	return &TestScooterBuilder{
 		scooter: &models.Scooter{
@@ -91,12 +88,10 @@ func (b *TestScooterBuilder) Build() *models.Scooter {
 	return b.scooter
 }
 
-// TestTripBuilder provides a fluent interface for building test trips
 type TestTripBuilder struct {
 	trip *models.Trip
 }
 
-// NewTestTripBuilder creates a new trip builder with default values
 func NewTestTripBuilder() *TestTripBuilder {
 	return &TestTripBuilder{
 		trip: &models.Trip{
@@ -182,10 +177,8 @@ func (b *TestUserBuilder) Build() *models.User {
 	return b.user
 }
 
-// MockSetup provides utilities for setting up mocks
 type MockSetup struct{}
 
-// SetupScooterServiceMocks creates all necessary mocks for scooter service tests
 func (m *MockSetup) SetupScooterServiceMocks() (*mocks.MockScooterRepository, *mocks.MockTripRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork) {
 	return &mocks.MockScooterRepository{},
 		&mocks.MockTripRepository{},
@@ -193,7 +186,6 @@ func (m *MockSetup) SetupScooterServiceMocks() (*mocks.MockScooterRepository, *m
 		&mocks.MockUnitOfWork{}
 }
 
-// SetupTripServiceMocks creates all necessary mocks for trip service tests
 func (m *MockSetup) SetupTripServiceMocks() (*mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork) {
 	return &mocks.MockTripRepository{},
 		&mocks.MockScooterRepository{},
@@ -202,7 +194,6 @@ func (m *MockSetup) SetupTripServiceMocks() (*mocks.MockTripRepository, *mocks.M
 		&mocks.MockUnitOfWork{}
 }
 
-// SetupBasicUnitOfWork sets up a basic unit of work with transaction
 func (m *MockSetup) SetupBasicUnitOfWork(unitOfWork *mocks.MockUnitOfWork, tripRepo *mocks.MockTripRepository, scooterRepo *mocks.MockScooterRepository, userRepo *mocks.MockUserRepository, locationRepo *mocks.MockLocationUpdateRepository) *mocks.MockUnitOfWorkTx {
 	mockTx := &mocks.MockUnitOfWorkTx{}
 	unitOfWork.On("Begin", mock.Anything).Return(mockTx, nil)
@@ -215,7 +206,6 @@ func (m *MockSetup) SetupBasicUnitOfWork(unitOfWork *mocks.MockUnitOfWork, tripR
 	return mockTx
 }
 
-// SetupScooterServiceUnitOfWork sets up unit of work specifically for scooter service
 func (m *MockSetup) SetupScooterServiceUnitOfWork(unitOfWork *mocks.MockUnitOfWork, scooterRepo *mocks.MockScooterRepository, locationRepo *mocks.MockLocationUpdateRepository) *mocks.MockUnitOfWorkTx {
 	mockTx := &mocks.MockUnitOfWorkTx{}
 	unitOfWork.On("Begin", mock.Anything).Return(mockTx, nil)
@@ -226,21 +216,18 @@ func (m *MockSetup) SetupScooterServiceUnitOfWork(unitOfWork *mocks.MockUnitOfWo
 	return mockTx
 }
 
-// CreateTestScooterService creates a scooter service with mocks
 func (m *MockSetup) CreateTestScooterService() (ScooterService, *mocks.MockScooterRepository, *mocks.MockTripRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork) {
 	scooterRepo, tripRepo, locationRepo, unitOfWork := m.SetupScooterServiceMocks()
 	service := NewScooterService(scooterRepo, tripRepo, locationRepo, unitOfWork)
 	return service, scooterRepo, tripRepo, locationRepo, unitOfWork
 }
 
-// CreateTestTripService creates a trip service with mocks
 func (m *MockSetup) CreateTestTripService() (TripService, *mocks.MockTripRepository, *mocks.MockScooterRepository, *mocks.MockUserRepository, *mocks.MockLocationUpdateRepository, *mocks.MockUnitOfWork) {
 	tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork := m.SetupTripServiceMocks()
 	service := NewTripService(tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork)
 	return service, tripRepo, scooterRepo, userRepo, locationRepo, unitOfWork
 }
 
-// TestContext provides a test context
 func TestContext() context.Context {
 	return context.Background()
 }

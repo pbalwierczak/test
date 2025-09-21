@@ -12,7 +12,6 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-// EventProducer interface for publishing events
 type EventProducer interface {
 	PublishTripStarted(ctx context.Context, event *TripStartedEvent) error
 	PublishTripEnded(ctx context.Context, event *TripEndedEvent) error
@@ -20,13 +19,11 @@ type EventProducer interface {
 	Close() error
 }
 
-// KafkaProducer implements EventProducer using Kafka
 type KafkaProducer struct {
 	producer sarama.SyncProducer
 	config   *config.KafkaConfig
 }
 
-// NewKafkaProducer creates a new Kafka producer
 func NewKafkaProducer(cfg *config.KafkaConfig) (*KafkaProducer, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("failed to create Kafka producer: config cannot be nil")
@@ -52,22 +49,18 @@ func NewKafkaProducer(cfg *config.KafkaConfig) (*KafkaProducer, error) {
 	}, nil
 }
 
-// PublishTripStarted publishes a trip started event
 func (p *KafkaProducer) PublishTripStarted(ctx context.Context, event *TripStartedEvent) error {
 	return p.publishEvent(ctx, p.config.Topics.TripStarted, event)
 }
 
-// PublishTripEnded publishes a trip ended event
 func (p *KafkaProducer) PublishTripEnded(ctx context.Context, event *TripEndedEvent) error {
 	return p.publishEvent(ctx, p.config.Topics.TripEnded, event)
 }
 
-// PublishLocationUpdated publishes a location updated event
 func (p *KafkaProducer) PublishLocationUpdated(ctx context.Context, event *LocationUpdatedEvent) error {
 	return p.publishEvent(ctx, p.config.Topics.LocationUpdated, event)
 }
 
-// publishEvent publishes an event to the specified topic
 func (p *KafkaProducer) publishEvent(ctx context.Context, topic string, event interface{}) error {
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
@@ -105,7 +98,6 @@ func (p *KafkaProducer) publishEvent(ctx context.Context, topic string, event in
 	return nil
 }
 
-// Close closes the Kafka producer
 func (p *KafkaProducer) Close() error {
 	if p.producer != nil {
 		return p.producer.Close()
@@ -113,50 +105,42 @@ func (p *KafkaProducer) Close() error {
 	return nil
 }
 
-// MockProducer implements EventProducer for testing
 type MockProducer struct {
 	Events []interface{}
 }
 
-// NewMockProducer creates a new mock producer
 func NewMockProducer() *MockProducer {
 	return &MockProducer{
 		Events: make([]interface{}, 0),
 	}
 }
 
-// PublishTripStarted publishes a trip started event (mock)
 func (m *MockProducer) PublishTripStarted(ctx context.Context, event *TripStartedEvent) error {
 	m.Events = append(m.Events, event)
 	logger.Debug("Mock: Trip started event published", logger.String("trip_id", event.Data.TripID))
 	return nil
 }
 
-// PublishTripEnded publishes a trip ended event (mock)
 func (m *MockProducer) PublishTripEnded(ctx context.Context, event *TripEndedEvent) error {
 	m.Events = append(m.Events, event)
 	logger.Debug("Mock: Trip ended event published", logger.String("trip_id", event.Data.TripID))
 	return nil
 }
 
-// PublishLocationUpdated publishes a location updated event (mock)
 func (m *MockProducer) PublishLocationUpdated(ctx context.Context, event *LocationUpdatedEvent) error {
 	m.Events = append(m.Events, event)
 	logger.Debug("Mock: Location updated event published", logger.String("scooter_id", event.Data.ScooterID))
 	return nil
 }
 
-// Close closes the mock producer
 func (m *MockProducer) Close() error {
 	return nil
 }
 
-// GetEvents returns all published events (for testing)
 func (m *MockProducer) GetEvents() []interface{} {
 	return m.Events
 }
 
-// ClearEvents clears all events (for testing)
 func (m *MockProducer) ClearEvents() {
 	m.Events = make([]interface{}, 0)
 }

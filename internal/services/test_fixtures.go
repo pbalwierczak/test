@@ -7,33 +7,26 @@ import (
 	"github.com/google/uuid"
 )
 
-// TestData contains common test data structures
 var TestData = struct {
-	// Valid UUIDs for testing
 	ValidScooterID uuid.UUID
 	ValidUserID    uuid.UUID
 	ValidTripID    uuid.UUID
 
-	// Valid coordinates
 	ValidLatitude  float64
 	ValidLongitude float64
 
-	// Invalid coordinates
 	InvalidLatitudeHigh  float64
 	InvalidLatitudeLow   float64
 	InvalidLongitudeHigh float64
 	InvalidLongitudeLow  float64
 
-	// Valid time
 	ValidTime time.Time
 
-	// Test limits and offsets
 	ValidLimit     int
 	ValidOffset    int
 	MaxLimit       int
 	ExcessiveLimit int
 
-	// Test radius
 	ValidRadius     float64
 	ExcessiveRadius float64
 }{
@@ -60,7 +53,6 @@ var TestData = struct {
 	ExcessiveRadius: 60000.0,
 }
 
-// GetValidScooterQueryParams returns valid scooter query parameters
 func GetValidScooterQueryParams() ScooterQueryParams {
 	return ScooterQueryParams{
 		Limit:  TestData.ValidLimit,
@@ -68,14 +60,12 @@ func GetValidScooterQueryParams() ScooterQueryParams {
 	}
 }
 
-// GetValidScooterQueryParamsWithStatus returns valid scooter query parameters with status
 func GetValidScooterQueryParamsWithStatus(status string) ScooterQueryParams {
 	params := GetValidScooterQueryParams()
 	params.Status = status
 	return params
 }
 
-// GetValidScooterQueryParamsWithBounds returns valid scooter query parameters with geographic bounds
 func GetValidScooterQueryParamsWithBounds() ScooterQueryParams {
 	params := GetValidScooterQueryParams()
 	params.MinLat = TestData.ValidLatitude - 0.1
@@ -85,7 +75,6 @@ func GetValidScooterQueryParamsWithBounds() ScooterQueryParams {
 	return params
 }
 
-// GetValidClosestScootersQueryParams returns valid closest scooters query parameters
 func GetValidClosestScootersQueryParams() ClosestScootersQueryParams {
 	return ClosestScootersQueryParams{
 		Latitude:  TestData.ValidLatitude,
@@ -95,14 +84,12 @@ func GetValidClosestScootersQueryParams() ClosestScootersQueryParams {
 	}
 }
 
-// GetValidClosestScootersQueryParamsWithStatus returns valid closest scooters query parameters with status
 func GetValidClosestScootersQueryParamsWithStatus(status string) ClosestScootersQueryParams {
 	params := GetValidClosestScootersQueryParams()
 	params.Status = status
 	return params
 }
 
-// GetInvalidScooterQueryParams returns various invalid scooter query parameters for testing
 func GetInvalidScooterQueryParams() []struct {
 	Name   string
 	Params ScooterQueryParams
@@ -143,7 +130,6 @@ func GetInvalidScooterQueryParams() []struct {
 	}
 }
 
-// GetInvalidClosestScootersQueryParams returns various invalid closest scooters query parameters for testing
 func GetInvalidClosestScootersQueryParams() []struct {
 	Name   string
 	Params ClosestScootersQueryParams
@@ -237,7 +223,6 @@ func GetInvalidClosestScootersQueryParams() []struct {
 	}
 }
 
-// GetTestScooters returns a slice of test scooters
 func GetTestScooters(count int) []*models.Scooter {
 	scooters := make([]*models.Scooter, count)
 	for i := 0; i < count; i++ {
@@ -249,7 +234,6 @@ func GetTestScooters(count int) []*models.Scooter {
 	return scooters
 }
 
-// GetTestScootersWithStatus returns a slice of test scooters with specific status
 func GetTestScootersWithStatus(count int, status models.ScooterStatus) []*models.Scooter {
 	scooters := make([]*models.Scooter, count)
 	for i := 0; i < count; i++ {
